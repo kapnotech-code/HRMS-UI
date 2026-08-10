@@ -1,0 +1,38 @@
+@if (sidebarService.isOpen()) {
+<div class="sidebar-backdrop" (click)="sidebarService.close()"></div>
+}
+<aside class="sidebar" [class.collapsed]="!sidebarService.isOpen()">
+
+  <!-- ===== Dashboard — standalone link, always visible, sits above the groups ===== -->
+  <nav class="sidebar-top-nav">
+    @for (item of topLevelItems; track item.route) {
+    <a [routerLink]="item.route"
+       routerLinkActive="active-link"
+       class="sidebar-link sidebar-top-link"
+       (click)="sidebarService.close()">
+      <span class="sidebar-icon">{{ item.icon }}</span>
+      <span class="sidebar-label">{{ item.label }}</span>
+    </a>
+    }
+  </nav>
+
+  @for (group of menuGroups; track group.label) {
+  <div class="sidebar-group">
+    <button class="sidebar-heading" (click)="group.open = !group.open">
+      <span>{{ group.label }}</span>
+      <span class="chevron" [class.rotated]="group.open">›</span>
+    </button>
+    <nav class="sidebar-nav" [class.open]="group.open">
+      @for (item of group.items; track item.route) {
+      <a [routerLink]="item.route"
+         routerLinkActive="active-link"
+         class="sidebar-link"
+         (click)="sidebarService.close()">
+        <span class="sidebar-icon">{{ item.icon }}</span>
+        <span class="sidebar-label">{{ item.label }}</span>
+      </a>
+      }
+    </nav>
+  </div>
+  }
+</aside>

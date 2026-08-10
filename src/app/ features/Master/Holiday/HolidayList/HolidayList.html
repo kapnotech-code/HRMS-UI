@@ -1,0 +1,89 @@
+<div class="holiday-container">
+  <div class="header-row">
+    <h2 class="page-title">Master - Holidays</h2>
+    <button class="btn-add" (click)="openAddForm()">+ Add Holiday</button>
+  </div>
+
+  <div class="filter-row">
+    <input type="text"
+           placeholder="Search by Holiday Name"
+           [(ngModel)]="filterName" />
+    <button class="btn-filter-apply" (click)="applyFilter()">Apply</button>
+    <button class="btn-filter-reset" (click)="resetFilter()">Reset</button>
+  </div>
+
+  <div *ngIf="errorMessage && !showForm" class="error-msg">{{ errorMessage }}</div>
+  <div *ngIf="loading" class="loading-msg">Loading...</div>
+
+  <div class="table-wrapper" *ngIf="!loading">
+    <table class="holiday-table">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Holiday Name</th>
+          <th>Holiday Date</th>
+          <th>Optional</th>
+          <th>Company</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredHolidays; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ item.holidayName }}</td>
+          <td>{{ item.holidayDate | date:'dd-MM-yyyy' }}</td>
+          <td>
+            <span [class.active]="!item.isOptional" [class.inactive]="item.isOptional">
+              {{ item.isOptional ? 'Optional' : 'Mandatory' }}
+            </span>
+          </td>
+          <td>{{ getCompanyName(item.companyID) }}</td>
+          <td>
+            <button class="btn-edit" (click)="editHoliday(item)">Edit</button>
+            <button class="btn-delete" (click)="deleteHoliday(item.holidayID)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredHolidays.length === 0">
+          <td colspan="6" class="no-data">No holidays found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" *ngIf="showForm">
+    <div class="modal-box">
+      <h3>{{ isEditMode ? 'Edit Holiday' : 'Add Holiday' }}</h3>
+      <div *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</div>
+      <div class="form-group">
+        <label>Holiday Name</label>
+        <input type="text" [(ngModel)]="formData.holidayName" name="holidayName" />
+      </div>
+      <div class="form-group">
+        <label>Holiday Date</label>
+        <input type="date" [(ngModel)]="formData.holidayDate" name="holidayDate" />
+      </div>
+      <div class="form-group">
+        <label>Company</label>
+        <select [(ngModel)]="formData.companyID" name="companyID">
+          <option [ngValue]="null">-- Select Company --</option>
+          <option *ngFor="let c of companies" [ngValue]="c.companyID">
+            {{ c.companyName }}
+          </option>
+        </select>
+      </div>
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox" [(ngModel)]="formData.isOptional" name="isOptional" />
+          Optional Holiday
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn-save" (click)="saveHoliday()" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+        <button class="btn-cancel" (click)="cancelForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

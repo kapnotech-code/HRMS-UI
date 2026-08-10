@@ -1,0 +1,122 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Attendance</h2>
+    <button class="btn-primary" (click)="openAddForm()">+ Add Attendance</button>
+  </div>
+
+  <div class="filter-row">
+    <select [(ngModel)]="filterEmployeeID" (change)="applyFilter()">
+      <option [ngValue]="null">-- All Employees --</option>
+      <option *ngFor="let e of employees" [ngValue]="e.employeeID">
+        {{ e.firstName }} {{ e.lastName }}
+      </option>
+    </select>
+    <input type="date" [(ngModel)]="filterDate" (change)="applyFilter()" />
+    <button class="btn-filter-apply" (click)="applyFilter()">Apply</button>
+    <button class="btn-filter-reset" (click)="resetFilter()">Reset</button>
+  </div>
+
+  <p *ngIf="errorMessage" class="error-text">{{ errorMessage }}</p>
+
+  <div class="table-wrapper" *ngIf="!loading && !errorMessage">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Employee</th>
+          <th>Company</th>
+          <th>Date</th>
+          <th>Check In</th>
+          <th>Check Out</th>
+          <th>Worked Hours</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of filteredAttendance">
+          <td>{{ a.attendanceID }}</td>
+          <td>{{ getEmployeeName(a.employeeID) }}</td>
+          <td>{{ getCompanyName(a.companyID) }}</td>
+          <td>{{ a.attendanceDate | date:'dd-MM-yyyy' }}</td>
+          <td>{{ a.checkInTime ? (a.checkInTime | date:'HH:mm') : '-' }}</td>
+          <td>{{ a.checkOutTime ? (a.checkOutTime | date:'HH:mm') : '-' }}</td>
+          <td>{{ a.workedHours ?? '-' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="'status-' + a.status.toLowerCase()">
+              {{ a.status }}
+            </span>
+          </td>
+          <td>
+            <button class="btn-edit" (click)="openEditForm(a)">Edit</button>
+            <button class="btn-delete" (click)="deleteItem(a)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredAttendance.length === 0">
+          <td colspan="9" class="no-data">Koi attendance record nahi mila.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-backdrop" *ngIf="showForm" (click)="closeForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3>{{ isEditMode ? 'Edit' : 'Add' }} Attendance</h3>
+
+      <div class="form-group">
+        <label>Employee *</label>
+        <select [(ngModel)]="formEmployeeID">
+          <option [ngValue]="null">-- Select Employee --</option>
+          <option *ngFor="let e of employees" [ngValue]="e.employeeID">
+            {{ e.firstName }} {{ e.lastName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Company *</label>
+        <select [(ngModel)]="formCompanyID">
+          <option [ngValue]="null">-- Select Company --</option>
+          <option *ngFor="let c of companies" [ngValue]="c.companyID">
+            {{ c.companyName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Attendance Date *</label>
+        <input type="date" [(ngModel)]="formAttendanceDate" />
+      </div>
+
+      <div class="form-group">
+        <label>Check In Time</label>
+        <input type="time" [(ngModel)]="formCheckInTime" />
+      </div>
+
+      <div class="form-group">
+        <label>Check Out Time</label>
+        <input type="time" [(ngModel)]="formCheckOutTime" />
+      </div>
+
+      <div class="form-group">
+        <label>Status *</label>
+        <select [(ngModel)]="formStatus">
+          <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Remarks</label>
+        <input type="text" [(ngModel)]="formRemarks" placeholder="Optional note" />
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-cancel" (click)="closeForm()" [disabled]="saving">Cancel</button>
+        <button class="btn-save" (click)="saveAttendance()" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

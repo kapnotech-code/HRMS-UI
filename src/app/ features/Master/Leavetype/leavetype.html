@@ -1,0 +1,84 @@
+<div class="leavetype-container">
+  <div class="header-row">
+    <h2 class="page-title">Master - Leave Types</h2>
+    <button class="btn-add" (click)="openAddForm()">+ Add Leave Type</button>
+  </div>
+
+  <div class="filter-row">
+    <input type="text"
+           placeholder="Search by Leave Type Name"
+           [(ngModel)]="filterName" />
+    <button class="btn-filter-apply" (click)="applyFilter()">Apply</button>
+    <button class="btn-filter-reset" (click)="resetFilter()">Reset</button>
+  </div>
+
+  <div *ngIf="errorMessage && !showForm" class="error-msg">{{ errorMessage }}</div>
+  <div *ngIf="loading" class="loading-msg">Loading...</div>
+
+  <div class="table-wrapper" *ngIf="!loading">
+    <table class="leavetype-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Leave Type Name</th>
+          <th>Default Days/Year</th>
+          <th>Paid</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredLeaveTypes; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ item.leaveTypeName }}</td>
+          <td>{{ item.defaultDaysPerYear }}</td>
+          <td>
+            <span [class.active]="item.isPaid" [class.inactive]="!item.isPaid">
+              {{ item.isPaid ? 'Paid' : 'Unpaid' }}
+            </span>
+          </td>
+          <td>
+            <span [class.active]="item.isActive" [class.inactive]="!item.isActive">
+              {{ item.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>
+            <button class="btn-edit" (click)="editLeaveType(item)">Edit</button>
+            <button class="btn-delete" (click)="deleteLeaveType(item.leaveTypeID)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredLeaveTypes.length === 0">
+          <td colspan="6" class="no-data">No leave types found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" *ngIf="showForm">
+    <div class="modal-box">
+      <h3>{{ isEditMode ? 'Edit Leave Type' : 'Add Leave Type' }}</h3>
+      <div *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</div>
+      <div class="form-group">
+        <label>Leave Type Name *</label>
+        <input type="text" [(ngModel)]="formData.leaveTypeName" name="leaveTypeName" placeholder="e.g. Casual Leave" />
+      </div>
+      <div class="form-group">
+        <label>Default Days Per Year *</label>
+        <input type="number" [(ngModel)]="formData.defaultDaysPerYear" name="defaultDaysPerYear" placeholder="e.g. 12" />
+      </div>
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox" [(ngModel)]="formData.isPaid" name="isPaid" />
+          Paid Leave
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" (click)="cancelForm()">Cancel</button>
+        <button class="btn-save" (click)="saveLeaveType()" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

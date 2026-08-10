@@ -1,0 +1,21 @@
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-icon"><i class="ti ti-building-skyscraper"></i></div>
+    <span>HRMS</span>
+  </div>
+  <div class="header-right">
+    <i class="ti ti-bell notif-icon"></i>
+    <div class="divider"></div>
+    <div class="user-info">
+      <div class="avatar">AK</div>
+      <div class="user-text">
+        <p class="user-name">{{ userName }}</p>
+        <p class="user-role">{{ userRole }}</p>
+      </div>
+      <i class="ti ti-chevron-down"></i>
+    </div>
+    <button class="logout-btn" (click)="logout()">
+      <i class="ti ti-logout"></i> Logout
+    </button>
+  </div>
+</header>

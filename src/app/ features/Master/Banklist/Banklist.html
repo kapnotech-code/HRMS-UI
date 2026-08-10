@@ -1,0 +1,127 @@
+<div class="bank-page">
+
+  <div class="page-header">
+    <div>
+      <h2>Bank Master</h2>
+      <p class="subtitle">Manage banks used across Employee bank details</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openAddModal()">+ Add Bank</button>
+    </div>
+  </div>
+
+  <p *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+
+  <div class="filter-card">
+    <input type="text"
+           placeholder="Search by bank name, branch, IFSC, or city..."
+           [(ngModel)]="searchText"
+           (input)="applyFilter()" />
+  </div>
+
+  <div class="table-card">
+    <div class="loading" *ngIf="loading">Loading banks...</div>
+
+    <div class="table-wrapper" *ngIf="!loading">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Bank Name</th>
+            <th>Branch Name</th>
+            <th>IFSC Code</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Country</th>
+            <th>Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of filteredBanks">
+            <td>{{ b.bankName || '-' }}</td>
+            <td>{{ b.branchName || '-' }}</td>
+            <td>{{ b.ifscCode || '-' }}</td>
+            <td>{{ b.city || '-' }}</td>
+            <td>{{ b.state || '-' }}</td>
+            <td>{{ b.country || '-' }}</td>
+            <td>
+              <span class="badge" [ngClass]="b.isActive ? 'badge-active' : 'badge-inactive'">
+                {{ b.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <div class="actions-group">
+                <button class="btn btn-small btn-secondary" (click)="openEditModal(b)">Edit</button>
+                <button class="btn btn-small btn-danger"
+                        [disabled]="deletingId === b.bankID"
+                        (click)="deleteBank(b)">
+                  {{ deletingId === b.bankID ? 'Deleting...' : 'Delete' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!filteredBanks.length">
+            <td colspan="8" class="empty-row">No banks found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== Add/Edit Modal ===== -->
+  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ isEditMode ? 'Edit Bank' : 'Add Bank' }}</h3>
+        <button class="modal-close" (click)="closeModal()">&times;</button>
+      </div>
+
+      <p *ngIf="formError" class="alert alert-error">{{ formError }}</p>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Bank Name <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formModel.bankName" placeholder="e.g. State Bank of India" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Branch Name</label>
+            <input type="text" [(ngModel)]="formModel.branchName" placeholder="e.g. MG Road" />
+          </div>
+          <div class="form-group">
+            <label>IFSC Code</label>
+            <input type="text" [(ngModel)]="formModel.ifscCode" placeholder="e.g. SBIN0001234" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" [(ngModel)]="formModel.city" placeholder="City" />
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" [(ngModel)]="formModel.state" placeholder="State" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Country</label>
+            <input type="text" [(ngModel)]="formModel.country" placeholder="Country" />
+          </div>
+          <div class="form-group"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary" [disabled]="saving" (click)="saveBank()">
+          {{ saving ? 'Saving...' : (isEditMode ? 'Update Bank' : 'Add Bank') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

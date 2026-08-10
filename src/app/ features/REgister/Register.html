@@ -1,0 +1,94 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo" aria-hidden="true">HR</div>
+      <h1>Create account</h1>
+      <p>Register to get started with HRMS</p>
+    </div>
+
+    <p *ngIf="errorMessage" class="error-text" role="alert">{{ errorMessage }}</p>
+    <p *ngIf="successMessage" class="success-text" role="status">{{ successMessage }}</p>
+
+    <form (ngSubmit)="submit()" autocomplete="on" *ngIf="!successMessage">
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input id="fullName"
+               name="fullName"
+               type="text"
+               [(ngModel)]="fullName"
+               placeholder="e.g. Priya Sharma"
+               autocomplete="name"
+               required />
+      </div>
+
+      <div class="form-group">
+        <label for="loginName">Login Id</label>
+        <input id="loginName"
+               name="loginName"
+               type="text"
+               [(ngModel)]="loginName"
+               placeholder="e.g. priya.sharma"
+               autocomplete="username"
+               required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email"
+               name="email"
+               type="email"
+               [(ngModel)]="email"
+               placeholder="e.g. priya@company.com"
+               autocomplete="email"
+               required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-wrap">
+          <input id="password"
+                 name="password"
+                 [type]="showPassword ? 'text' : 'password'"
+                 [(ngModel)]="password"
+                 placeholder="Create a password"
+                 autocomplete="new-password"
+                 required />
+          <button type="button"
+                  class="toggle-visibility"
+                  (click)="showPassword = !showPassword"
+                  [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="password-wrap">
+          <input id="confirmPassword"
+                 name="confirmPassword"
+                 [type]="showConfirmPassword ? 'text' : 'password'"
+                 [(ngModel)]="confirmPassword"
+                 placeholder="Re-enter your password"
+                 autocomplete="new-password"
+                 required />
+          <button type="button"
+                  class="toggle-visibility"
+                  (click)="showConfirmPassword = !showConfirmPassword"
+                  [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+            {{ showConfirmPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login" [disabled]="loading">
+        <span class="btn-spinner" *ngIf="loading" aria-hidden="true"></span>
+        {{ loading ? 'Creating account...' : 'Create Account' }}
+      </button>
+    </form>
+
+    <p class="login-footnote">
+      Already have an account? <a routerLink="/login" class="link-accent">Sign in</a>
+    </p>
+  </div>
+</div>

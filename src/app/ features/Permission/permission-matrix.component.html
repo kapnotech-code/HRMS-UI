@@ -1,0 +1,169 @@
+<div class="container">
+  <div class="page-header">
+    <h2>Role Page Permissions</h2>
+    <p class="subtitle">Assign page-level access rights to each role</p>
+  </div>
+
+  <!-- Initial loading -->
+  <div class="card" *ngIf="loadingInitial">
+    <div class="loading-cell">Loading roles and pages…</div>
+  </div>
+
+  <ng-container *ngIf="!loadingInitial">
+
+    <!-- Filter card -->
+    <div class="card">
+      <h3 class="card-title">Select Role</h3>
+
+      <p *ngIf="errorMessage" class="error-text">
+        <span class="error-icon">⚠</span> {{ errorMessage }}
+      </p>
+      <p *ngIf="successMessage" class="success-text">
+        <span class="error-icon">✓</span> {{ successMessage }}
+      </p>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Role <span class="required">*</span></label>
+          <select class="page-dropdown" [(ngModel)]="selectedRoleId" (change)="loadPermissions()">
+            <option [ngValue]="0">-- Select Role --</option>
+            <option *ngFor="let role of roles; trackBy: trackByRoleId" [ngValue]="role.roleId">
+              {{ role.roleName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Summary</label>
+          <div class="summary-line">
+            <span class="count-badge">{{ roles.length }} Roles</span>
+            <span class="count-badge count-badge-alt">{{ pages.length }} Pages</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Permissions table (grouped by menuGroup, collapsible) -->
+    <div class="table-section" *ngIf="selectedRoleId !== 0">
+      <div class="table-header">
+        <h3 class="card-title">Permissions — {{ getRoleName(selectedRoleId) }}</h3>
+        <div class="header-actions" *ngIf="!loadingPermissions">
+          <span class="count-badge">{{ permissions.length }} Pages</span>
+          <button class="btn-link" (click)="expandAll()">Expand All</button>
+          <button class="btn-link" (click)="collapseAll()">Collapse All</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Page</th>
+              <th class="text-center">View</th>
+              <th class="text-center">Add</th>
+              <th class="text-center">Edit</th>
+              <th class="text-center">Delete</th>
+              <th class="text-center">Approve</th>
+              <th class="text-center">Print</th>
+              <th class="text-center">Export</th>
+              <th class="text-center">Quick Set</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loadingPermissions">
+              <td class="loading-cell" colspan="9">Loading permissions…</td>
+            </tr>
+
+            <tr *ngIf="!loadingPermissions && permissions.length === 0">
+              <td class="empty-cell" colspan="9">No pages available for this role.</td>
+            </tr>
+
+            <ng-container *ngIf="!loadingPermissions">
+              <ng-container *ngFor="let group of groupNames">
+
+                <!-- Parent Menu (group) row — click se expand/collapse -->
+                <tr class="group-row" (click)="toggleGroup(group)">
+                  <td colspan="8">
+                    <span class="chevron" [class.open]="expandedGroups[group]">▸</span>
+                    {{ group }}
+                    <span class="group-view-count">({{ viewCount(group) }}/{{ groupedPermissions[group].length }} viewable)</span>
+                  </td>
+                  <td class="text-center" (click)="$event.stopPropagation()">
+                    <button class="btn-edit" (click)="toggleGroupView(group, true)">All View</button>
+                    <button class="btn-delete" (click)="toggleGroupView(group, false)">No View</button>
+                  </td>
+                </tr>
+
+                <!-- Submenu rows — sirf tab render hote hain jab group expand ho -->
+                <ng-container *ngIf="expandedGroups[group]">
+                  <tr *ngFor="let p of groupedPermissions[group]; trackBy: trackByPageId" class="submenu-row">
+                    <td class="page-name-cell submenu-name">{{ p.pageName }}</td>
+                    <td class="text-center">
+                      <label class="switch">
+                        <input type="checkbox" [(ngModel)]="p.canView">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-center">
+                      <label class="switch">
+                        <input type="checkbox" [(ngModel)]="p.canAdd">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-center">
+                      <label class="switch">
+                        <input type="checkbox" [(ngModel)]="p.canEdit">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-center">
+                      <label class="switch">
+                        <input type="checkbox" [(ngModel)]="p.canDelete">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-center">
+                      <label class="switch">
+                        <input type="checkbox" [(ngModel)]="p.canApprove">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-center">
+                      <label class="switch">
+                        <input type="checkbox" [(ngModel)]="p.canPrint">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-center">
+                      <label class="switch">
+                        <input type="checkbox" [(ngModel)]="p.canExport">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-center">
+                      <button class="btn-edit" (click)="toggleAll(p, true)">All</button>
+                      <button class="btn-delete" (click)="toggleAll(p, false)">None</button>
+                    </td>
+                  </tr>
+                </ng-container>
+
+              </ng-container>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-actions table-footer-actions" *ngIf="!loadingPermissions && permissions.length > 0">
+        <button class="btn-primary" (click)="savePermissions()" [disabled]="saving">
+          <span class="btn-spinner" *ngIf="saving"></span>
+          {{ saving ? 'Saving…' : 'Save Permissions' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="card" *ngIf="selectedRoleId === 0">
+      <div class="empty-cell">Please select a role above to view and edit its page permissions.</div>
+    </div>
+
+  </ng-container>
+</div>

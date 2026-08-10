@@ -1,0 +1,51 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiResponse } from '../../shared/models/api-response';
+import { environment } from '../../../environments/environment';
+import { EmployeeResponse } from '../../shared/models/employee/ employee-response';
+import { EmployeeRequest } from '../../shared/models/employee/employee-request';
+
+@Injectable({ providedIn: 'root' })
+export class EmployeeService {
+  private apiUrl = `${environment.apiUrl}/Employee`;
+  constructor(private http: HttpClient) { }
+
+  // GET: api/Employee/GetAll
+  getAll(): Observable<ApiResponse<EmployeeResponse[]>> {
+    return this.http.get<ApiResponse<EmployeeResponse[]>>(`${this.apiUrl}/GetAll`);
+  }
+
+  // GET: api/Employee/GetAllForDropdown
+  getAllForDropdown(): Observable<ApiResponse<EmployeeResponse[]>> {
+    return this.http.get<ApiResponse<EmployeeResponse[]>>(`${this.apiUrl}/GetAllForDropdown`);
+  }
+
+  // GET: api/Employee/GetById/5
+  getById(id: number): Observable<ApiResponse<EmployeeResponse>> {
+    return this.http.get<ApiResponse<EmployeeResponse>>(`${this.apiUrl}/GetById/${id}`);
+  }
+
+  // POST: api/Employee/Add
+  // Controller binds [FromBody] EmployeeRequest request directly — send the object as-is.
+  add(request: EmployeeRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/Add`, request);
+  }
+
+  // PUT: api/Employee/{id}
+  update(id: number, request: EmployeeRequest): Observable<ApiResponse<any>> {
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/${id}`, request);
+  }
+
+  // DELETE: api/Employee/Delete/5?hardDelete=false
+  delete(id: number, hardDelete: boolean = false): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/Delete/${id}?hardDelete=${hardDelete}`);
+  }
+  uploadFile(file: File, type: 'profile' | 'resume'): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    // Content-Type set mat karo — browser khud multipart boundary set karta hai
+    return this.http.post<any>(`${this.apiUrl}/UploadFile`, formData);
+  }
+}

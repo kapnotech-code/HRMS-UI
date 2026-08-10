@@ -1,0 +1,162 @@
+<div class="container">
+  <div class="page-header">
+    <h2>Document Types</h2>
+    <p class="subtitle">Define document types allowed under each category</p>
+  </div>
+
+  <p *ngIf="errorMessage && !showModal" class="error-text">
+    <span class="error-icon">⚠</span> {{ errorMessage }}
+  </p>
+  <p *ngIf="successMessage" class="success-text">
+    <span class="error-icon">✓</span> {{ successMessage }}
+  </p>
+
+  <!-- Table card -->
+  <div class="table-section">
+    <div class="table-header">
+      <h3 class="card-title">All Document Types</h3>
+      <div class="header-actions">
+        <span class="count-badge" *ngIf="!loading">{{ items.length }} Types</span>
+        <button class="btn-primary" (click)="openAddModal()" type="button">
+          + Add Document Type
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Category</th>
+            <th>Name</th>
+            <th class="text-center">Mandatory</th>
+            <th class="text-center">Expiry Required</th>
+            <th>Extensions</th>
+            <th class="text-center">Max Size (MB)</th>
+            <th class="text-center">Status</th>
+            <th class="text-center" style="width: 160px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td class="loading-cell" colspan="9">Loading document types…</td>
+          </tr>
+
+          <tr *ngIf="!loading && items.length === 0">
+            <td class="empty-cell" colspan="9">No document types found. Click "Add Document Type" to create one.</td>
+          </tr>
+
+          <tr *ngFor="let item of items">
+            <td>{{ item.documentTypeId }}</td>
+            <td>{{ getCategoryName(item.categoryId) }}</td>
+            <td class="page-name-cell">{{ item.documentTypeName }}</td>
+            <td class="text-center">{{ item.isMandatory ? 'Yes' : 'No' }}</td>
+            <td class="text-center">{{ item.expiryRequired ? 'Yes' : 'No' }}</td>
+            <td>{{ item.allowedExtensions || '—' }}</td>
+            <td class="text-center">{{ item.maxFileSizeMB ?? '—' }}</td>
+            <td class="text-center">
+              <span class="status-badge" [ngClass]="item.isActive ? 'status-active' : 'status-inactive'">
+                {{ item.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button class="btn-edit" (click)="openEditModal(item)" type="button">Edit</button>
+              <button class="btn-delete" (click)="delete(item.documentTypeId)" type="button">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="card-title">{{ isEdit ? 'Edit Document Type' : 'Add Document Type' }}</h3>
+        <button class="modal-close" (click)="closeModal()" type="button" [disabled]="saving">✕</button>
+      </div>
+
+      <p *ngIf="errorMessage" class="error-text">
+        <span class="error-icon">⚠</span> {{ errorMessage }}
+      </p>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Category <span class="required">*</span></label>
+          <select class="page-input"
+                  [(ngModel)]="model.categoryId"
+                  name="categoryId">
+            <option [ngValue]="0" disabled>-- Select Category --</option>
+            <option *ngFor="let cat of categories" [ngValue]="cat.categoryId">
+              {{ cat.categoryName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Document Type Name <span class="required">*</span></label>
+          <input class="page-input"
+                 type="text"
+                 placeholder="e.g. Aadhaar Card"
+                 [(ngModel)]="model.documentTypeName"
+                 name="documentTypeName" />
+        </div>
+
+        <div class="form-group">
+          <label>Allowed Extensions</label>
+          <input class="page-input"
+                 type="text"
+                 placeholder="pdf,docx,jpg"
+                 [(ngModel)]="model.allowedExtensions"
+                 name="allowedExtensions" />
+        </div>
+
+        <div class="form-group">
+          <label>Max File Size (MB)</label>
+          <input class="page-input"
+                 type="number"
+                 placeholder="e.g. 5"
+                 [(ngModel)]="model.maxFileSizeMB"
+                 name="maxFileSizeMB" />
+        </div>
+
+        <div class="form-group">
+          <label>Options</label>
+          <div class="switch-line">
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="model.isMandatory" name="isMandatory" id="isMandatory">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">Mandatory</span>
+          </div>
+          <div class="switch-line">
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="model.expiryRequired" name="expiryRequired" id="expiryRequired">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">Expiry Required</span>
+          </div>
+          <div class="switch-line">
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="model.isActive" name="isActive" id="isActive">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">{{ model.isActive ? 'Active' : 'Inactive' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-clear" (click)="closeModal()" type="button" [disabled]="saving">
+          Cancel
+        </button>
+        <button class="btn-primary" (click)="save()" [disabled]="saving || !model.documentTypeName" type="button">
+          <span class="btn-spinner" *ngIf="saving"></span>
+          {{ saving ? 'Saving…' : (isEdit ? 'Update' : 'Save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

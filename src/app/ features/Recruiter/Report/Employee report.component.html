@@ -1,0 +1,752 @@
+<div class="report-page">
+
+  <!-- ============ FLOATING REPORTS MENU (fixed position — escapes the table's scroll container) ============ -->
+  <div class="dropdown-menu-floating"
+       *ngIf="dropdownOpen && dropdownEmployee as ddEmp"
+       [style.top.px]="dropdownTop"
+       [style.left.px]="dropdownLeft"
+       (click)="$event.stopPropagation()">
+    <a *ngFor="let r of reportMenu"
+       class="dropdown-item"
+       href="javascript:void(0)"
+       (click)="openReport(r.view, ddEmp)">
+      {{ r.label }}
+    </a>
+  </div>
+
+  <!-- ============ LIST VIEW (unchanged) ============ -->
+  <ng-container *ngIf="view === 'list'">
+
+    <div class="page-header">
+      <div>
+        <h2>Employee Report</h2>
+        <p class="subtitle">Search, filter, export, and view detailed employee reports</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="exportToCsv()">⬇ Export CSV</button>
+      </div>
+    </div>
+
+    <p *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+
+    <!-- Filters -->
+    <div class="filter-card">
+      <div class="filter-grid">
+        <input type="text"
+               placeholder="Search by name or code..."
+               [(ngModel)]="searchText"
+               (input)="applyFilters()" />
+
+        <select [(ngModel)]="filterCompanyID" (change)="applyFilters()">
+          <option [ngValue]="null">-- All Companies --</option>
+          <option *ngFor="let c of companies" [ngValue]="c.id">{{ c.name }}</option>
+        </select>
+
+        <select [(ngModel)]="filterDepartment" (change)="applyFilters()">
+          <option [ngValue]="''">-- All Departments --</option>
+          <option *ngFor="let d of departments" [ngValue]="d.name">{{ d.name }}</option>
+        </select>
+
+        <select [(ngModel)]="filterDesignation" (change)="applyFilters()">
+          <option [ngValue]="''">-- All Designations --</option>
+          <option *ngFor="let d of designations" [ngValue]="d.name">{{ d.name }}</option>
+        </select>
+
+        <select [(ngModel)]="filterStatus" (change)="applyFilters()">
+          <option [ngValue]="''">-- All Status --</option>
+          <option *ngFor="let s of statusOptions" [ngValue]="s">{{ s }}</option>
+        </select>
+
+        <button class="btn btn-link" (click)="resetFilters()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Summary Table -->
+    <div class="table-card">
+      <div class="loading" *ngIf="loading">Loading employees...</div>
+
+      <div class="table-wrapper" *ngIf="!loading">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Employee Code</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Alternate Phone</th>
+              <th>Gender</th>
+              <th>Date of Birth</th>
+              <th>Marital Status</th>
+              <th>Blood Group</th>
+              <th>Nationality</th>
+              <th>Father's Name</th>
+              <th>Mother's Name</th>
+              <th>Highest Qualification</th>
+              <th>Aadhar Number</th>
+              <th>PAN Number</th>
+              <th>Passport Number</th>
+              <th>Current Address</th>
+              <th>Permanent Address</th>
+              <th>City</th>
+              <th>State</th>
+              <th>Country</th>
+              <th>Pin Code</th>
+              <th>Emergency Contact Name</th>
+              <th>Emergency Contact Phone</th>
+              <th>Emergency Contact Relation</th>
+              <th>Company</th>
+              <th>Department</th>
+              <th>Designation</th>
+              <th>Shift</th>
+              <th>Employment Type</th>
+              <th>Work Location</th>
+              <th>Manager</th>
+              <th>Reporting Manager</th>
+              <th>Salary</th>
+              <th>Joining Date</th>
+              <th>Probation End Date</th>
+              <th>Confirmation Date</th>
+              <th>Exit Date</th>
+              <th>Exit Reason</th>
+              <th>Status</th>
+            
+              <th class="col-profile">Profile Picture</th>
+              <th class="col-resume">Resume</th>
+              <th>Bank Name</th>
+              <th>Bank Account Number</th>
+              <th>IFSC Code</th>
+              <th>UAN</th>
+              <th>PF Number</th>
+              <th>ESIC Number</th>
+
+              <th class="col-actions">Report</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let emp of filteredEmployees">
+              <td class="muted">{{ emp.employeeCode || '-' }}</td>
+              <td>{{ emp.firstName || '-' }}</td>
+              <td>{{ emp.lastName || '-' }}</td>
+              <td>{{ emp.email || '-' }}</td>
+              <td>{{ emp.phone || '-' }}</td>
+              <td>{{ emp.alternatePhone || '-' }}</td>
+              <td>{{ emp.gender || '-' }}</td>
+              <td>{{ (emp.dateOfBirth | slice:0:10) || '-' }}</td>
+              <td>{{ emp.maritalStatus || '-' }}</td>
+              <td>{{ emp.bloodGroup || '-' }}</td>
+              <td>{{ emp.nationality || '-' }}</td>
+              <td>{{ emp.fatherName || '-' }}</td>
+              <td>{{ emp.motherName || '-' }}</td>
+              <td>{{ emp.highestQualification || '-' }}</td>
+              <td>{{ emp.aadharNumber || '-' }}</td>
+              <td>{{ emp.panNumber || '-' }}</td>
+              <td>{{ emp.passportNumber || '-' }}</td>
+              <td>{{ emp.currentAddress || '-' }}</td>
+              <td>{{ emp.permanentAddress || '-' }}</td>
+              <td>{{ emp.city || '-' }}</td>
+              <td>{{ emp.state || '-' }}</td>
+              <td>{{ emp.country || '-' }}</td>
+              <td>{{ emp.pinCode || '-' }}</td>
+              <td>{{ emp.emergencyContactName || '-' }}</td>
+              <td>{{ emp.emergencyContactPhone || '-' }}</td>
+              <td>{{ emp.emergencyContactRelation || '-' }}</td>
+              <td>{{ getCompanyName(emp.companyID) }}</td>
+              <td>{{ emp.department || '-' }}</td>
+              <td>{{ emp.designation || '-' }}</td>
+              <td>{{ emp.shiftType || '-' }}</td>
+              <td>{{ emp.employmentType || '-' }}</td>
+              <td>{{ emp.workLocation || '-' }}</td>
+              <td>{{ getManagerName(emp.managerID) }}</td>
+              <td>{{ getManagerName(emp.reportingManagerID) }}</td>
+              <td class="amount">{{ emp.salary ? ('₹' + (emp.salary | number)) : '-' }}</td>
+              <td>{{ (emp.dateOfJoining | slice:0:10) || '-' }}</td>
+              <td>{{ (emp.probationEndDate | slice:0:10) || '-' }}</td>
+              <td>{{ (emp.confirmationDate | slice:0:10) || '-' }}</td>
+              <td>{{ (emp.exitDate | slice:0:10) || '-' }}</td>
+              <td>{{ emp.exitReason || '-' }}</td>
+
+              <td>
+                <span class="badge" [ngClass]="statusClass(emp.employeeStatus)">
+                  {{ emp.employeeStatus || 'Unknown' }}
+                </span>
+              </td>
+            
+
+              <!-- Profile Picture -->
+              <td class="col-profile">
+                <ng-container *ngIf="emp.profilePicturePath; else noProfilePic">
+                  <ng-container [ngSwitch]="getProfileImageState(emp)?.status">
+                    <img *ngSwitchCase="'ready'"
+                         [src]="getProfileImageState(emp)?.url"
+                         alt="Profile photo"
+                         class="table-profile-img">
+                    <span *ngSwitchCase="'loading'" class="table-profile-img table-profile-img--loading"></span>
+                    <span *ngSwitchCase="'error'"
+                          class="img-error-dot"
+                          [title]="getProfileImageState(emp)?.errorMessage">⚠</span>
+                  </ng-container>
+                </ng-container>
+                <ng-template #noProfilePic><span class="muted">-</span></ng-template>
+              </td>
+
+              <!-- Resume -->
+              <td class="col-resume">
+                <ng-container *ngIf="emp.resumePath; else noResume">
+                  <div class="resume-actions">
+                    <button type="button"
+                            class="icon-btn icon-btn-view"
+                            title="View Resume"
+                            [disabled]="resumeBusyId === emp.employeeID"
+                            (click)="viewResume(emp, $event)">
+                      <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                      View
+                    </button>
+                    <button type="button"
+                            class="icon-btn icon-btn-download"
+                            title="Download Resume"
+                            [disabled]="resumeBusyId === emp.employeeID"
+                            (click)="downloadResume(emp, $event)">
+                      <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v12" />
+                        <path d="M7 10l5 5 5-5" />
+                        <path d="M5 21h14" />
+                      </svg>
+                      Download
+                    </button>
+                  </div>
+                  <div class="resume-error" *ngIf="getResumeError(emp) as errMsg" [title]="errMsg">
+                    ⚠ {{ errMsg }}
+                  </div>
+                </ng-container>
+                <ng-template #noResume>
+                  <span class="muted">Not Uploaded</span>
+                </ng-template>
+              </td>
+
+              <td>{{ emp.bankName || '-' }}</td>
+              <td>{{ emp.bankAccountNumber || '-' }}</td>
+              <td>{{ emp.ifscCode || '-' }}</td>
+              <td>{{ emp.uan || '-' }}</td>
+              <td>{{ emp.pfNumber || '-' }}</td>
+              <td>{{ emp.esicNumber || '-' }}</td>
+
+              <td class="actions-cell">
+                <div class="actions-group">
+                  <button class="btn btn-small btn-primary dropdown-toggle"
+                          type="button"
+                          [class.active]="dropdownOpen && dropdownEmployee?.employeeID === emp.employeeID"
+                          (click)="toggleDropdown(emp, $event)">
+                    Reports
+                  </button>
+                  <button class="btn btn-small btn-danger"
+                          type="button"
+                          [disabled]="deletingEmployeeId === emp.employeeID"
+                          (click)="deleteEmployee(emp, $event)">
+                    {{ deletingEmployeeId === emp.employeeID ? 'Deleting...' : '🗑 Delete' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="!filteredEmployees.length">
+              <td colspan="51" class="empty-row">Koi matching employee record nahi mila.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ============ TOOLBAR shown for every report view below ============ -->
+  <ng-container *ngIf="view !== 'list' && selectedEmployee as emp">
+
+    <div class="report-toolbar no-print">
+      <button class="btn btn-link" (click)="backToList()">← Back to Report List</button>
+      <div class="toolbar-actions">
+        <button class="btn btn-secondary" (click)="print()">🖨 Print</button>
+        <button class="btn btn-primary" (click)="downloadPdf()" [disabled]="downloadingPdf">
+          {{ downloadingPdf ? 'Preparing PDF...' : '⬇ Download PDF' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ 1. EMPLOYEE MASTER REPORT ============ -->
+    <div id="printArea" class="print-card" *ngIf="view === 'employee-master'">
+      <div class="print-header">
+        <ng-container *ngIf="emp.profilePicturePath; else masterNoPhoto">
+          <ng-container [ngSwitch]="getProfileImageState(emp)?.status">
+            <img *ngSwitchCase="'ready'" [src]="getProfileImageState(emp)?.url" class="emp-photo" alt="Photo" />
+            <div *ngSwitchCase="'loading'" class="emp-photo emp-photo-placeholder">Loading...</div>
+            <div *ngSwitchCase="'error'" class="emp-photo emp-photo-placeholder emp-photo-error" [title]="getProfileImageState(emp)?.errorMessage">
+              ⚠ Image failed to load
+            </div>
+          </ng-container>
+        </ng-container>
+        <ng-template #masterNoPhoto>
+          <div class="emp-photo emp-photo-placeholder">No Photo</div>
+        </ng-template>
+        <div class="header-text">
+          <h2>{{ fullName(emp) }}</h2>
+          <p class="muted">{{ emp.designation || '-' }} • {{ emp.department || '-' }}</p>
+          <p class="muted">Employee Code: {{ emp.employeeCode }}</p>
+        </div>
+      </div>
+
+      <div class="print-section">
+        <h3>Employment Details</h3>
+        <div class="print-grid">
+          <div><span class="label">Company</span><span class="value">{{ getCompanyName(emp.companyID) }}</span></div>
+          <div><span class="label">Department</span><span class="value">{{ emp.department || '-' }}</span></div>
+          <div><span class="label">Designation</span><span class="value">{{ emp.designation || '-' }}</span></div>
+          <div><span class="label">Shift</span><span class="value">{{ emp.shiftType || '-' }}</span></div>
+          <div><span class="label">Employment Type</span><span class="value">{{ emp.employmentType || '-' }}</span></div>
+          <div><span class="label">Work Location</span><span class="value">{{ emp.workLocation || '-' }}</span></div>
+          <div><span class="label">Manager</span><span class="value">{{ getManagerName(emp.managerID) }}</span></div>
+          <div><span class="label">Reporting Manager</span><span class="value">{{ getManagerName(emp.reportingManagerID) }}</span></div>
+          <div><span class="label">Salary</span><span class="value">{{ emp.salary ? ('₹' + (emp.salary | number)) : '-' }}</span></div>
+          <div><span class="label">Joining Date</span><span class="value">{{ (emp.dateOfJoining | slice:0:10) || '-' }}</span></div>
+          <div><span class="label">Probation End Date</span><span class="value">{{ (emp.probationEndDate | slice:0:10) || '-' }}</span></div>
+          <div><span class="label">Confirmation Date</span><span class="value">{{ (emp.confirmationDate | slice:0:10) || '-' }}</span></div>
+          <div><span class="label">Exit Date</span><span class="value">{{ (emp.exitDate | slice:0:10) || '-' }}</span></div>
+          <div class="wide"><span class="label">Exit Reason</span><span class="value">{{ emp.exitReason || '-' }}</span></div>
+          <div><span class="label">Status</span><span class="value">{{ emp.employeeStatus || '-' }}</span></div>
+          <div><span class="label">Active</span><span class="value">{{ emp.isActive ? 'Yes' : 'No' }}</span></div>
+        </div>
+      </div>
+
+      <div class="print-section">
+        <h3>Contact Information</h3>
+        <div class="print-grid">
+          <div><span class="label">Email</span><span class="value">{{ emp.email || '-' }}</span></div>
+          <div><span class="label">Phone</span><span class="value">{{ emp.phone || '-' }}</span></div>
+          <div><span class="label">Alternate Phone</span><span class="value">{{ emp.alternatePhone || '-' }}</span></div>
+          <div><span class="label">Gender</span><span class="value">{{ emp.gender || '-' }}</span></div>
+          <div><span class="label">Date of Birth</span><span class="value">{{ (emp.dateOfBirth | slice:0:10) || '-' }}</span></div>
+          <div><span class="label">Marital Status</span><span class="value">{{ emp.maritalStatus || '-' }}</span></div>
+          <div><span class="label">Blood Group</span><span class="value">{{ emp.bloodGroup || '-' }}</span></div>
+          <div><span class="label">Nationality</span><span class="value">{{ emp.nationality || '-' }}</span></div>
+          <div class="wide"><span class="label">Current Address</span><span class="value">{{ emp.currentAddress || '-' }}</span></div>
+          <div class="wide"><span class="label">Permanent Address</span><span class="value">{{ emp.permanentAddress || '-' }}</span></div>
+          <div><span class="label">City</span><span class="value">{{ emp.city || '-' }}</span></div>
+          <div><span class="label">State</span><span class="value">{{ emp.state || '-' }}</span></div>
+          <div><span class="label">Country</span><span class="value">{{ emp.country || '-' }}</span></div>
+          <div><span class="label">Pin Code</span><span class="value">{{ emp.pinCode || '-' }}</span></div>
+        </div>
+      </div>
+
+      <div class="print-section">
+        <h3>Family &amp; Personal</h3>
+        <div class="print-grid">
+          <div><span class="label">Father's Name</span><span class="value">{{ emp.fatherName || '-' }}</span></div>
+          <div><span class="label">Mother's Name</span><span class="value">{{ emp.motherName || '-' }}</span></div>
+          <div><span class="label">Highest Qualification</span><span class="value">{{ emp.highestQualification || '-' }}</span></div>
+        </div>
+      </div>
+
+      <div class="print-section">
+        <h3>Emergency Contact</h3>
+        <div class="print-grid">
+          <div><span class="label">Contact Name</span><span class="value">{{ emp.emergencyContactName || '-' }}</span></div>
+          <div><span class="label">Contact Phone</span><span class="value">{{ emp.emergencyContactPhone || '-' }}</span></div>
+          <div><span class="label">Relation</span><span class="value">{{ emp.emergencyContactRelation || '-' }}</span></div>
+        </div>
+      </div>
+
+      <div class="print-section">
+        <h3>Identity Documents</h3>
+        <div class="print-grid">
+          <div><span class="label">PAN</span><span class="value">{{ emp.panNumber || '-' }}</span></div>
+          <div><span class="label">Aadhaar</span><span class="value">{{ emp.aadharNumber || '-' }}</span></div>
+          <div><span class="label">Passport Number</span><span class="value">{{ emp.passportNumber || '-' }}</span></div>
+        </div>
+      </div>
+
+      <div class="print-section">
+        <h3>Bank &amp; Statutory Details</h3>
+        <div class="print-grid">
+          <div><span class="label">Bank Name</span><span class="value">{{ emp.bankName || '-' }}</span></div>
+          <div><span class="label">Account Number</span><span class="value">{{ emp.bankAccountNumber || '-' }}</span></div>
+          <div><span class="label">IFSC Code</span><span class="value">{{ emp.ifscCode || '-' }}</span></div>
+          <div><span class="label">PF Number</span><span class="value">{{ emp.pfNumber || '-' }}</span></div>
+          <div><span class="label">ESIC Number</span><span class="value">{{ emp.esicNumber || '-' }}</span></div>
+          <div><span class="label">UAN</span><span class="value">{{ emp.uan || '-' }}</span></div>
+        </div>
+      </div>
+
+      <div class="print-section no-print" *ngIf="emp.profilePicturePath || emp.resumePath">
+        <h3>Attachments</h3>
+        <div class="print-grid">
+          <div>
+            <span class="label">Profile Picture</span>
+            <span class="value"><a *ngIf="emp.profilePicturePath" [href]="resolveFileUrl(emp.profilePicturePath)" target="_blank" rel="noopener noreferrer" class="table-link">View File</a><span *ngIf="!emp.profilePicturePath">-</span></span>
+          </div>
+          <div>
+            <span class="label">Resume</span>
+            <span class="value"><a *ngIf="emp.resumePath" [href]="resolveFileUrl(emp.resumePath)" target="_blank" rel="noopener noreferrer" class="table-link">View File</a><span *ngIf="!emp.resumePath">-</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="print-footer"><p>This is a system-generated report.</p></div>
+    </div>
+
+    <!-- ============ 2. APPOINTMENT LETTER ============ -->
+    <div id="printArea" class="print-card letter" *ngIf="view === 'appointment-letter'">
+      <div class="letterhead">
+        <img *ngIf="companyLogoUrl" [src]="companyLogoUrl" class="company-logo" alt="Company Logo" />
+        <div class="letterhead-text">
+          <h2>{{ getCompanyName(emp.companyID) }}</h2>
+          <p class="letterhead-tagline">Human Resources Department</p>
+        </div>
+      </div>
+
+      <div class="letter-meta-row">
+        <span>Ref No: APT/{{ emp.employeeCode }}/{{ today | date:'yyyy' }}</span>
+        <span>Date: {{ today | date:'dd-MM-yyyy' }}</span>
+      </div>
+
+      <h3 class="letter-title">Letter of Appointment</h3>
+
+      <p>Dear <strong>{{ fullName(emp) }}</strong>,</p>
+      <p>
+        With reference to your application and the subsequent interview and discussions you had with us,
+        we are pleased to offer you the position of <strong>{{ emp.designation || '[Designation]' }}</strong>
+        in the <strong>{{ emp.department || '[Department]' }}</strong> department at
+        <strong>{{ getCompanyName(emp.companyID) }}</strong>. Your employment with us will commence on
+        <strong>{{ (emp.dateOfJoining | date:'dd-MM-yyyy') || '[Joining Date]' }}</strong>, subject to the
+        terms and conditions of employment set out in this letter and in the company's policies as amended
+        from time to time.
+      </p>
+
+      <h4>1. Position &amp; Posting Details</h4>
+      <div class="letter-details">
+        <div><span class="label">Employee Name</span><span class="value">{{ fullName(emp) }}</span></div>
+        <div><span class="label">Employee Code</span><span class="value">{{ emp.employeeCode || '-' }}</span></div>
+        <div><span class="label">Designation</span><span class="value">{{ emp.designation || '-' }}</span></div>
+        <div><span class="label">Department</span><span class="value">{{ emp.department || '-' }}</span></div>
+        <div><span class="label">Employment Type</span><span class="value">{{ emp.employmentType || '-' }}</span></div>
+        <div><span class="label">Work Location</span><span class="value">{{ emp.workLocation || '-' }}</span></div>
+        <div><span class="label">Reporting Manager</span><span class="value">{{ getManagerName(emp.reportingManagerID) }}</span></div>
+        <div><span class="label">Shift</span><span class="value">{{ emp.shiftType || '-' }}</span></div>
+        <div><span class="label">Joining Date</span><span class="value">{{ (emp.dateOfJoining | slice:0:10) || '-' }}</span></div>
+      </div>
+
+      <h4>2. Compensation</h4>
+      <p>
+        Your total fixed monthly compensation ("Cost to Company") will be as detailed below, payable in
+        accordance with the company's standard payroll cycle and subject to applicable statutory deductions.
+      </p>
+      <table class="report-table letter-salary-table">
+        <thead>
+          <tr><th>Component</th><th class="amount">Monthly Amount</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Basic Salary</td><td class="amount">₹ {{ basic | number }}</td></tr>
+          <tr><td>House Rent Allowance (HRA)</td><td class="amount">₹ {{ hra | number }}</td></tr>
+          <tr><td>Other Allowances</td><td class="amount">₹ {{ allowances | number }}</td></tr>
+          <tr><td>Performance Bonus</td><td class="amount">₹ {{ bonus | number }}</td></tr>
+          <tr class="total-row"><td>Gross Monthly Salary</td><td class="amount">₹ {{ grossSalary | number }}</td></tr>
+        </tbody>
+      </table>
+
+      <h4>3. Probation &amp; Confirmation</h4>
+      <p>
+        You will be on probation for an initial period of six (6) months from your date of joining. Your
+        performance will be reviewed during this period, and your services will be confirmed in writing upon
+        satisfactory completion of probation. The probation period may be extended at the company's discretion
+        if deemed necessary.
+      </p>
+
+      <h4>4. Terms &amp; Conditions of Employment</h4>
+      <ol class="terms-list">
+        <li>You are required to abide by all company policies, rules, regulations, and the code of conduct in force and as amended from time to time.</li>
+        <li>You will devote your full time, attention, and best efforts exclusively to the business and interests of the company during working hours.</li>
+        <li>During your employment, you shall not engage, directly or indirectly, in any other employment, business, or occupation without prior written consent from the company.</li>
+        <li>All information, data, documents, and trade secrets relating to the company's business, clients, and operations are strictly confidential and must not be disclosed to any third party, during or after your employment.</li>
+        <li>You shall be entitled to leave, holidays, and other benefits as per the company's HR policy applicable to your grade and category of employment.</li>
+        <li>Your employment may be terminated by either party by giving written notice of the period specified in the company's HR policy, or payment of salary in lieu of such notice.</li>
+        <li>The company reserves the right to transfer, promote, or reassign you to any department, location, or role based on business requirements.</li>
+        <li>This offer is contingent upon the successful verification of the documents, credentials, and references submitted by you.</li>
+        <li>Any advance, loan, or asset issued to you by the company during your tenure must be settled/returned in full at the time of separation.</li>
+      </ol>
+
+      <p>
+        Please sign and return the duplicate copy of this letter as a token of your acceptance of the above
+        terms and conditions. We welcome you to the {{ getCompanyName(emp.companyID) }} family and look forward to a long
+        and mutually rewarding association with you.
+      </p>
+
+      <div class="dual-signature-row">
+        <div class="signature-block">
+          <p>For {{ getCompanyName(emp.companyID) }}</p>
+          <div class="signature-space"></div>
+          <p><strong>HR Manager</strong></p>
+          <p class="muted">Authorized Signatory</p>
+        </div>
+        <div class="signature-block">
+          <p>Employee Acknowledgement</p>
+          <div class="signature-space"></div>
+          <p><strong>{{ fullName(emp) }}</strong></p>
+          <p class="muted">Date: ___________________</p>
+        </div>
+      </div>
+
+      <div class="print-footer"><p>This is a system-generated letter and does not require a physical signature for internal record purposes.</p></div>
+    </div>
+
+    <!-- ============ 3. IDENTITY CARD (FIXED) ============ -->
+    <div id="printArea" class="id-card-wrapper" *ngIf="view === 'identity-card'">
+      <div class="id-card">
+        <div class="id-card-header">
+          <img *ngIf="companyLogoUrl" [src]="companyLogoUrl" class="id-card-logo" alt="Logo" />
+          <span class="id-card-company">{{ getCompanyName(emp.companyID) }}</span>
+        </div>
+        <div class="id-card-body">
+          <ng-container *ngIf="emp.profilePicturePath; else idNoPhoto">
+            <ng-container [ngSwitch]="getProfileImageState(emp)?.status">
+              <img *ngSwitchCase="'ready'" [src]="getProfileImageState(emp)?.url" class="id-photo" alt="Photo" />
+              <div *ngSwitchCase="'loading'" class="id-photo id-photo-placeholder">Loading...</div>
+              <div *ngSwitchCase="'error'" class="id-photo id-photo-placeholder emp-photo-error" [title]="getProfileImageState(emp)?.errorMessage">
+                ⚠
+              </div>
+            </ng-container>
+          </ng-container>
+          <ng-template #idNoPhoto>
+            <div class="id-photo id-photo-placeholder">No Photo</div>
+          </ng-template>
+
+          <h3>{{ fullName(emp) }}</h3>
+          <p class="id-designation">{{ emp.designation || '-' }}</p>
+          <p class="id-dept">{{ emp.department || '-' }}</p>
+
+          <div class="id-front-row">
+            <span class="label">ID No</span>
+            <span class="value">{{ emp.employeeCode }}</span>
+          </div>
+
+          <div class="id-front-row-split">
+            <div>
+              <span class="label">Blood Group</span>
+              <span class="value">{{ emp.bloodGroup || '-' }}</span>
+            </div>
+            <div>
+              <span class="label">Valid Upto</span>
+              <span class="value">12/{{ today | date:'yy' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="id-card id-card-back">
+        <div class="id-card-body">
+          <div class="id-back-row">
+            <span class="label">Contact</span>
+            <span class="value">{{ emp.phone || '-' }}</span>
+          </div>
+          <div class="id-back-row">
+            <span class="label">Emergency Contact</span>
+            <span class="value">{{ emp.emergencyContactName || '-' }} ({{ emp.emergencyContactPhone || '-' }})</span>
+          </div>
+          <div class="id-back-row">
+            <span class="label">City</span>
+            <span class="value">{{ emp.city || '-' }}, {{ emp.state || '-' }}</span>
+          </div>
+
+          <p class="id-card-disclaimer">
+            This card is the property of {{ getCompanyName(emp.companyID) }}.
+            If found, please return to the HR / Admin department.
+          </p>
+
+          <img [src]="qrCodeUrl" class="id-qr" alt="QR Code" *ngIf="qrCodeUrl" />
+
+          <div class="id-signature">
+            <div class="signature-space"></div>
+            <p class="muted">Authorized Signatory</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 4. SALARY SLIP ============ -->
+    <!-- ============ 4. SALARY SLIP (IMPROVED) ============ -->
+    <div id="printArea" class="print-card payslip" *ngIf="view === 'salary-slip'">
+
+      <div class="payslip-header">
+        <div class="payslip-header-left">
+          <img *ngIf="companyLogoUrl" [src]="companyLogoUrl" class="payslip-logo" alt="Logo" />
+          <div>
+            <h2>{{ getCompanyName(emp.companyID) }}</h2>
+            <p class="muted">Payslip for {{ today | date:'MMMM yyyy' }}</p>
+          </div>
+        </div>
+        <ng-container *ngIf="emp.profilePicturePath; else payslipNoPhoto">
+          <ng-container [ngSwitch]="getProfileImageState(emp)?.status">
+            <img *ngSwitchCase="'ready'" [src]="getProfileImageState(emp)?.url" class="payslip-photo" alt="Photo" />
+            <div *ngSwitchCase="'loading'" class="payslip-photo payslip-photo-placeholder">...</div>
+            <div *ngSwitchCase="'error'" class="payslip-photo payslip-photo-placeholder">⚠</div>
+          </ng-container>
+        </ng-container>
+        <ng-template #payslipNoPhoto>
+          <div class="payslip-photo payslip-photo-placeholder">No Photo</div>
+        </ng-template>
+      </div>
+
+      <div class="payslip-emp-strip">
+        <div><span class="label">Employee Name</span><span class="value">{{ fullName(emp) }}</span></div>
+        <div><span class="label">Employee Code</span><span class="value">{{ emp.employeeCode }}</span></div>
+        <div><span class="label">Designation</span><span class="value">{{ emp.designation || '-' }}</span></div>
+        <div><span class="label">Department</span><span class="value">{{ emp.department || '-' }}</span></div>
+        <div><span class="label">Date of Joining</span><span class="value">{{ (emp.dateOfJoining | slice:0:10) || '-' }}</span></div>
+        <div><span class="label">Pay Period</span><span class="value">{{ today | date:'MMMM yyyy' }}</span></div>
+      </div>
+
+      <div class="payslip-columns">
+        <div class="payslip-col">
+          <h4>Earnings</h4>
+          <table class="report-table payslip-table">
+            <tbody>
+              <tr><td>Basic Salary</td><td class="amount">₹ {{ basic | number }}</td></tr>
+              <tr><td>House Rent Allowance</td><td class="amount">₹ {{ hra | number }}</td></tr>
+              <tr><td>Other Allowances</td><td class="amount">₹ {{ allowances | number }}</td></tr>
+              <tr><td>Performance Bonus</td><td class="amount">₹ {{ bonus | number }}</td></tr>
+            </tbody>
+            <tfoot>
+              <tr class="total-row"><td>Gross Earnings</td><td class="amount">₹ {{ grossSalary | number }}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="payslip-col">
+          <h4>Deductions</h4>
+          <table class="report-table payslip-table">
+            <tbody>
+              <tr><td>Provident Fund (PF)</td><td class="amount">₹ {{ pf | number }}</td></tr>
+              <tr><td>ESI</td><td class="amount">₹ {{ esi | number }}</td></tr>
+              <tr><td>Income Tax (TDS)</td><td class="amount">₹ {{ tax | number }}</td></tr>
+              <!-- keeps deductions table same row-height as earnings table -->
+              <tr class="spacer-row"><td>&nbsp;</td><td></td></tr>
+            </tbody>
+            <tfoot>
+              <tr class="total-row"><td>Total Deductions</td><td class="amount">₹ {{ totalDeductions | number }}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="net-salary-box">
+        <div>
+          <span class="label">Net Salary Payable</span>
+          <span class="net-amount">₹ {{ netSalary | number }}</span>
+        </div>
+        <div class="net-salary-words">
+          {{ emp.employeeCode }} • Paid via bank transfer
+        </div>
+      </div>
+
+      <div class="print-section payslip-bank-section" *ngIf="emp.bankName || emp.bankAccountNumber">
+        <h3>Payment Details</h3>
+        <div class="print-grid">
+          <div><span class="label">Bank Name</span><span class="value">{{ emp.bankName || '-' }}</span></div>
+          <div><span class="label">Account Number</span><span class="value">{{ emp.bankAccountNumber || '-' }}</span></div>
+          <div><span class="label">IFSC Code</span><span class="value">{{ emp.ifscCode || '-' }}</span></div>
+        </div>
+      </div>
+
+      <p class="disclaimer no-print">
+        ⚠️ Note: this breakdown is a placeholder calculation (Basic 50% / HRA 20% / Allowances 20% / Bonus 10% of monthly salary).
+        Wire this up to a real Payroll API for accurate figures.
+      </p>
+
+      <div class="print-footer">
+        <p>This is a system-generated payslip and does not require a signature.</p>
+      </div>
+    </div>
+
+ 
+
+    <!-- ============ 6. LEAVE REPORT ============ -->
+    <div id="printArea" class="print-card" *ngIf="view === 'leave-report'">
+      <div class="print-header">
+        <div class="header-text">
+          <h2>Leave Report</h2>
+          <p class="muted">{{ fullName(emp) }} • {{ emp.employeeCode }}</p>
+        </div>
+      </div>
+
+      <div class="loading" *ngIf="leaveLoading">Loading leave records...</div>
+
+      <table class="report-table" *ngIf="!leaveLoading">
+        <thead>
+          <tr>
+            <th>Leave Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Days</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Approved By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let l of leaveRecords">
+            <td>{{ l.leaveTypeName || l.leaveTypeID || '-' }}</td>
+            <td>{{ (l.startDate | slice:0:10) || '-' }}</td>
+            <td>{{ (l.endDate | slice:0:10) || '-' }}</td>
+            <td>{{ daysBetween(l.startDate, l.endDate) }}</td>
+            <td>{{ l.reason || '-' }}</td>
+            <td>{{ l.status || '-' }}</td>
+            <td>{{ l.approverName || l.approvedBy || '-' }}</td>
+          </tr>
+          <tr *ngIf="!leaveRecords.length">
+            <td colspan="7" class="empty-row">No leave records found.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="print-footer"><p>This is a system-generated report.</p></div>
+    </div>
+
+    <!-- ============ 7. EXPERIENCE LETTER ============ -->
+    <div id="printArea" class="print-card letter" *ngIf="view === 'experience-letter'">
+      <div class="letterhead">
+        <img *ngIf="companyLogoUrl" [src]="companyLogoUrl" class="company-logo" alt="Company Logo" />
+        <h2>{{ getCompanyName(emp.companyID) }}</h2>
+      </div>
+
+      <p class="letter-date">Date: {{ today | date:'dd-MM-yyyy' }}</p>
+      <h3 class="letter-title">Experience Letter</h3>
+
+      <p>To Whomsoever It May Concern,</p>
+      <p>
+        This is to certify that <strong>{{ fullName(emp) }}</strong> (Employee Code:
+        {{ emp.employeeCode }}) was employed with {{ getCompanyName(emp.companyID) }}
+        as <strong>{{ emp.designation || '[Designation]' }}</strong> in the
+        <strong>{{ emp.department || '[Department]' }}</strong> department,
+        from <strong>{{ (emp.dateOfJoining | date:'dd-MM-yyyy') || '[Joining Date]' }}</strong>
+        {{ emp.exitDate ? 'to ' + (emp.exitDate | date:'dd-MM-yyyy') : 'to present' }}.
+      </p>
+      <p>
+        During this period of <strong>{{ experienceDuration() }}</strong>, we found
+        {{ emp.gender === 'F' ? 'her' : 'him' }} to be sincere, hardworking, and
+        professional in {{ emp.gender === 'F' ? 'her' : 'his' }} conduct. We wish
+        {{ emp.gender === 'F' ? 'her' : 'him' }} all the best for future endeavors.
+      </p>
+
+      <div class="signature-block">
+        <p>For {{ getCompanyName(emp.companyID) }}</p>
+        <div class="signature-space"></div>
+        <p><strong>HR Manager</strong></p>
+      </div>
+
+      <div class="print-footer"><p>This is a system-generated letter.</p></div>
+    </div>
+
+
+
+  </ng-container>
+
+</div>

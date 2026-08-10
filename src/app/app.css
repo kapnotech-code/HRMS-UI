@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  min-height: calc(100vh - 60px); /* 60px = header ki approx height, apne header ke hisaab se adjust karo */
+}
+
+.app-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.full-width {
+  width: 100%;
+  margin: 0;
+}
+

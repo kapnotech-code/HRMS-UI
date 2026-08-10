@@ -1,0 +1,388 @@
+<div class="container">
+
+  <div class="page-header">
+    <div>
+      <h2>Documents Management</h2>
+      <p class="subtitle">Upload, track, and manage all organization documents</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openAddModal()">+ Add Document</button>
+  </div>
+  <div class="alert error-alert" *ngIf="errorMessage">
+    <span class="icon">⚠️</span>
+    <div>
+      <strong>Delete Failed</strong>
+      <p>{{ errorMessage }}</p>
+    </div>
+  </div>
+
+  <div class="alert success-alert" *ngIf="successMessage">
+    <span class="icon">✅</span>
+    <div>
+      <strong>Success</strong>
+      <p>{{ successMessage }}</p>
+    </div>
+  </div>
+
+  <p class="success-text" *ngIf="successMessage">
+    <span class="error-icon">✓</span>{{ successMessage }}
+  </p>
+  <p class="error-text" *ngIf="errorMessage && !showModal">
+    <span class="error-icon">⚠</span>{{ errorMessage }}
+  </p>
+
+  <div class="table-section">
+    <div class="table-header">
+      <h3 class="card-title">All Documents</h3>
+      <div class="header-actions">
+        <span class="count-badge">{{ documents.length }} total</span>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Module</th>
+            <th>Reference </th>
+            <th>Original File Name</th>
+            <th>Stored File Name</th>
+            <th>File Extension</th>
+            <th class="text-center">File Size (KB)</th>
+            <th class="text-center">Version No</th>
+            <th class="text-center">Uploaded By</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Confidential</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="15" class="loading-cell">Loading documents…</td>
+          </tr>
+          <tr *ngIf="!loading && documents.length === 0">
+            <td colspan="15" class="empty-cell">No documents found. Click "Add Document" to create one.</td>
+          </tr>
+          <tr *ngFor="let doc of documents">
+            <td>{{ doc.documentId }}</td>
+            <td class="doc-title-cell">{{ doc.documentTitle }}</td>
+            <td>{{ doc.description || '-' }}</td>
+            <td>{{ getDocumentTypeName(doc.documentTypeId) }}</td>
+            <td>{{ doc.moduleName }}</td>
+            <td>{{ getReferenceDisplay(doc) }}</td>
+            <td>
+              <div class="file-cell" *ngIf="doc.filePath">
+                <img *ngIf="isImageFile(doc.fileExtension)"
+                     [src]="getFileUrl(doc.filePath)"
+                     [alt]="doc.originalFileName"
+                     class="file-thumb" />
+                <!--<a class="file-link" [href]="getFileUrl(doc.filePath)" target="_blank">
+                  <span *ngIf="!isImageFile(doc.fileExtension)">📄</span>
+                  {{ doc.originalFileName || '-' }}
+                </a>-->
+              </div>
+              <span *ngIf="!doc.filePath">{{ doc.originalFileName || '-' }}</span>
+            </td>
+            <td>{{ doc.storedFileName || '-' }}</td>
+            <td>{{ doc.fileExtension || '-' }}</td>
+            <td class="text-center">{{ doc.fileSizeKB || '-' }}</td>
+            <td class="text-center">{{ doc.versionNo || '-' }}</td>
+            <td class="text-center">{{ doc.uploadedBy || '-' }}</td>
+            <td class="text-center">
+              <span class="status-badge" [ngClass]="doc.status === 'Active' ? 'status-active' : 'status-inactive'">
+                {{ doc.status }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="status-badge" [ngClass]="doc.isConfidential ? 'confidential-yes' : 'confidential-no'">
+                {{ doc.isConfidential ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button type="button" class="btn-edit" (click)="openEditModal(doc)">Edit</button>
+              <button type="button" class="btn-delete" [disabled]="deletingId === doc.documentId" (click)="deleteDocument(doc)">
+                {{ deletingId === doc.documentId ? 'Deleting...' : 'Delete' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit -->
+  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h3 class="card-title">{{ isEdit ? 'Edit Document' : 'Add Document' }}</h3>
+        <button type="button" class="modal-close" (click)="closeModal()" [disabled]="saving">&times;</button>
+      </div>
+
+      <p class="error-text" *ngIf="errorMessage">
+        <span class="error-icon">⚠</span>{{ errorMessage }}
+      </p>
+
+      <form [formGroup]="documentForm" (ngSubmit)="submit()">
+        <div class="modal-body">
+          <div class="form-grid">
+
+            <!-- ===================== TOP: Module + Reference / Employee / Company ===================== -->
+            <div class="form-group">
+              <label>Module Name <span class="required">*</span></label>
+              <select class="page-input"
+                      formControlName="moduleName"
+                      [class.input-invalid]="isInvalid('moduleName')">
+                <option value="" disabled>-- Select Module --</option>
+                <option *ngFor="let module of moduleOptions" [value]="module">
+                  {{ module }}
+                </option>
+              </select>
+              <small class="field-error" *ngIf="hasError('moduleName', 'required')">
+                Please select a module.
+              </small>
+            </div>
+
+            <!-- Employee module selected -> employee picker shows, its selection auto-fills Reference ID -->
+            <div class="form-group" *ngIf="isEmployeeModule">
+              <label>Employee <span class="required">*</span></label>
+              <select class="page-input"
+                      formControlName="employeeId"
+                      [class.input-invalid]="isInvalid('employeeId')"
+                      [disabled]="employeesLoading">
+                <option [ngValue]="null" disabled>
+                  {{ employeesLoading ? 'Loading employees...' : '-- Select Employee --' }}
+                </option>
+                <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+                  {{ getEmployeeDisplayName(emp) }}
+                </option>
+              </select>
+              <small class="field-error" *ngIf="isInvalid('employeeId')">
+                Please select an employee.
+              </small>
+              <small class="field-error" *ngIf="employeesError">
+                ⚠ {{ employeesError }}
+              </small>
+              <small class="field-error" *ngIf="!employeesLoading && !employeesError && employees.length === 0">
+                ⚠ No employees found. Check console (F12) for API response details.
+              </small>
+              <small class="field-hint" *ngIf="documentForm.get('referenceId')?.value">
+                Reference ID auto-filled: {{ documentForm.get('referenceId')?.value }}
+              </small>
+            </div>
+
+            <!-- Company module selected -> company picker shows, its selection auto-fills Reference ID -->
+            <div class="form-group" *ngIf="isCompanyModule">
+              <label>Company <span class="required">*</span></label>
+              <select class="page-input"
+                      formControlName="companyId"
+                      [class.input-invalid]="isInvalid('companyId')"
+                      [disabled]="companiesLoading">
+                <option [ngValue]="null" disabled>
+                  {{ companiesLoading ? 'Loading companies...' : '-- Select Company --' }}
+                </option>
+                <option *ngFor="let company of companies" [ngValue]="company.companyID">
+                  {{ getCompanyDisplayName(company) }}
+                </option>
+              </select>
+              <small class="field-error" *ngIf="isInvalid('companyId')">
+                Please select a company.
+              </small>
+              <small class="field-error" *ngIf="companiesError">
+                ⚠ {{ companiesError }}
+              </small>
+              <small class="field-error" *ngIf="!companiesLoading && !companiesError && companies.length === 0">
+                ⚠ No companies found. Check console (F12) for API response details.
+              </small>
+              <small class="field-hint" *ngIf="documentForm.get('referenceId')?.value">
+                Reference ID auto-filled: {{ documentForm.get('referenceId')?.value }}
+              </small>
+            </div>
+
+            <!-- For modules other than Employee/Company -> manual Reference ID -->
+            <div class="form-group" *ngIf="!isEmployeeModule && !isCompanyModule">
+              <label>Reference ID <span class="required">*</span></label>
+              <input class="page-input"
+                     type="number"
+                     formControlName="referenceId"
+                     min="1"
+                     [class.input-invalid]="isInvalid('referenceId')" />
+              <small class="field-error" *ngIf="hasError('referenceId', 'required')">
+                Reference ID is required.
+              </small>
+              <small class="field-error" *ngIf="hasError('referenceId', 'min')">
+                Reference ID must be greater than 0.
+              </small>
+            </div>
+            <!-- ===================== END TOP SECTION ===================== -->
+
+            <div class="form-group">
+              <label>Document Type <span class="required">*</span></label>
+              <select class="page-input"
+                      formControlName="documentTypeId"
+                      (change)="onDocumentTypeChange()"
+                      [class.input-invalid]="isInvalid('documentTypeId')">
+                <option [ngValue]="0" disabled>-- Select Type --</option>
+                <option *ngFor="let type of documentTypes" [ngValue]="type.documentTypeId">
+                  {{ type.documentTypeName }}
+                </option>
+              </select>
+              <small class="field-error" *ngIf="isInvalid('documentTypeId')">
+                Please select a document type.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Document Title <span class="required">*</span></label>
+              <input class="page-input"
+                     type="text"
+                     formControlName="documentTitle"
+                     maxlength="200"
+                     [class.input-invalid]="isInvalid('documentTitle')" />
+              <small class="field-error" *ngIf="hasError('documentTitle', 'required')">
+                Document title is required.
+              </small>
+              <small class="field-error" *ngIf="hasError('documentTitle', 'minlength')">
+                Title must be at least 3 characters.
+              </small>
+              <small class="field-error" *ngIf="hasError('documentTitle', 'maxlength')">
+                Title cannot exceed 200 characters.
+              </small>
+            </div>
+
+            <!-- FILE UPLOAD (replaces manual Original/Stored/Path/Extension/Size text inputs) -->
+            <div class="form-group span-2 upload-section">
+              <label>Upload File <span class="required" *ngIf="!isEdit">*</span></label>
+
+              <!-- No file chosen yet -->
+              <label class="upload-dropzone" [class.upload-disabled]="!selectedDocumentType" *ngIf="!selectedFile && !existingFileName" [attr.for]="selectedDocumentType ? 'fileInput' : null">
+                <span class="upload-icon">⬆️</span>
+                <span class="upload-text">{{ selectedDocumentType ? 'Click to upload document' : 'Select a Document Type first' }}</span>
+                <span class="upload-hint">{{ fileRulesHint }}</span>
+              </label>
+
+              <!-- Existing file (edit mode, no new file chosen yet) -->
+              <div class="file-preview-card" *ngIf="!selectedFile && existingFileName">
+                <span class="file-icon">📄</span>
+                <div class="file-info">
+                  <span class="file-name">{{ existingFileName }}</span>
+                  <span class="file-meta">Currently uploaded — choose a new file below to replace it</span>
+                </div>
+                <label class="btn-replace" for="fileInput">Replace</label>
+              </div>
+
+              <!-- Newly selected file preview -->
+              <div class="file-preview-card selected" *ngIf="selectedFile">
+                <span class="file-icon">📄</span>
+                <div class="file-info">
+                  <span class="file-name">{{ selectedFile.name }}</span>
+                  <span class="file-meta">{{ formatFileSize(selectedFile.size) }} — ready to upload</span>
+                </div>
+                <button type="button" class="btn-remove-file" (click)="removeSelectedFile()">✕</button>
+              </div>
+
+              <input id="fileInput"
+                     type="file"
+                     class="hidden-file-input"
+                     [attr.accept]="acceptAttribute || null"
+                     [disabled]="!selectedDocumentType"
+                     (change)="onFileSelected($event)" />
+
+              <small class="field-error" *ngIf="fileError">{{ fileError }}</small>
+            </div>
+
+            <div class="form-group span-2">
+              <label>Description</label>
+              <textarea class="page-input"
+                        formControlName="description"
+                        rows="3"
+                        maxlength="1000"
+                        [class.input-invalid]="isInvalid('description')"></textarea>
+              <small class="field-error" *ngIf="hasError('description', 'maxlength')">
+                Description cannot exceed 1000 characters.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Version No</label>
+              <input class="page-input"
+                     type="number"
+                     formControlName="versionNo"
+                     min="1"
+                     [class.input-invalid]="isInvalid('versionNo')" />
+              <small class="field-error" *ngIf="hasError('versionNo', 'min')">
+                Version number must be at least 1.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Effective Date</label>
+              <input class="page-input"
+                     type="date"
+                     formControlName="effectiveDate"
+                     [class.input-invalid]="showDateRangeError" />
+            </div>
+
+            <div class="form-group">
+              <label>Expiry Date</label>
+              <input class="page-input"
+                     type="date"
+                     formControlName="expiryDate"
+                     [class.input-invalid]="showDateRangeError" />
+              <small class="field-error" *ngIf="showDateRangeError">
+                Expiry date cannot be earlier than effective date.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Status</label>
+              <select class="page-input"
+                      formControlName="status"
+                      [class.input-invalid]="isInvalid('status')">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+              <small class="field-error" *ngIf="hasError('status', 'required')">
+                Status is required.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Uploaded By</label>
+              <input class="page-input"
+                     type="number"
+                     formControlName="uploadedBy"
+                     min="1"
+                     [class.input-invalid]="isInvalid('uploadedBy')" />
+              <small class="field-error" *ngIf="hasError('uploadedBy', 'min')">
+                Uploaded By must be a valid user ID.
+              </small>
+            </div>
+            <div class="form-group span-2">
+              <div class="switch-line">
+                <label class="switch">
+                  <input type="checkbox" formControlName="isConfidential" />
+                  <span class="slider"></span>
+                </label>
+                <span class="switch-label">Mark as confidential</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-clear" (click)="closeModal()" [disabled]="saving">Cancel</button>
+          <button type="submit" class="btn-primary" [disabled]="saving || documentForm.invalid">
+            <span class="btn-spinner" *ngIf="saving"></span>
+            {{ saving ? 'Saving...' : (isEdit ? 'Update' : 'Save') }}
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,63 @@
+<div class="dashboard-page">
+
+  <div class="page-header">
+    <div>
+      <h2>Dashboard</h2>
+      <p class="subtitle">{{ today | date:'EEEE, MMMM d, y' }}</p>
+    </div>
+  </div>
+
+  <!-- ===== Stat Cards ===== -->
+  <div class="stat-grid">
+    @for (card of statCards; track card.label) {
+    <div class="stat-card">
+      <div class="stat-icon">{{ card.icon }}</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ card.value }}</div>
+        <div class="stat-label">{{ card.label }}</div>
+        @if (card.trend) {
+        <div class="stat-trend" [class.trend-down]="!card.trendUp">{{ card.trend }}</div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="dashboard-columns">
+
+    <!-- ===== Recent Activity ===== -->
+    <div class="dashboard-card">
+      <h3>Recent Activity</h3>
+      <div class="activity-list">
+        @for (activity of recentActivity; track activity.text) {
+        <div class="activity-item">
+          <span class="activity-icon">{{ activity.icon }}</span>
+          <div class="activity-body">
+            <p class="activity-text">{{ activity.text }}</p>
+            <span class="activity-time">{{ activity.time }}</span>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- ===== Quick Links ===== -->
+    <div class="dashboard-card">
+      <h3>Quick Links</h3>
+      <div class="quick-links-grid">
+        @for (link of quickLinks; track link.route) {
+        <a [routerLink]="link.route" class="quick-link">
+          <span class="quick-link-icon">{{ link.icon }}</span>
+          <span class="quick-link-label">{{ link.label }}</span>
+        </a>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <p class="dashboard-note">
+    ⚠️ This is placeholder data for layout purposes. Wire this up to real APIs (Employee, Attendance, Leave services) once ready.
+  </p>
+
+</div>

@@ -1,0 +1,159 @@
+<div class="page">
+  <div class="page-header">
+    <h2>Master - Menu</h2>
+    <button class="btn btn-primary" (click)="openAddModal()">+ Add Menu</button>
+  </div>
+
+  <!-- Error / success messages -->
+  <p *ngIf="errorMessage" class="error-text" style="color:#c0392b; font-size:14px;">
+    ⚠ {{ errorMessage }}
+  </p>
+  <p *ngIf="successMessage" class="success-text" style="color:green; font-size:14px;">
+    ✓ {{ successMessage }}
+  </p>
+
+  <div class="filter-bar">
+    <input class="form-control search-input"
+           type="text"
+           placeholder="Search by Menu Name"
+           [(ngModel)]="searchText">
+    <button class="btn btn-primary" (click)="applyFilter()">Apply</button>
+    <button class="btn btn-outline" (click)="resetFilter()">Reset</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Menu Name</th>
+          <th>Parent Menu</th>
+          <th>Page</th>
+          <th>Display Order</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading state -->
+        <tr *ngIf="loading">
+          <td colspan="7" class="empty-row">Loading menus…</td>
+        </tr>
+
+        <!-- Data rows -->
+        <ng-container *ngIf="!loading">
+          <tr *ngFor="let item of filteredMenus; let i = index">
+            <td class="idx">{{ i + 1 }}</td>
+            <td class="name-cell">{{ item.menuName }}</td>
+            <td>{{ item.parentMenuName || 'Main Menu' }}</td>
+            <td>{{ item.pageName || '—' }}</td>
+            <td>{{ item.displayOrder }}</td>
+            <td>
+              <span class="badge" [ngClass]="item.isActive ? 'badge-active' : 'badge-inactive'">
+                <span class="dot"></span>{{ item.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn btn-edit" (click)="openEditModal(item)">Edit</button>
+              <button class="btn btn-delete" (click)="onDelete(item)">Delete</button>
+            </td>
+          </tr>
+
+          <!-- Empty state (only shown after loading finishes) -->
+          <tr *ngIf="filteredMenus.length === 0">
+            <td colspan="7" class="empty-row">No menus found.</td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================= Add / Edit Modal ================= -->
+<div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editId ? 'Edit Menu' : 'Add Menu' }}</h3>
+      <button class="modal-close" (click)="closeModal()">&times;</button>
+    </div>
+
+    <form [formGroup]="form" class="modal-form">
+      <div class="field">
+        <label>Menu Name</label>
+        <input class="form-control"
+               formControlName="menuName"
+               placeholder="Enter menu name">
+        <small *ngIf="form.get('menuName')?.invalid && form.get('menuName')?.touched" style="color:#c0392b;font-size:12px;">
+          Menu name is required
+        </small>
+      </div>
+
+      <div class="field">
+        <label>Parent Menu</label>
+        <input class="form-control"
+               type="text"
+               placeholder="Type parent menu name (leave blank for Main Menu)"
+               [ngModel]="parentMenuText"
+               [ngModelOptions]="{standalone: true}"
+               (ngModelChange)="onParentMenuTextChange($event)"
+               list="parentMenuOptions">
+        <datalist id="parentMenuOptions">
+          <option *ngFor="let menu of availableParentMenus" [value]="menu.menuName"></option>
+        </datalist>
+
+        <small style="color:#c0392b;font-size:12px;" *ngIf="parentMenuNotFound">
+          ⚠ "{{ parentMenuText }}" abhi exist nahi karta.
+        </small>
+      </div>
+
+      <div class="field">
+        <label>Page <span *ngIf="!isParentGroup" style="color:#ef4444;">*</span></label>
+        <input class="form-control"
+               type="text"
+               placeholder="Type page name (optional for Parent Menu)"
+               [ngModel]="pageText"
+               [ngModelOptions]="{standalone: true}"
+               (ngModelChange)="onPageTextChange($event)"
+               list="pageOptions">
+        <datalist id="pageOptions">
+          <option *ngFor="let page of pages" [value]="page.pageName"></option>
+        </datalist>
+
+        <small *ngIf="form.get('pageId')?.invalid && form.get('pageId')?.touched" style="color:#c0392b;font-size:12px;">
+          Please enter a valid page
+        </small>
+        <small style="color:#c0392b;font-size:12px;" *ngIf="pageNotFound">
+          ⚠ "{{ pageText }}" exist nahi karta. Pehle Page Master me create karo.
+        </small>
+      </div>
+
+      <div class="field">
+        <label>Icon</label>
+        <input class="form-control"
+               formControlName="icon"
+               placeholder="e.g. fa-list">
+      </div>
+
+      <div class="field">
+        <label>Display Order</label>
+        <input type="number"
+               class="form-control"
+               formControlName="displayOrder">
+      </div>
+
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" formControlName="isActive">
+          Active
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving" (click)="save()">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

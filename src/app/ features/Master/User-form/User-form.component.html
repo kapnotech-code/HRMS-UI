@@ -1,0 +1,69 @@
+<div class="page">
+  <div class="page-header">
+    <h1>{{ isEditMode ? 'Edit User' : 'New User' }}</h1>
+    <p class="subtitle">
+      {{ isEditMode ? 'User details update karein' : 'Naya master user account banayein' }}
+    </p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <form class="form-card" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading">
+    <div class="form-row">
+      <label for="userName">Full Name *</label>
+      <input id="userName" type="text" formControlName="userName" placeholder="e.g. Rahul Sharma" />
+      <span class="error-text" *ngIf="form.get('userName')?.touched && form.get('userName')?.invalid">
+        Naam required hai.
+      </span>
+    </div>
+
+    <div class="form-row">
+      <label for="loginUserId">Login Name *</label>
+      <input id="loginUserId" type="text" formControlName="loginUserId" placeholder="e.g. rahul.sharma" [readonly]="isEditMode" />
+      <span class="error-text" *ngIf="form.get('loginUserId')?.touched && form.get('loginUserId')?.invalid">
+        Login name required hai.
+      </span>
+    </div>
+
+    <div class="form-row" *ngIf="!isEditMode">
+      <label for="password">Password *</label>
+      <input id="password" type="password" formControlName="password" placeholder="Minimum 6 characters" />
+      <span class="error-text" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
+        Password kam se kam 6 characters ka hona chahiye.
+      </span>
+    </div>
+
+    <div class="form-row">
+      <label for="email">Email</label>
+      <input id="email" type="email" formControlName="email" placeholder="e.g. rahul@company.com" />
+      <span class="error-text" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+        Valid email daalein.
+      </span>
+    </div>
+
+    <div class="form-row">
+      <label for="roleId">Role *</label>
+      <select id="roleId" formControlName="roleId">
+        <option [ngValue]="null" disabled>Role select karein</option>
+        <option *ngFor="let role of roles" [ngValue]="role.roleId">{{ role.roleName }}</option>
+      </select>
+      <span class="error-text" *ngIf="form.get('roleId')?.touched && form.get('roleId')?.invalid">
+        Role select karna zaroori hai.
+      </span>
+    </div>
+
+    <div class="form-row">
+      <label for="deviceId">Device ID</label>
+      <input id="deviceId" type="text" formControlName="deviceId" placeholder="Optional" />
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </form>
+
+  <div class="loading" *ngIf="loading">Loading user...</div>
+</div>

@@ -1,0 +1,149 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Users</h1>
+      <p class="subtitle">Manage master user accounts, roles, and login access</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAddModal()">+ New User</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text"
+           class="search-input"
+           placeholder="Search by name, login, or email..."
+           [(ngModel)]="searchTerm"
+           (ngModelChange)="onSearchChange()" />
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="table-wrap">
+    <table class="data-table" *ngIf="!loading; else loadingTpl">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Login Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Failed Attempts</th>
+          <th>Device ID</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td class="user-cell">{{ user.userName }}</td>
+          <td>{{ getLoginName(user) }}</td>
+          <td>{{ user.email || '-' }}</td>
+          <td>{{ getRoleName(user.roleId) }}</td>
+          <td>
+            <span class="badge" [class.badge-locked]="user.isLocked" [class.badge-active]="!user.isLocked">
+              {{ user.isLocked ? 'Locked' : 'Active' }}
+            </span>
+          </td>
+          <td>
+            <span [class.text-danger]="user.failedLoginCount >= 5">
+              {{ user.failedLoginCount }} / 5
+            </span>
+          </td>
+          <td>{{ user.deviceId || '-' }}</td>
+          <td>{{ user.createdDate | date: 'dd-MMM-yyyy' }}</td>
+          <td class="actions-cell">
+            <button class="action-btn" (click)="openEditModal(user)">
+              Edit
+            </button>
+
+            <button class="action-btn unlock"
+                    *ngIf="user.isLocked"
+                    (click)="unlockUser(user)">
+              Unlock
+            </button>
+
+            <button class="action-btn delete"
+                    (click)="toggleActive(user, false)">
+              Delete
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="users.length === 0">
+          <td colspan="9" class="empty-row">No users found.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #loadingTpl>
+      <div class="loading">Loading users...</div>
+    </ng-template>
+  </div>
+
+  <!-- ================= ADD / EDIT MODAL ================= -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'Edit User' : 'New User' }}</h2>
+        <button class="modal-close" (click)="closeModal()">&times;</button>
+      </div>
+
+      <div class="alert alert-error" *ngIf="formError">{{ formError }}</div>
+
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-row">
+          <label for="userName">Full Name *</label>
+          <input id="userName" type="text" formControlName="userName" placeholder="e.g. Rahul Sharma" />
+          <span class="error-text" *ngIf="form.get('userName')?.touched && form.get('userName')?.invalid">
+            Name is required.
+          </span>
+        </div>
+
+        <div class="form-row">
+          <label for="loginUserId">Login Name *</label>
+          <input id="loginUserId" type="text" formControlName="loginUserId" placeholder="e.g. rahul.sharma" />
+          <span class="error-text" *ngIf="form.get('loginUserId')?.touched && form.get('loginUserId')?.invalid">
+            Login name is required.
+          </span>
+        </div>
+
+        <div class="form-row" *ngIf="!isEditMode">
+          <label for="password">Password *</label>
+          <input id="password" type="password" formControlName="password" placeholder="Minimum 6 characters" />
+          <span class="error-text" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
+            Password must be at least 6 characters.
+          </span>
+        </div>
+
+        <div class="form-row">
+          <label for="email">Email *</label>
+          <input id="email" type="email" formControlName="email" placeholder="e.g. rahul@company.com" />
+          <span class="error-text" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+            Please enter a valid email.
+          </span>
+        </div>
+
+        <div class="form-row">
+          <label for="roleId">Role *</label>
+          <select id="roleId" formControlName="roleId">
+            <option [ngValue]="null" disabled>Select a role</option>
+            <option *ngFor="let role of roles" [ngValue]="role.roleId">{{ role.roleName }}</option>
+          </select>
+          <span class="error-text" *ngIf="form.get('roleId')?.touched && form.get('roleId')?.invalid">
+            Please select a role.
+          </span>
+        </div>
+
+        <div class="form-row">
+          <label for="deviceId">Device ID</label>
+          <input id="deviceId" type="text" formControlName="deviceId" placeholder="Optional" />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

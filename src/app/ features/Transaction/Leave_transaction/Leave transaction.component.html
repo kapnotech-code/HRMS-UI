@@ -1,0 +1,237 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <p class="eyebrow">HRMS · Leave</p>
+      <h1>Leave Transactions</h1>
+    </div>
+    <button class="btn btn--primary" (click)="openAdd(activeTab)">
+      + {{ activeTab === 'requests' ? 'Apply for leave' : 'Add balance' }}
+    </button>
+  </header>
+
+  <div *ngIf="errorMsg" class="alert alert--error">{{ errorMsg }}</div>
+
+  <nav class="tabs">
+    <button
+      class="tabs__item"
+      [class.tabs__item--active]="activeTab === 'requests'"
+      (click)="switchTab('requests')">
+      Leave Requests
+      <span class="tabs__count">{{ requests.length }}</span>
+    </button>
+    <button
+      class="tabs__item"
+      [class.tabs__item--active]="activeTab === 'balances'"
+      (click)="switchTab('balances')">
+      Leave Balances
+      <span class="tabs__count">{{ balances.length }}</span>
+    </button>
+  </nav>
+
+  <div class="panel">
+    <div *ngIf="loading" class="state state--loading">Loading transactions…</div>
+
+    <!-- ================= LEAVE REQUESTS ================= -->
+    <div class="table-wrapper" *ngIf="!loading && activeTab === 'requests'">
+      <table class="table">
+        <thead>
+          <tr>
+            
+            <th>Employee</th>
+            <th>Leave Type</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Total Days</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th class="table__actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of requests">
+           
+            <td>{{ getEmployeeName(r.employeeID) }}</td>
+            <td>{{ getLeaveTypeName(r.leaveTypeID) }}</td>
+            <td>{{ r.startDate | date: 'mediumDate' }}</td>
+            <td>{{ r.endDate | date: 'mediumDate' }}</td>
+            <td>{{ totalDays(r) }}</td>
+            <td class="truncate" [title]="r.reason">{{ r.reason }}</td>
+            <td><span [class]="statusClass(r.status)">{{ r.status }}</span></td>
+            <td class="table__actions">
+              <button class="icon-btn icon-btn--ok"
+                      title="Approve"
+                      [disabled]="(r.status || '').toLowerCase() !== 'pending'"
+                      (click)="openEditRequest(r, 'Approved')">
+                ✓
+              </button>
+              <button class="icon-btn icon-btn--warn"
+                      title="Reject"
+                      [disabled]="(r.status || '').toLowerCase() !== 'pending'"
+                      (click)="openEditRequest(r, 'Rejected')">
+                ✕
+              </button>
+              <button class="icon-btn"
+                      title="Edit"
+                      (click)="openEditRequestForm(r)">
+                ✎
+              </button>
+              <button class="icon-btn icon-btn--danger"
+                      title="Delete"
+                      (click)="deleteRequest(r)">
+                🗑
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="requests.length === 0">
+            <td colspan="9" class="state state--empty">No leave requests yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================= LEAVE BALANCES ================= -->
+    <div class="table-wrapper" *ngIf="!loading && activeTab === 'balances'">
+      <table class="table">
+        <thead>
+          <tr>
+            
+            <th>Employee</th>
+            <th>Leave Type</th>
+            <th>Year</th>
+            <th>Allocated</th>
+            <th>Used</th>
+            <th>Remaining</th>
+            <th class="table__actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of balances">
+           
+            <td>{{ getEmployeeName(b.employeeID) }}</td>
+            <td>{{ getLeaveTypeName(b.leaveTypeID) }}</td>
+            <td>{{ b.year }}</td>
+            <td>{{ b.allocatedDays }}</td>
+            <td>{{ b.usedDays }}</td>
+            <td>
+              <span class="pill" [class.pill--low]="remainingDays(b) <= 2">
+                {{ remainingDays(b) }} days
+              </span>
+            </td>
+            <td class="table__actions">
+              <button class="icon-btn" title="Edit" (click)="openEditBalance(b)">✎</button>
+              <button class="icon-btn icon-btn--danger" title="Delete" (click)="askDelete('balances', b.leaveBalanceID)">🗑</button>
+            </td>
+          </tr>
+          <tr *ngIf="balances.length === 0">
+            <td colspan="8" class="state state--empty">No leave balances recorded yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ADD / EDIT MODAL ================= -->
+<div class="overlay" *ngIf="modalMode" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h2>{{ modalMode === 'add' ? 'New' : 'Edit' }} {{ modalTab === 'requests' ? 'leave request' : 'leave balance' }}</h2>
+
+    <!-- Request form (add only — edits go through approve/reject actions) -->
+    <form *ngIf="modalTab === 'requests'" (ngSubmit)="saveRequest()" #reqForm="ngForm">
+      <label>
+        Employee
+        <select name="employeeID" [(ngModel)]="requestForm.employeeID" required>
+          <option [ngValue]="0">-- Select Employee --</option>
+          <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+            {{ emp.firstName }} {{ emp.lastName }}
+          </option>
+        </select>
+      </label>
+      <label>
+        Leave Type
+        <select name="leaveTypeID" [(ngModel)]="requestForm.leaveTypeID" required>
+          <option *ngFor="let lt of leaveTypes" [ngValue]="lt.leaveTypeID">{{ lt.leaveTypeName }}</option>
+        </select>
+      </label>
+      <p class="form-hint" *ngIf="requestForm.employeeID && requestForm.leaveTypeID">
+        Available balance: <strong>{{ remainingForCurrentSelection() }} days</strong>
+        <span *ngIf="remainingForCurrentSelection() === 0"> — no balance allocated for this leave type/year yet.</span>
+      </p>
+      <div class="form-row">
+        <label>
+          Start date
+          <input type="date" name="startDate" [(ngModel)]="requestForm.startDate" required>
+        </label>
+        <label>
+          End date
+          <input type="date" name="endDate" [(ngModel)]="requestForm.endDate" required>
+        </label>
+      </div>
+      <label>
+        Reason
+        <textarea name="reason" rows="3" [(ngModel)]="requestForm.reason" required></textarea>
+      </label>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn--primary" [disabled]="reqForm.invalid">Submit request</button>
+      </div>
+    </form>
+
+    <!-- Balance form (add + edit) -->
+    <form *ngIf="modalTab === 'balances'" (ngSubmit)="saveBalance()" #balForm="ngForm">
+      <label>
+        Employee
+        <select name="employeeID" [(ngModel)]="balanceForm.employeeID" required>
+          <option [ngValue]="0">-- Select Employee --</option>
+          <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+            {{ emp.firstName }} {{ emp.lastName }}
+          </option>
+        </select>
+      </label>
+      <label>
+        Leave Type
+        <select name="leaveTypeID" [(ngModel)]="balanceForm.leaveTypeID" required>
+          <option *ngFor="let lt of leaveTypes" [ngValue]="lt.leaveTypeID">{{ lt.leaveTypeName }}</option>
+        </select>
+      </label>
+      <label>
+        Year
+        <input type="number" name="year" [(ngModel)]="balanceForm.year" required>
+      </label>
+      <div class="form-row">
+        <label>
+          Allocated days
+          <input type="number" name="allocatedDays" [(ngModel)]="balanceForm.allocatedDays" required min="0">
+        </label>
+        <label>
+          Used days
+          <input type="number" name="usedDays" [(ngModel)]="balanceForm.usedDays" required min="0">
+        </label>
+      </div>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn--primary" [disabled]="balForm.invalid">
+          {{ modalMode === 'add' ? 'Add balance' : 'Save changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= DELETE CONFIRM ================= -->
+<div class="overlay" *ngIf="confirmDeleteFor" (click)="cancelDelete()">
+  <div class="modal modal--small" (click)="$event.stopPropagation()">
+    <h2>{{ confirmDeleteFor.tab === 'requests' ? 'Cancel this request?' : 'Delete this balance?' }}</h2>
+    <p class="modal__body-text">
+      {{ confirmDeleteFor.tab === 'requests'
+        ? 'This marks the leave request as cancelled. This cannot be undone.'
+        : 'This removes the leave balance record. This cannot be undone.' }}
+    </p>
+    <div class="modal__actions">
+      <button class="btn btn--ghost" (click)="cancelDelete()">Keep it</button>
+      <button class="btn btn--danger" (click)="confirmDelete()">
+        {{ confirmDeleteFor.tab === 'requests' ? 'Cancel request' : 'Delete' }}
+      </button>
+    </div>
+  </div>
+</div>

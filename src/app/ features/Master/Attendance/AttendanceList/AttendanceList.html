@@ -1,0 +1,275 @@
+<div class="attendance-page">
+
+  <!-- ===== HERO: Live Time Clock ===== -->
+  <div class="clock-hero">
+    <div class="clock-hero-left">
+      <span class="clock-eyebrow">{{ todayLabel }}</span>
+      <div class="clock-display">
+        {{ hh0 }}{{ hh1 }}:{{ mm0 }}{{ mm1 }}:{{ ss0 }}{{ ss1 }} {{ meridiem }}
+      </div>
+      <span class="clock-sub">Mark your attendance for today</span>
+    </div>
+
+    <div class="clock-hero-right">
+      <div class="quick-punch">
+        <select class="punch-input"
+                [(ngModel)]="quickEmployeeId"
+                name="quickEmployeeId">
+          <option [ngValue]="null">-- Select Employee --</option>
+          <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+            {{ emp.firstName }} {{ emp.lastName }}
+          </option>
+        </select>
+        <select class="punch-select" [(ngModel)]="quickSource" name="quickSource">
+          <option value="Web">Web</option>
+          <option value="Mobile">Mobile</option>
+          <option value="Biometric">Biometric</option>
+        </select>
+        <button class="btn-punch btn-in" (click)="doCheckIn()" [disabled]="saving">
+          <span class="dot dot-in"></span> Check In
+        </button>
+        <button class="btn-punch btn-out" (click)="doCheckOut()" [disabled]="saving">
+          <span class="dot dot-out"></span> Check Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="banner banner-error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="banner banner-success">{{ successMessage }}</div>
+
+  <!-- ===== Tabs ===== -->
+  <div class="tabs">
+    <button class="tab-btn" [class.active]="activeTab === 'records'" (click)="setTab('records')">
+      Records
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'applyLeave'" (click)="setTab('applyLeave')">
+      Apply Leave
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'approveLeave'" (click)="setTab('approveLeave')">
+      Approve Leave
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'absentees'" (click)="setTab('absentees')">
+      Mark Absentees
+    </button>
+  </div>
+
+  <!-- ===== TAB: Records ===== -->
+  <div *ngIf="activeTab === 'records'" class="tab-panel">
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <select [(ngModel)]="filterEmployeeId" name="filterEmployeeId">
+          <option [ngValue]="null">-- All Employees --</option>
+          <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+            {{ emp.firstName }} {{ emp.lastName }}
+          </option>
+        </select>
+      </div>
+      <button class="btn-ghost" (click)="filterByEmployee()">Apply</button>
+      <button class="btn-ghost" (click)="clearFilter()">Reset</button>
+    </div>
+
+    <div *ngIf="loading" class="loading-msg">
+      <span class="spinner"></span> Loading records…
+    </div>
+
+    <div class="table-card" *ngIf="!loading">
+      <div class="table-scroll">
+        <table class="attendance-table">
+          <thead>
+            <tr>
+              <th>Attendance ID</th>
+              <th>Employee</th>
+              <th>Date</th>
+              <th>Shift ID</th>
+              <th>Check-In</th>
+              <th>Check-Out</th>
+              <th>Worked Hrs</th>
+              <th>Status</th>
+              <th>Source</th>
+              <th>Remarks</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of attendances">
+              <td data-label="Attendance ID" class="muted">{{ item.attendanceID }}</td>
+              <td data-label="Employee" class="emp-cell">
+                <span class="emp-fullname">{{ getEmployeeName(item.employeeID) }}</span>
+              </td>
+              <td data-label="Date">{{ item.attendanceDate | date:'dd MMM yyyy' }}</td>
+              <td data-label="Shift ID">
+                <span class="shift-chip" *ngIf="item.shiftID; else noShift">{{ item.shiftID }}</span>
+                <ng-template #noShift><span class="muted">—</span></ng-template>
+              </td>
+              <td data-label="Check-In">{{ item.checkInTime ? (item.checkInTime | date:'HH:mm') : '—' }}</td>
+              <td data-label="Check-Out">{{ item.checkOutTime ? (item.checkOutTime | date:'HH:mm') : '—' }}</td>
+              <td data-label="Worked Hrs">{{ item.workedHours ?? '—' }}</td>
+              <td data-label="Status">
+                <span class="status-pill" [ngClass]="item.status.toLowerCase()">
+                  {{ item.status }}
+                </span>
+              </td>
+              <td data-label="Source" class="muted">{{ item.source }}</td>
+              <td data-label="Remarks" class="remarks-cell" [title]="item.remarks">
+                {{ item.remarks || '—' }}
+              </td>
+              <td data-label="Actions" class="action-cell">
+                <button class="icon-btn danger" (click)="deleteAttendance(item.attendanceID)" title="Delete">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="attendances.length === 0">
+              <td colspan="11" class="no-data">No attendance records found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: Apply Leave ===== -->
+  <div *ngIf="activeTab === 'applyLeave'" class="tab-panel">
+    <div class="card-grid">
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <span class="panel-icon">🗓️</span>
+          <h3>Apply Leave</h3>
+        </div>
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label>Employee</label>
+            <select [(ngModel)]="leaveData.employeeID" name="leaveEmpId">
+              <option [ngValue]="0">-- Select Employee --</option>
+              <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+                {{ emp.firstName }} {{ emp.lastName }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Leave Type</label>
+            <select [(ngModel)]="leaveData.leaveTypeID" name="leaveTypeId">
+              <option [ngValue]="0">-- Select Leave Type --</option>
+              <option *ngFor="let lt of leaveTypes" [ngValue]="lt.leaveTypeID">
+                {{ lt.leaveTypeName }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" [(ngModel)]="leaveData.startDate" name="leaveStart" />
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" [(ngModel)]="leaveData.endDate" name="leaveEnd" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Reason</label>
+          <textarea [(ngModel)]="leaveData.reason" name="leaveReason" rows="3" placeholder="Optional note"></textarea>
+        </div>
+        <button class="btn-primary full" (click)="submitLeave()" [disabled]="saving">
+          {{ saving ? 'Submitting…' : 'Submit Leave Request' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: Approve Leave ===== -->
+  <div *ngIf="activeTab === 'approveLeave'" class="tab-panel">
+    <div class="panel-card">
+      <div class="panel-card-head">
+        <span class="panel-icon">✅</span>
+        <h3>Pending Leave Requests</h3>
+      </div>
+
+      <div class="form-group" style="max-width: 260px;">
+        <label>Approver</label>
+        <select [(ngModel)]="approverId" name="approverId">
+          <option [ngValue]="null">-- Select Approver --</option>
+          <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+            {{ emp.firstName }} {{ emp.lastName }}
+          </option>
+        </select>
+      </div>
+
+      <div *ngIf="loadingLeaves" class="loading-msg">
+        <span class="spinner"></span> Loading pending requests…
+      </div>
+
+      <div class="table-card" *ngIf="!loadingLeaves">
+        <div class="table-scroll">
+          <table class="attendance-table">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Employee</th>
+                <th>Leave Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of pendingLeaves">
+                <td data-label="Request ID" class="muted">#{{ item.leaveRequestID }}</td>
+                <td data-label="Employee">{{ getEmployeeName(item.employeeID) }}</td>
+                <td data-label="Leave Type">{{ getLeaveTypeName(item.leaveTypeID) }}</td>
+                <td data-label="Start Date">{{ item.startDate | date:'dd MMM yyyy' }}</td>
+                <td data-label="End Date">{{ item.endDate | date:'dd MMM yyyy' }}</td>
+                <td data-label="Reason" class="remarks-cell" [title]="item.reason">{{ item.reason || '—' }}</td>
+                <td data-label="Status">
+                  <span class="status-pill" [ngClass]="item.status.toLowerCase()">{{ item.status }}</span>
+                </td>
+                <td data-label="Actions" class="action-cell">
+                  <div class="action-btns">
+                    <button class="btn-ghost" (click)="approveLeave(item)">Approve</button>
+                    <button class="btn-ghost" (click)="rejectLeave(item)">Reject</button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="pendingLeaves.length === 0">
+                <td colspan="8" class="no-data">No pending leave requests</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: Mark Absentees ===== -->
+  <div *ngIf="activeTab === 'absentees'" class="tab-panel">
+    <div class="panel-card narrow">
+      <div class="panel-card-head">
+        <span class="panel-icon">📋</span>
+        <h3>Mark Absentees</h3>
+      </div>
+      <p class="panel-desc">
+        Employees without a check-in on the selected date will automatically be marked absent.
+      </p>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" [(ngModel)]="absenteeDate" name="absenteeDate" />
+      </div>
+      <button class="btn-primary full" (click)="submitMarkAbsentees()" [disabled]="saving">
+        {{ saving ? 'Processing…' : 'Mark Absentees' }}
+      </button>
+    </div>
+  </div>
+
+</div>

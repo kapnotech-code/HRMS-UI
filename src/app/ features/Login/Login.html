@@ -1,0 +1,48 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo" aria-hidden="true">HR</div>
+      <h1>Welcome back</h1>
+      <p>Sign in to continue to your dashboard</p>
+    </div>
+    <p *ngIf="errorMessage" class="error-text" role="alert">{{ errorMessage }}</p>
+    <form (ngSubmit)="submit()" autocomplete="on">
+      <div class="form-group">
+        <label for="loginName">Login Id</label>
+        <input id="loginName"
+               name="loginName"
+               type="text"
+               [(ngModel)]="loginName"
+               placeholder="e.g. priya.sharma"
+               autocomplete="username"
+               required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-wrap">
+          <input id="password"
+                 name="password"
+                 [type]="showPassword ? 'text' : 'password'"
+                 [(ngModel)]="password"
+                 placeholder="Enter your password"
+                 autocomplete="current-password"
+                 required />
+          <button type="button"
+                  class="toggle-visibility"
+                  (click)="showPassword = !showPassword"
+                  [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn-login" [disabled]="loading">
+        <span class="btn-spinner" *ngIf="loading" aria-hidden="true"></span>
+        {{ loading ? 'Signing in...' : 'Sign In' }}
+      </button>
+    </form>
+    <p class="login-footnote">Contact your administrator if you're locked out or need access.</p>
+    <p class="login-footnote">
+      Don't have an account? <a routerLink="/register" class="link-accent">Create account</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,154 @@
+<div class="company-page">
+
+  <div class="page-header">
+    <div>
+      <h2>Company Master</h2>
+      <p class="subtitle">Manage companies used across Employee records</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openAddModal()">+ Add Company</button>
+    </div>
+  </div>
+
+  <p *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+
+  <div class="filter-card">
+    <input type="text"
+           placeholder="Search by name, location, or contact person..."
+           [(ngModel)]="searchText"
+           (input)="applyFilter()" />
+  </div>
+
+  <div class="table-card">
+    <div class="loading" *ngIf="loading">Loading companies...</div>
+
+    <div class="table-wrapper" *ngIf="!loading">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Logo</th>
+            <th>Company Image</th>
+            <th>Company Name</th>
+            <th>Location</th>
+            <th>Contact Person</th>
+            <th>Contact Number</th>
+            <th>From Date</th>
+            <th>To Date</th>
+            <th>Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of filteredCompanies">
+            <td>
+              <img *ngIf="c.companyLogo" [src]="getFileUrl(c.companyLogo)" alt="logo" class="company-logo-thumb" />
+              <span *ngIf="!c.companyLogo">-</span>
+            </td>
+            <td>
+              <img *ngIf="c.companyImage" [src]="getFileUrl(c.companyImage)" alt="company image" class="company-logo-thumb" />
+              <span *ngIf="!c.companyImage">-</span>
+            </td>
+            <td>{{ c.companyName || '-' }}</td>
+            <td>{{ c.location || '-' }}</td>
+            <td>{{ c.contactPersonName || '-' }}</td>
+            <td>{{ c.contactNumber || '-' }}</td>
+            <td>{{ (c.fromDate | slice:0:10) || '-' }}</td>
+            <td>{{ (c.toDate | slice:0:10) || '-' }}</td>
+            <td>
+              <span class="badge" [ngClass]="c.isActive ? 'badge-active' : 'badge-inactive'">
+                {{ c.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <div class="actions-group">
+                <button class="btn btn-small btn-secondary" (click)="openEditModal(c)">Edit</button>
+                <button class="btn btn-small btn-danger"
+                        [disabled]="deletingId === c.companyID"
+                        (click)="deleteCompany(c)">
+                  {{ deletingId === c.companyID ? 'Deleting...' : 'Delete' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!filteredCompanies.length">
+            <td colspan="10" class="empty-row">No companies found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== Add/Edit Modal ===== -->
+  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ isEditMode ? 'Edit Company' : 'Add Company' }}</h3>
+        <button class="modal-close" (click)="closeModal()">&times;</button>
+      </div>
+
+      <p *ngIf="formError" class="alert alert-error">{{ formError }}</p>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Company Name <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formModel.companyName" placeholder="e.g. Acme Corporation" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" [(ngModel)]="formModel.location" placeholder="City, State" />
+          </div>
+          <div class="form-group">
+            <label>Contact Person</label>
+            <input type="text" [(ngModel)]="formModel.contactPersonName" placeholder="Full name" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Contact Number</label>
+            <input type="text" [(ngModel)]="formModel.contactNumber" placeholder="+91 ..." />
+          </div>
+          <div class="form-group"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>From Date</label>
+            <input type="date" [(ngModel)]="formModel.fromDate" />
+          </div>
+          <div class="form-group">
+            <label>To Date</label>
+            <input type="date" [(ngModel)]="formModel.toDate" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Company Logo</label>
+            <input type="file" accept="image/*" (change)="onLogoSelected($event)" />
+            <span class="file-hint" *ngIf="formModel.companyLogo">{{ formModel.companyLogo.name }}</span>
+            <img *ngIf="isEditMode && !formModel.companyLogo && editingLogoUrl"
+                 [src]="editingLogoUrl" alt="current logo" class="company-logo-preview" />
+          </div>
+          <div class="form-group">
+            <label>Company Image</label>
+            <input type="file" accept="image/*" (change)="onImageSelected($event)" />
+            <span class="file-hint" *ngIf="formModel.companyImage">{{ formModel.companyImage.name }}</span>
+            <img *ngIf="isEditMode && !formModel.companyImage && editingImageUrl"
+                 [src]="editingImageUrl" alt="current image" class="company-logo-preview" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary" [disabled]="saving" (click)="saveCompany()">
+          {{ saving ? 'Saving...' : (isEditMode ? 'Update Company' : 'Add Company') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

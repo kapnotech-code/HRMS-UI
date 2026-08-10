@@ -1,0 +1,67 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Master - Designation</h2>
+    <button class="btn-primary" (click)="openAddForm()">+ Add Designation</button>
+  </div>
+  <div class="filter-row">
+    <input type="text"
+           placeholder="Search by Title"
+           [(ngModel)]="filterTitle" />
+    <button class="btn-filter-apply" (click)="applyFilter()">Apply</button>
+    <button class="btn-filter-reset" (click)="resetFilter()">Reset</button>
+  </div>
+  <p *ngIf="errorMessage" class="error-text">{{ errorMessage }}</p>
+  <div class="table-wrapper" *ngIf="!loading && !errorMessage">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Designation Name</th>
+          <th>Company</th>
+          <th>Created At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let d of filteredDesignations; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ d.designationName }}</td>
+          <td>{{ getCompanyName(d.companyID) }}</td>
+          <td>{{ d.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
+          <td>
+            <button class="btn-edit" (click)="openEditForm(d)">Edit</button>
+            <button class="btn-delete" (click)="deleteItem(d)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredDesignations.length === 0">
+          <td colspan="5" class="no-data">Koi data nahi mila. Naya Add karo.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- Add/Edit Modal -->
+  <div class="modal-backdrop" *ngIf="showForm" (click)="closeForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3>{{ isEditMode ? 'Edit' : 'Add' }} Designation</h3>
+      <div class="form-group">
+        <label>Designation Title *</label>
+        <input type="text" [(ngModel)]="formTitle" placeholder="e.g. Software Engineer" />
+      </div>
+      <div class="form-group">
+        <label>Company *</label>
+        <select [(ngModel)]="formCompanyID">
+          <option [ngValue]="null">-- Select Company --</option>
+          <option *ngFor="let c of companies" [ngValue]="c.companyID">
+            {{ c.companyName }}
+          </option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" (click)="closeForm()" [disabled]="saving">Cancel</button>
+        <button class="btn-save" (click)="saveDesignation()" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
