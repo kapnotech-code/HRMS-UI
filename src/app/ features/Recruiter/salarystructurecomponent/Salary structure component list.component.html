@@ -1,0 +1,117 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Salary Structure Components</h2>
+      <p>Map earnings &amp; deductions to a salary structure</p>
+    </div>
+    <button class="btn-primary" (click)="openAddForm()">
+      + Add Mapping
+    </button>
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    Loading salary structure components...
+  </div>
+
+  <div class="table-card" *ngIf="!loading">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Salary Structure</th>
+          <th>Component</th>
+          <th>Calculation</th>
+          <th>Value</th>
+          <th>Order</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of mappings; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td><strong>{{ structureName(item.SSC_SS_Id) }}</strong></td>
+          <td>{{ componentName(item.SSC_SC_Id) }}</td>
+          <td>
+            <span class="calc-badge">{{ item.SSC_CalculationType }}</span>
+          </td>
+          <td>
+            <ng-container *ngIf="item.SSC_CalculationType === 'Percentage'; else fixedVal">
+              {{ item.SSC_Value }}%
+            </ng-container>
+            <ng-template #fixedVal>{{ item.SSC_Value | currency:'INR':'symbol':'1.0-2' }}</ng-template>
+          </td>
+          <td>{{ item.SSC_DisplayOrder ?? '-' }}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-edit" (click)="openEditForm(item)">Edit</button>
+              <button class="btn-delete" (click)="deleteMapping(item)">Delete</button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="mappings.length === 0 && !loading">
+          <td colspan="7" class="empty">No component mappings found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add/Edit form -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()">
+    <div class="form-card" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h3>{{ isEditMode ? 'Edit Mapping' : 'Add Mapping' }}</h3>
+        <button class="form-close" (click)="closeForm()" aria-label="Close">×</button>
+      </div>
+
+      <div class="form-body">
+        <label class="form-label">
+          Salary Structure *
+          <select class="form-input" [(ngModel)]="formSSId">
+            <option [ngValue]="null" disabled>Select a structure</option>
+            <option *ngFor="let s of structures" [ngValue]="s.ss_Id">{{ s.ss_StructureName }}</option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          Component *
+          <select class="form-input" [(ngModel)]="formSCId">
+            <option [ngValue]="null" disabled>Select a component</option>
+            <option *ngFor="let c of components" [ngValue]="c.sc_Id">
+              {{ c.sc_ComponentName }} ({{ c.sc_ComponentType }})
+            </option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          Calculation Type *
+          <select class="form-input" [(ngModel)]="formCalculationType">
+            <option value="Fixed">Fixed</option>
+            <option value="Percentage">Percentage</option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          {{ formCalculationType === 'Percentage' ? 'Percentage Value' : 'Fixed Amount' }} *
+          <input type="number" class="form-input" [(ngModel)]="formValue" min="0" />
+        </label>
+
+        <label class="form-label">
+          Display Order *
+          <input type="number" class="form-input" [(ngModel)]="formDisplayOrder" min="0" placeholder="e.g. 1" />
+        </label>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn-cancel" (click)="closeForm()" [disabled]="saving">Cancel</button>
+        <button class="btn-primary" (click)="saveMapping()" [disabled]="saving">
+          {{ saving ? 'Saving…' : (isEditMode ? 'Update' : 'Save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

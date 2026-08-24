@@ -5,6 +5,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ShiftService } from '../../../../core/services/shift.service'
 import { EmployerService } from '../../../../core/services/company.service';
+import { FrontendPermissionService } from '../../../../core/services/frontend-permission.service';
 import { ShiftResponse } from '../../../../shared/models/ShiftResponse/ShiftResponse';
 import { ShiftRequest } from '../../../../shared/models/ShiftResponse/Shiftrequest';
 import { CompanyRequest } from '../../../../shared/models/companylist/CompanyRequest';
@@ -33,6 +34,11 @@ export class ShiftList implements OnInit {
   // filter
   filterName = '';
 
+  // Permission flags (admin bypass)
+  canAdd = true;
+  canEdit = true;
+  canDelete = true;
+
   // Form fields
   formShiftName = '';
   formStartTime = '';
@@ -45,18 +51,22 @@ export class ShiftList implements OnInit {
     private employerService: EmployerService,
     private router: Router,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private frontendPerm: FrontendPermissionService
   ) { }
 
   ngOnInit(): void {
     this.loadData();
     this.loadEmployers();
+    this.loadPermissions();
 
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'add') {
+        if (!this.canAdd) return;
         this.resetForm();
         this.showForm = true;
       } else if (params['action'] === 'edit' && params['id']) {
+        if (!this.canEdit) return;
         const item = this.shifts.find(s => s.shiftID === +params['id']);
         if (item) {
           this.isEditMode = true;
@@ -73,6 +83,15 @@ export class ShiftList implements OnInit {
       }
       this.cdr.detectChanges();
     });
+  }
+
+  private loadPermissions(): void {
+    const roleId = this.frontendPerm.getCurrentRoleId();
+    if (!roleId || roleId === 1) return;
+    this.canAdd = this.frontendPerm.canAddByUrl('/masters/shifts');
+    this.canEdit = this.frontendPerm.canEditByUrl('/masters/shifts');
+    this.canDelete = this.frontendPerm.canDeleteByUrl('/masters/shifts');
+    this.cdr.detectChanges();
   }
 
   loadData(): void {
@@ -130,6 +149,7 @@ export class ShiftList implements OnInit {
   }
 
   openAddForm(): void {
+    if (!this.canAdd) return;
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { action: 'add' },
@@ -138,6 +158,7 @@ export class ShiftList implements OnInit {
   }
 
   openEditForm(item: ShiftResponse): void {
+    if (!this.canEdit) return;
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { action: 'edit', id: item.shiftID },
@@ -154,6 +175,7 @@ export class ShiftList implements OnInit {
   }
 
   deleteItem(item: ShiftResponse): void {
+    if (!this.canDelete) return;
     if (!confirm(`Are you sure you want to delete "${item.shiftName}"?`)) return;
 
     this.shiftService.delete(item.shiftID).subscribe({
@@ -162,7 +184,10 @@ export class ShiftList implements OnInit {
         this.loadData();
       },
       error: (err) => {
-        alert('Delete failed.');
+        const deleteMsg = err?.error?.message ||
+        err?.error?.errors?.[Object.keys(err?.error?.errors ?? {})[0]]?.[0] ||
+        'Unable to delete shift. Please remove employee shift assignments first.';
+      alert(deleteMsg);
         console.error(err);
       }
     });
@@ -180,9 +205,10 @@ export class ShiftList implements OnInit {
       return;
     }
 
-    // Duplicate Shift Name Check
+    // Duplicate Shift Name Check (per company)
     const duplicate = this.shifts.some(s =>
       s.shiftName.trim().toLowerCase() === this.formShiftName.trim().toLowerCase() &&
+      s.companyID === this.formCompanyID &&
       (!this.isEditMode || s.shiftID !== this.currentId)
     );
 
@@ -237,4 +263,3 @@ export class ShiftList implements OnInit {
     }
   }
 }
-   

@@ -1,0 +1,180 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2>Salary Components</h2>
+      <p>Manage reusable salary earnings and deductions</p>
+    </div>
+    <button class="btn-primary" (click)="openAddForm()">
+      + Add Component
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div class="error-message" *ngIf="errorMessage" role="alert">
+    {{ errorMessage }}
+    <button class="error-dismiss" (click)="errorMessage = ''" aria-label="Dismiss error">×</button>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar" *ngIf="!loading">
+    <input type="text"
+           class="filter-input"
+           placeholder="Search by component name..."
+           [(ngModel)]="filterName"
+           (ngModelChange)="applyFilter()" />
+    <button class="btn-reset" (click)="resetFilter()" *ngIf="filterName">
+      Clear
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    Loading salary components...
+  </div>
+
+  <!-- Table -->
+  <div class="table-card" *ngIf="!loading">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Code</th>
+          <th>Component Name</th>
+          <th>Type</th>
+          <th>Calculation</th>
+          <th>Value</th>
+          <th>Taxable</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let component of filteredComponents; let i = index; trackBy: trackByComponentId">
+          <td>{{ i + 1 }}</td>
+
+          <td><span class="code">{{ component.sc_ComponentCode }}</span></td>
+
+          <td><strong>{{ component.sc_ComponentName }}</strong></td>
+
+          <td>
+            <span class="type-badge" [class.deduction]="component.sc_ComponentType === 'Deduction'">
+              {{ component.sc_ComponentType }}
+            </span>
+          </td>
+
+          <td>{{ component.sc_CalculationType }}</td>
+
+          <td>
+            <ng-container *ngIf="component.sc_CalculationType === 'Percentage'; else fixedValue">
+              {{ component.sc_CalculationValue }}%
+            </ng-container>
+            <ng-template #fixedValue>
+              {{ component.sc_CalculationValue | currency:'INR':'symbol':'1.0-2' }}
+            </ng-template>
+          </td>
+
+          <td>
+            <span class="taxable" [class.no]="!component.sc_IsTaxable">
+              {{ component.sc_IsTaxable ? 'Yes' : 'No' }}
+            </span>
+          </td>
+
+          <td>
+            <span class="status" [class.inactive]="!component.sc_IsActive">
+              {{ component.sc_IsActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+
+          <td>
+            <div class="actions">
+              <button class="btn-edit" (click)="openEditForm(component)">
+                Edit
+              </button>
+              <button class="btn-delete"
+                      [disabled]="deletingId === component.sc_Id"
+                      (click)="deleteComponent(component)">
+                {{ deletingId === component.sc_Id ? 'Deleting…' : 'Delete' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Empty -->
+        <tr *ngIf="filteredComponents.length === 0">
+          <td colspan="9" class="empty">
+            <div class="empty-state">
+              <div class="empty-icon">＋</div>
+              <p>No salary components found.</p>
+              <button class="btn-primary btn-empty" (click)="openAddForm()">
+                Add your first component
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== Add / Edit form — shown inline via ?action=add|edit, same as DepartmentList ===== -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()">
+    <div class="form-card" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h3>{{ isEditMode ? 'Edit Salary Component' : 'Add Salary Component' }}</h3>
+        <button class="form-close" (click)="closeForm()" aria-label="Close">×</button>
+      </div>
+
+      <div class="form-body">
+        <label class="form-label">
+          Component Code *
+          <input type="text" class="form-input" [(ngModel)]="formComponentCode" placeholder="e.g. BASIC" />
+        </label>
+
+        <label class="form-label">
+          Component Name *
+          <input type="text" class="form-input" [(ngModel)]="formComponentName" placeholder="e.g. Basic Salary" />
+        </label>
+
+        <label class="form-label">
+          Component Type *
+          <select class="form-input" [(ngModel)]="formComponentType">
+            <option value="Earning">Earning</option>
+            <option value="Deduction">Deduction</option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          Calculation Type *
+          <select class="form-input" [(ngModel)]="formCalculationType">
+            <option value="Fixed">Fixed</option>
+            <option value="Percentage">Percentage</option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          {{ formCalculationType === 'Percentage' ? 'Percentage Value' : 'Fixed Amount' }}
+          <input type="number" class="form-input" [(ngModel)]="formCalculationValue" min="0" />
+        </label>
+
+        <label class="form-checkbox">
+          <input type="checkbox" [(ngModel)]="formIsTaxable" />
+          Taxable
+        </label>
+
+        <label class="form-checkbox">
+          <input type="checkbox" [(ngModel)]="formIsActive" />
+          Active
+        </label>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn-cancel" (click)="closeForm()" [disabled]="saving">
+          Cancel
+        </button>
+        <button class="btn-primary" (click)="saveComponent()" [disabled]="saving">
+          {{ saving ? 'Saving…' : (isEditMode ? 'Update' : 'Save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -647,7 +647,7 @@ export class DocumentsComponent implements OnInit {
       next: () => {
         this.saving = false;
         this.showModal = false;
-        this.successMessage = this.isEdit ? 'Document updated successfully.' : 'Document added successfully.';
+        this.successMessage = this.isEdit ?'Document updated successfully.' : 'Document added successfully.';
         this.resetForm();
         this.selectedFile = null;
         this.existingFileName = null;

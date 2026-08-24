@@ -1,5 +1,6 @@
 <div class="bank-page">
-
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
   <div class="page-header">
     <div>
       <h2>Bank Master</h2>

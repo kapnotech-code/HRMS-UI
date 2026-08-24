@@ -125,7 +125,7 @@ export class HolidayList implements OnInit {
 
   saveHoliday(): void {
     if (!this.formData.holidayName.trim()) {
-      alert('Holiday naam likhna zaroori hai');
+      alert('Holiday naam is needed');
       return;
     }
     if (!this.formData.holidayDate) {
@@ -163,7 +163,7 @@ export class HolidayList implements OnInit {
         },
         error: (err) => {
           this.saving = false;
-          alert('al.');
+          alert('already exist.');
           console.error(err);
           this.errorMessage = 'Add fail .';
           this.cdr.detectChanges();
@@ -188,7 +188,7 @@ export class HolidayList implements OnInit {
       error: (err) => {
         console.error(err);
         alert('Delete failed.');
-        this.errorMessage = 'Unable to delete holiday';
+        this.errorMessage = 'Unable to delete holiday it is referenced by company table.';
         this.cdr.detectChanges();
       }
     });

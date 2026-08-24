@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../../core/services/user.service';
 import { UserRequest } from '../../../shared/models/User/UserRequest';
+import { FrontendPermissionService } from '../../../core/services/frontend-permission.service';
 import { Role } from '../../../shared/models/Role/Role';
 @Component({
   selector: 'app-user-form',
@@ -19,6 +20,7 @@ export class UserFormComponent implements OnInit {
   loading = false;
   saving = false;
   errorMsg = '';
+  permissionDenied = false;
 
   // Roles master API alag se ho to yahan service call se replace kar lena
   roles: Role[] = [
@@ -31,14 +33,34 @@ export class UserFormComponent implements OnInit {
     private fb: FormBuilder,
     private userService: UserService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private frontendPerm: FrontendPermissionService
   ) {}
+
+  private checkPermissions(): void {
+    const roleId = this.frontendPerm.getCurrentRoleId();
+    if (!roleId || roleId === 1) return;
+    if (!this.isEditMode && !this.frontendPerm.canAddByUrl('/masters/users')) {
+      this.permissionDenied = true;
+      this.errorMsg = 'You do not have permission to add users.';
+      this.router.navigate(['/masters/users']);
+      return;
+    }
+    if (this.isEditMode && !this.frontendPerm.canEditByUrl('/masters/users')) {
+      this.permissionDenied = true;
+      this.errorMsg = 'You do not have permission to edit users.';
+      this.router.navigate(['/masters/users']);
+    }
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
 
     this.userId = id ? Number(id) : null;
     this.isEditMode = this.userId !== null;
+    this.checkPermissions();
+    if (this.permissionDenied) return;
+
     this.form = this.fb.group({
       userName: ['', [Validators.required, Validators.maxLength(100)]],
       loginUserId: ['', [Validators.required, Validators.maxLength(100)]],
@@ -70,7 +92,7 @@ export class UserFormComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.errorMsg = 'User load nahi ho paya.';
+        this.errorMsg = 'Unable to load user.';
         this.loading = false;
       }
     });
@@ -91,28 +113,30 @@ export class UserFormComponent implements OnInit {
       this.userService.update(this.userId, payload).subscribe({
         next: () => {
           this.saving = false;
-          this.router.navigate(['/users']);
+          this.router.navigate(['/masters/users']);
         },
         error: (err) => {
           this.saving = false;
-          this.errorMsg = err?.error?.message || 'Update nahi ho paya.';
+          this.errorMsg = err?.error?.message || 'Update failed.';
         }
       });
     } else {
       this.userService.create(payload).subscribe({
         next: () => {
           this.saving = false;
-          this.router.navigate(['/users']);
+          this.router.navigate(['/masters/users']);
         },
         error: (err) => {
           this.saving = false;
-          this.errorMsg = err?.error?.message || 'Save nahi ho paya.';
+          this.errorMsg = err?.error?.message || 'Save failed.';
         }
       });
     }
   }
 
   cancel(): void {
-    this.router.navigate(['/users']);
+    this.router.navigate(['/masters/users']);
   }
 }
+
+

@@ -4,7 +4,7 @@
       <h1>Users</h1>
       <p class="subtitle">Manage master user accounts, roles, and login access</p>
     </div>
-    <button class="btn btn-primary" (click)="openAddModal()">+ New User</button>
+    <button class="btn btn-primary" (click)="openAddModal()" [disabled]="!canAdd">+ New User</button>
   </div>
 
   <div class="toolbar">
@@ -16,6 +16,7 @@
   </div>
 
   <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
 
   <div class="table-wrap">
     <table class="data-table" *ngIf="!loading; else loadingTpl">
@@ -27,7 +28,9 @@
           <th>Role</th>
           <th>Status</th>
           <th>Failed Attempts</th>
-          <th>Device ID</th>
+          <th>
+            Device
+          </th>
           <th>Created</th>
           <th>Actions</th>
         </tr>
@@ -51,7 +54,7 @@
           <td>{{ user.deviceId || '-' }}</td>
           <td>{{ user.createdDate | date: 'dd-MMM-yyyy' }}</td>
           <td class="actions-cell">
-            <button class="action-btn" (click)="openEditModal(user)">
+            <button class="action-btn" [disabled]="!canEdit" (click)="openEditModal(user)">
               Edit
             </button>
 
@@ -62,8 +65,9 @@
             </button>
 
             <button class="action-btn delete"
-                    (click)="toggleActive(user, false)">
-              Delete
+                    [disabled]="deletingId === user.userId || !canDelete"
+                    (click)="deleteUser(user)">
+              {{ deletingId === user.userId ? 'Deleting...' : 'Delete' }}
             </button>
           </td>
         </tr>
@@ -133,7 +137,7 @@
         </div>
 
         <div class="form-row">
-          <label for="deviceId">Device ID</label>
+          <label for="deviceId">Device </label>
           <input id="deviceId" type="text" formControlName="deviceId" placeholder="Optional" />
         </div>
 

@@ -495,7 +495,13 @@
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
   }
+.form-grid .combo-wrapper {
+  z-index: 1;
+}
 
+  .form-grid .combo-wrapper:focus-within {
+    z-index: 5;
+  }
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -688,6 +694,7 @@
         flex-shrink: 0;
       }
 }
+
 
 /* ---- Small mobile ---- */
 @media (max-width: 480px) {

@@ -9,9 +9,7 @@ import { DepartmentService } from '../../../core/services/Department.Service';
 import { DesignationService } from '../../../core/services/designation.service';
 import { ShiftService } from '../../../core/services/shift.service';
 
-
 import { EmployeeRequest } from '../../../shared/models/employee/employee-request';
-
 import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
 import { EmployerService } from '../../../core/services/company.service';
 
@@ -69,7 +67,7 @@ export class EmployeeMasterComponent implements OnInit {
   toastMessage = '';
   private toastTimer: any = null;
 
-  // ---------- Searchable combobox state ----------
+  // ---------- Searchable combobox state (Employee Code / Name) ----------
   codeSearchText = '';
   nameSearchText = '';
   codeOptionsOpen = false;
@@ -77,6 +75,10 @@ export class EmployeeMasterComponent implements OnInit {
   filteredByCode: EmployeeResponse[] = [];
   filteredByName: EmployeeResponse[] = [];
   selectedEmployeeId: number | null = null;
+
+  // ---------- Manager / Reporting Manager — manual text input (no dropdown) ----------
+  managerSearchText = '';
+  reportingManagerSearchText = '';
 
   // ---------- File upload state ----------
   uploadingProfilePic = false;
@@ -206,7 +208,7 @@ export class EmployeeMasterComponent implements OnInit {
   }
 
   // ===================================================
-  // SEARCHABLE + SYNCED COMBOBOX LOGIC
+  // SEARCHABLE + SYNCED COMBOBOX LOGIC (Employee Code / Name)
   // ===================================================
 
   fullName(emp: EmployeeResponse): string {
@@ -258,6 +260,56 @@ export class EmployeeMasterComponent implements OnInit {
 
   private scrollToForm(): void {
     setTimeout(() => this.formPanel?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  }
+
+  // ===================================================
+  // MANAGER / REPORTING MANAGER — manual text input (no dropdown)
+  // User poora naam khud type karta hai. Har keystroke aur blur par
+  // us naam se exact (case-insensitive) match employees list mein
+  // dhoondha jaata hai taaki backend ke liye ID mil sake. Match na
+  // milne par field khaali kar di jaati hai taaki galat/adhura naam
+  // save na ho.
+  // ===================================================
+
+  onManagerInput(): void {
+    const term = this.managerSearchText.trim().toLowerCase();
+    if (!term) {
+      this.formModel.managerID = undefined;
+      return;
+    }
+    const match = this.managers.find(m => m.name.toLowerCase() === term);
+    this.formModel.managerID = match ? match.id : undefined;
+  }
+
+  onManagerBlur(): void {
+    const term = this.managerSearchText.trim().toLowerCase();
+    const match = this.managers.find(m => m.name.toLowerCase() === term);
+    this.formModel.managerID = match ? match.id : undefined;
+    if (!match) {
+      this.managerSearchText = '';
+    }
+    this.cdr.detectChanges();
+  }
+
+  onReportingManagerInput(): void {
+    const term = this.reportingManagerSearchText.trim().toLowerCase();
+    const match = term ? this.managers.find(m => m.name.toLowerCase() === term) : undefined;
+    this.formModel.reportingManagerID = match ? match.id : undefined;
+    // NOTE: reportingManagerSearchText ko yahan kabhi touch nahi karte —
+    // jo user type kare wahi text box mein rahega, sirf ID silently resolve hoti hai
+  }
+
+  onReportingManagerBlur(): void {
+    const term = this.reportingManagerSearchText.trim().toLowerCase();
+    const match = term ? this.managers.find(m => m.name.toLowerCase() === term) : undefined;
+    this.formModel.reportingManagerID = match ? match.id : undefined;
+    // Text clear NAHI karna — pehle yahi line thi jo blur hote hi field khaali kar deti thi
+  }
+
+  // Manager array se naam dhoondhne ka helper — edit mode prefill ke liye
+  private managerNameById(id: number | undefined | null): string {
+    if (id == null) return '';
+    return this.managers.find(m => m.id === id)?.name ?? '';
   }
 
   // ===================================================
@@ -473,6 +525,11 @@ export class EmployeeMasterComponent implements OnInit {
       profilePicturePath: emp.profilePicturePath,
       resumePath: emp.resumePath
     };
+
+    // Manager / Reporting Manager text fields prefill karo, warna edit mode
+    // mein khaali dikhenge jabki formModel mein ID already set hai.
+    this.managerSearchText = this.managerNameById(emp.managerID);
+    this.reportingManagerSearchText = this.managerNameById(emp.reportingManagerID);
   }
 
   newEmployee(): void {
@@ -480,6 +537,11 @@ export class EmployeeMasterComponent implements OnInit {
     this.formModel = this.emptyForm();
     this.clearSelection();
     this.clearMessages();
+
+    // Manager text fields bhi reset karo
+    this.managerSearchText = '';
+    this.reportingManagerSearchText = '';
+
     this.employeeForm?.resetForm(this.formModel);
   }
 

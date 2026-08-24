@@ -131,8 +131,20 @@ export class LeaveTransactionComponent implements OnInit {
       balances: forkJoin(balanceCalls)
     }).subscribe({
       next: ({ requests, balances }) => {
-        this.requests = requests.flatMap((r: any) => r?.data ?? r ?? []);
-        this.balances = balances.flatMap((b: any) => b?.data ?? b ?? []);
+        const allRequests = requests.flatMap((r: any) => r?.data ?? r ?? []);
+        const allBalances = balances.flatMap((b: any) => b?.data ?? b ?? []);
+
+        // 🔧 FIX (duplicate rows): each employee's getByEmployee() call is
+        // merged into one flat list above. If the backend's getByEmployee
+        // isn't filtering strictly by employeeID (or a record legitimately
+        // shows up under more than one call), the SAME leave request /
+        // balance row was being pushed into the array once per employee —
+        // so adding ONE request could visually appear as MANY rows.
+        // Deduping by the record's unique ID here guarantees each row is
+        // only shown once, regardless of how many times it came back.
+        this.requests = this.dedupeById(allRequests, 'leaveRequestID');
+        this.balances = this.dedupeById(allBalances, 'leaveBalanceID');
+
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -145,6 +157,17 @@ export class LeaveTransactionComponent implements OnInit {
     });
   }
 
+  // Generic dedupe helper: keeps the last occurrence for a given id key.
+  private dedupeById<T extends Record<string, any>>(items: T[], idKey: keyof T): T[] {
+    const map = new Map<any, T>();
+    for (const item of items) {
+      if (item && item[idKey] != null) {
+        map.set(item[idKey], item);
+      }
+    }
+    return Array.from(map.values());
+  }
+
   switchTab(tab: TabKey): void {
     this.activeTab = tab;
     this.cdr.detectChanges();
@@ -154,10 +177,7 @@ export class LeaveTransactionComponent implements OnInit {
     return (b.allocatedDays ?? 0) - (b.usedDays ?? 0);
   }
 
-  // Used by the "Apply for leave" form to show the requester how many days
-  // they have left for the currently selected employee + leave type, so
-  // they don't submit a request that will fail balance checks server-side.
-  // Matches on the current calendar year, same as emptyBalanceForm()'s default.
+
   remainingForCurrentSelection(): number {
     const employeeId = this.requestForm.employeeID;
     const leaveTypeId = this.requestForm.leaveTypeID;
@@ -212,7 +232,7 @@ export class LeaveTransactionComponent implements OnInit {
     // ("Sirf Pending requests par action liya ja sakta hai") which
     // surfaces to the user as a raw 500.
     if ((r.status || '').toLowerCase() !== 'pending') {
-      alert('Ye request pehle se hi actioned ho chuki hai. List refresh ho rahi hai...');
+      alert('This request has already been actioned. The list is currently refreshing....');
       this.loadAll();
       return;
     }

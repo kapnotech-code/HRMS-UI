@@ -1,0 +1,112 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Payroll Adjustments</h2>
+      <p>Manage payroll adjustments for employees</p>
+    </div>
+    <button class="btn-primary" (click)="openAddForm()">+ Add Adjustment</button>
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="loading" *ngIf="loading">Loading payroll adjustments...</div>
+
+  <div class="table-card" *ngIf="!loading">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Employee</th>
+          <th>Adjustment Type</th>
+          <th>Adjustment Name</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Reason</th>
+          <th>Created At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of adjustments; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td><strong>{{ payrollLabel(item.pa_PR_Id) }}</strong></td>
+          <td>{{ item.pa_AdjustmentType }}</td>
+          <td>{{ item.pa_AdjustmentName }}</td>
+          <td>{{ item.pa_AdjustmentCategory }}</td>
+          <td>{{ item.pa_Amount | number:'1.2-2' }}</td>
+          <td>{{ item.pa_Reason || '-' }}</td>
+          <td>{{ item.pa_CreatedAt ? (item.pa_CreatedAt | date:'dd MMM yyyy') : '-' }}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-edit" (click)="openEditForm(item)">Edit</button>
+              <button class="btn-delete" (click)="deleteAdjustment(item.pa_Id)">Delete</button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="adjustments.length === 0 && !loading">
+          <td colspan="9" class="empty-row">No payroll adjustments found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()">
+    <div class="form-card" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h3>{{ isEditMode ? 'Edit Payroll Adjustment' : 'Add Payroll Adjustment' }}</h3>
+        <button class="form-close" (click)="closeForm()" aria-label="Close">×</button>
+      </div>
+
+      <div class="form-body">
+        <label class="form-label">
+          Payroll Record *
+          <select class="form-input" [(ngModel)]="formPRId">
+            <option [ngValue]="null" disabled>Select payroll record</option>
+            <option *ngFor="let p of payrolls" [ngValue]="p.pr_Id">
+              {{ payrollLabel(p.pr_Id) }}
+            </option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          Adjustment Type *
+          <input type="text" class="form-input" [(ngModel)]="formAdjustmentType" placeholder="e.g. Bonus, Deduction" />
+        </label>
+
+        <label class="form-label">
+          Adjustment Name *
+          <input type="text" class="form-input" [(ngModel)]="formAdjustmentName" placeholder="e.g. Performance Bonus, Late Deduction" />
+        </label>
+
+        <label class="form-label">
+          Adjustment Category *
+          <input type="text" class="form-input" [(ngModel)]="formAdjustmentCategory" placeholder="e.g. Earning, Deduction" />
+        </label>
+
+        <label class="form-label">
+          Amount *
+          <input type="number" class="form-input" [(ngModel)]="formAmount" min="0" step="0.01" />
+        </label>
+
+        <label class="form-label">
+          Reason
+          <input type="text" class="form-input" [(ngModel)]="formReason" placeholder="Reason for adjustment (optional)" />
+        </label>
+
+        <label class="form-label">
+          Created By *
+          <input type="number" class="form-input" [(ngModel)]="formCreatedBy" min="1" />
+        </label>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn-cancel" (click)="closeForm()" [disabled]="saving">Cancel</button>
+        <button class="btn-primary" (click)="saveAdjustment()" [disabled]="saving">
+          {{ saving ? 'Saving...' : (isEditMode ? 'Update' : 'Save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

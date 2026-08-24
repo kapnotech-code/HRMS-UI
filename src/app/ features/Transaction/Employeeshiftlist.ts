@@ -98,7 +98,6 @@ export class EmployeeShiftListComponent implements OnInit {
 
   loadAll(): void {
     this.loading = true;
-    this.clearMessages();
     this.employeeShiftService.getAll().subscribe({
       next: (data) => {
         this.shifts = data;
@@ -114,12 +113,12 @@ export class EmployeeShiftListComponent implements OnInit {
   }
 
   applyEmployeeFilter(): void {
+    this.clearMessages();
     if (!this.filterEmployeeId) {
       this.loadAll();
       return;
     }
     this.loading = true;
-    this.clearMessages();
     this.employeeShiftService.getByEmployee(this.filterEmployeeId).subscribe({
       next: (data) => {
         this.shifts = data;
@@ -136,18 +135,25 @@ export class EmployeeShiftListComponent implements OnInit {
 
   clearFilter(): void {
     this.filterEmployeeId = null;
+    this.clearMessages();
+    this.loadAll();
+  }
+
+  // Bound to the Refresh button — clears old banners before reloading
+  refresh(): void {
+    this.clearMessages();
     this.loadAll();
   }
 
   openAddForm(): void {
     this.isEditMode = false;
     this.formModel = this.emptyForm();
+    this.clearMessages();
     this.showForm = true;
     this.cdr.detectChanges();
   }
 
   openEditForm(row: EmployeeShiftResponse): void {
-    console.log('Edit clicked for row:', row);
     this.isEditMode = true;
     this.formModel = {
       employeeShiftID: Number(row.employeeShiftID),
@@ -156,29 +162,28 @@ export class EmployeeShiftListComponent implements OnInit {
       effectiveFrom: row.effectiveFrom?.substring(0, 10),
       effectiveTo: row.effectiveTo ? row.effectiveTo.substring(0, 10) : null
     };
-    console.log('formModel after edit prefill:', this.formModel);
+    this.clearMessages();
     this.showForm = true;
     this.cdr.detectChanges();
   }
+
   resetForm(): void {
     this.isEditMode = false;
     this.formModel = this.emptyForm();
-    this.errorMessage = '';
     this.cdr.detectChanges();
   }
 
   cancelForm(): void {
     this.showForm = false;
     this.formModel = this.emptyForm();
+    this.clearMessages();
     this.cdr.detectChanges();
   }
 
   saveForm(): void {
-    console.log('saveForm called. isEditMode:', this.isEditMode, 'formModel:', this.formModel);
     this.clearMessages();
 
     if (!this.formModel.employeeID || !this.formModel.shiftID || !this.formModel.effectiveFrom) {
-      console.warn('Validation failed, not calling API. formModel:', this.formModel);
       this.errorMessage = 'Employee, Shift, and Effective From are required.';
       this.cdr.detectChanges();
       return;
@@ -187,51 +192,43 @@ export class EmployeeShiftListComponent implements OnInit {
     this.saving = true;
 
     if (this.isEditMode && this.formModel.employeeShiftID) {
-      console.log('Calling UPDATE API for id:', this.formModel.employeeShiftID);
       this.employeeShiftService.update(this.formModel.employeeShiftID, this.formModel).subscribe({
         next: (res) => {
-          console.log('Update API success:', res);
           this.saving = false;
           this.successMessage = res.message || 'Employee shift updated successfully.';
           this.showForm = false;
+          this.resetForm();
           this.loadAll();
           this.cdr.detectChanges();
         },
         error: (err) => {
-          console.error('Update API failed:', err);
           this.saving = false;
           this.errorMessage = 'Update failed. ' + this.extractError(err);
+          // keep the modal open so the user actually sees the error and can retry
           this.cdr.detectChanges();
         }
       });
     } else {
-      console.log('Calling ADD API (not edit mode or missing employeeShiftID)');
-
       this.employeeShiftService.add(this.formModel).subscribe({
         next: (res) => {
           this.saving = false;
           this.successMessage = res.message || 'Employee shift added successfully.';
-
-          alert('Employee shift added successfully.');
-
-          this.resetForm();
           this.showForm = false;
-
+          this.resetForm();
           this.loadAll();
           this.cdr.detectChanges();
         },
         error: (err) => {
           this.saving = false;
           this.errorMessage = 'Add failed. ' + this.extractError(err);
-          console.error('Add API failed:', err);
+          // keep the modal open so the user actually sees the error and can retry
           this.cdr.detectChanges();
         }
       });
     }
   }
 
-  // Delete Employee Shift
-  // 'force' param HTML se aata hai (deleteRow(row, true)) — hard delete flag ke liye
+  // 'force' comes from the HTML (deleteRow(row, true)) — hard-delete flag
   deleteRow(row: EmployeeShiftResponse, force: boolean = true): void {
     if (!confirm(`Delete shift #${row.employeeShiftID}? This cannot be undone.`)) {
       return;
@@ -240,7 +237,7 @@ export class EmployeeShiftListComponent implements OnInit {
     this.clearMessages();
     this.employeeShiftService.delete(row.employeeShiftID, force).subscribe({
       next: (res) => {
-        this.successMessage = res.message || 'Employee shift deleted.';
+        this.successMessage = res.message || 'Employee shift deleted successfully.';
         this.loadAll();
         this.cdr.detectChanges();
       },

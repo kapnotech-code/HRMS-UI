@@ -1,0 +1,177 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Payroll Management</h2>
+      <p>Manage employee payroll records</p>
+    </div>
+    <button class="btn-primary" (click)="openAddForm()">+ Add Payroll</button>
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="loading" *ngIf="loading">Loading payroll records...</div>
+
+  <div class="table-card" *ngIf="!loading">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Employee</th>
+          <th>Month/Year</th>
+          <th>Working Days</th>
+          <th>Present Days</th>
+          <th>Paid Leave</th>
+          <th>LOP Days</th>
+          <th>Gross Salary</th>
+          <th>Net Salary</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of payrollList; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td><strong>{{ employeeName(item.pr_EmployeeId) }}</strong></td>
+          <td>{{ item.pr_PayrollMonth }}/{{ item.pr_PayrollYear }}</td>
+          <td>{{ item.pr_WorkingDays }}</td>
+          <td>{{ item.pr_PresentDays }}</td>
+          <td>{{ item.pr_PaidLeaveDays }}</td>
+          <td>{{ item.pr_LOPDays }}</td>
+          <td>{{ item.pr_GrossSalary | number:'1.2-2' }}</td>
+          <td>{{ item.pr_NetSalary | number:'1.2-2' }}</td>
+          <td>
+            <span class="status-badge"
+                  [class.status-approved]="item.pr_Status === 'Approved'"
+                  [class.status-pending]="item.pr_Status === 'Pending'"
+                  [class.status-processed]="item.pr_Status === 'Processed'"
+                  [class.status-rejected]="item.pr_Status === 'Rejected'">
+              {{ item.pr_Status }}
+            </span>
+          </td>
+          <td>
+            <div class="actions">
+              <button class="btn-edit" (click)="openEditForm(item)">Edit</button>
+              <button class="btn-delete" (click)="deletePayroll(item.pr_Id)">Delete</button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="payrollList.length === 0 && !loading">
+          <td colspan="11" class="empty-row">No payroll records found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()">
+    <div class="form-card" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h3>{{ isEditMode ? 'Edit Payroll' : 'Add Payroll' }}</h3>
+        <button class="form-close" (click)="closeForm()" aria-label="Close">×</button>
+      </div>
+
+      <div class="form-body">
+        <label class="form-label">
+          Employee *
+          <select class="form-input" [(ngModel)]="formEmployeeId">
+            <option [ngValue]="null" disabled>Select an employee</option>
+            <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+              {{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})
+            </option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          Payroll Month *
+          <select class="form-input" [(ngModel)]="formPayrollMonth">
+            <option [ngValue]="1">January</option>
+            <option [ngValue]="2">February</option>
+            <option [ngValue]="3">March</option>
+            <option [ngValue]="4">April</option>
+            <option [ngValue]="5">May</option>
+            <option [ngValue]="6">June</option>
+            <option [ngValue]="7">July</option>
+            <option [ngValue]="8">August</option>
+            <option [ngValue]="9">September</option>
+            <option [ngValue]="10">October</option>
+            <option [ngValue]="11">November</option>
+            <option [ngValue]="12">December</option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          Payroll Year *
+          <input type="number" class="form-input" [(ngModel)]="formPayrollYear" min="2000" />
+        </label>
+
+        <label class="form-label">
+          Working Days *
+          <input type="number" class="form-input" [(ngModel)]="formWorkingDays" min="0" />
+        </label>
+
+        <label class="form-label">
+          Present Days *
+          <input type="number" class="form-input" [(ngModel)]="formPresentDays" min="0" />
+        </label>
+
+        <label class="form-label">
+          Paid Leave Days *
+          <input type="number" class="form-input" [(ngModel)]="formPaidLeaveDays" min="0" />
+        </label>
+
+        <label class="form-label">
+          LOP Days *
+          <input type="number" class="form-input" [(ngModel)]="formLOPDays" min="0" />
+        </label>
+
+        <label class="form-label">
+          Total Earnings *
+          <input type="number" class="form-input" [(ngModel)]="formTotalEarnings" min="0" />
+        </label>
+
+        <label class="form-label">
+          Total Deductions *
+          <input type="number" class="form-input" [(ngModel)]="formTotalDeductions" min="0" />
+        </label>
+
+        <label class="form-label">
+          Gross Salary *
+          <input type="number" class="form-input" [(ngModel)]="formGrossSalary" min="0" />
+        </label>
+
+        <label class="form-label">
+          Net Salary *
+          <input type="number" class="form-input" [(ngModel)]="formNetSalary" min="0" />
+        </label>
+
+        <label class="form-label">
+          Status *
+          <select class="form-input" [(ngModel)]="formStatus">
+            <option value="Pending">Pending</option>
+            <option value="Processed">Processed</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </label>
+
+        <label class="form-label">
+          Processed Date
+          <input type="date" class="form-input" [(ngModel)]="formProcessedDate" />
+        </label>
+
+        <label class="form-label">
+          Approved Date
+          <input type="date" class="form-input" [(ngModel)]="formApprovedDate" />
+        </label>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn-cancel" (click)="closeForm()" [disabled]="saving">Cancel</button>
+        <button class="btn-primary" (click)="savePayroll()" [disabled]="saving">
+          {{ saving ? 'Saving...' : (isEditMode ? 'Update' : 'Save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

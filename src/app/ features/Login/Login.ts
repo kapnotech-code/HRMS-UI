@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../app/core/services/Auth.service';
 import { LoginRequest } from '../../../app/shared/models/Login/LoginRequest';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -17,29 +18,37 @@ export class Login {
   showPassword = false;
   loading = false;
   errorMessage = '';
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) { }
+
   submit(): void {
     this.errorMessage = '';
+
     if (!this.loginName.trim() || !this.password.trim()) {
       this.errorMessage = 'Please enter your Login Id and Password.';
       return;
     }
+
     this.loading = true;
+
     const request: LoginRequest = {
       userId: this.loginName.trim(),
       loginName: this.loginName.trim(),
       password: this.password,
       deviceId: 'WEB'
     };
+
     this.authService.login(request).subscribe({
       next: (res: any) => {
         this.loading = false;
+
         // Poora response dekho console mein — isse exact shape confirm hogi
         console.log('LOGIN RESPONSE:', res);
+
         // Token ko har common jagah se dhoondo (backend jo bhi format bheje)
         const token =
           res?.token ||
@@ -49,9 +58,11 @@ export class Login {
           res?.data?.token ||
           res?.data?.Token ||
           res?.result?.token;
+
         if (token) {
           this.authService.saveToken(token);
           console.log('TOKEN SAVED:', localStorage.getItem('token'));
+
           this.router.navigateByUrl('/dashboard').then(success => {
             if (!success) {
               console.error('Navigation blocked — check authGuard / isLoggedIn().');

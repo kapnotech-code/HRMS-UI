@@ -10,8 +10,6 @@ import { CompanyRequest } from '../../../../shared/models/companylist/CompanyReq
 import { CompanyResponse } from '../../../../shared/models/companylist/CompanyResponse';
 import { ApiResponse } from '../../../../shared/models/companylist/ ApiResponse';
 
-
-
 @Component({
   selector: 'app-department-list',
   standalone: true,
@@ -156,20 +154,23 @@ export class DepartmentList implements OnInit {
       queryParamsHandling: 'merge'
     });
   }
-  deleteItem(item: DepartmentResponse): void {
-    if (!confirm(`Do you want to delete "${item.departmentName}"?`)) return;
 
-    this.departmentService.delete(item.departmentID).subscribe({
+  deleteItem(item: DepartmentResponse): void {
+    if (!confirm(`Do you want to permanently delete "${item.departmentName}"? This cannot be undone.`)) return;
+
+    this.departmentService.delete(item.departmentID, true).subscribe({
       next: () => {
         alert('Department deleted successfully.');
         this.loadData();
       },
       error: (err) => {
-        alert('Delete failed.');
+        const msg = err?.error?.message || 'Delete failed. Please try again.';
+        alert(msg);
         console.error(err);
       }
     });
   }
+
   saveDepartment(): void {
     if (!this.formDepartmentCode.trim() || !this.formDepartmentName.trim()) {
       alert('Department Code and Name is needed');
@@ -199,7 +200,8 @@ export class DepartmentList implements OnInit {
         },
         error: (err) => {
           this.saving = false;
-          alert('Update failed.');
+          const msg = err?.error?.message || 'Update failed. Please try again.';
+          alert(msg);
           console.error('Update error:', err);
           this.cdr.detectChanges();
         }
@@ -216,7 +218,8 @@ export class DepartmentList implements OnInit {
         },
         error: (err) => {
           this.saving = false;
-          alert('Save failed.');
+          const msg = err?.error?.message || 'Save failed. Please try again.';
+          alert(msg);
           console.error('Create error:', err);
           this.cdr.detectChanges();
         }

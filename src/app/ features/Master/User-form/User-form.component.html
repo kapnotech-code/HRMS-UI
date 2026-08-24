@@ -8,7 +8,7 @@
 
   <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
-  <form class="form-card" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading">
+  <form class="form-card" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading && !permissionDenied">
     <div class="form-row">
       <label for="userName">Full Name *</label>
       <input id="userName" type="text" formControlName="userName" placeholder="e.g. Rahul Sharma" />
@@ -67,3 +67,4 @@
 
   <div class="loading" *ngIf="loading">Loading user...</div>
 </div>
+

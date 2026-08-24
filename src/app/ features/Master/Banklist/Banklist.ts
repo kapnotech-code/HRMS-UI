@@ -18,6 +18,7 @@ export class BankList implements OnInit {
 
   loading = false;
   errorMessage = '';
+  successMessage = '';
   searchText = '';
 
   // ---------- Modal state ----------
@@ -49,6 +50,27 @@ export class BankList implements OnInit {
     };
   }
 
+  // ---------- Helpers to show & auto-clear messages ----------
+  private showSuccess(msg: string): void {
+    this.successMessage = msg;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.successMessage = '';
+      this.cdr.detectChanges();
+    }, 4000);
+  }
+
+  private showError(msg: string): void {
+    this.errorMessage = msg;
+    this.successMessage = '';
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.errorMessage = '';
+      this.cdr.detectChanges();
+    }, 5000);
+  }
+
   // ===================================================
   // LOAD
   // ===================================================
@@ -63,9 +85,8 @@ export class BankList implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.errorMessage = 'Failed to load banks.';
         this.loading = false;
-        this.cdr.detectChanges();
+        this.showError('Failed to load banks.');
       }
     });
   }
@@ -127,10 +148,13 @@ export class BankList implements OnInit {
           this.saving = false;
           this.showModal = false;
           this.loadBanks();
+          this.showSuccess(`Bank "${this.formModel.bankName}" updated successfully.`);
         },
         error: (err) => {
           this.saving = false;
-          this.formError = err?.error?.message || 'Failed to update bank.';
+          const msg = err?.error?.message || 'Failed to update bank.';
+          this.formError = msg;
+          this.showError(msg);
           this.cdr.detectChanges();
         }
       });
@@ -140,10 +164,13 @@ export class BankList implements OnInit {
           this.saving = false;
           this.showModal = false;
           this.loadBanks();
+          this.showSuccess(`Bank "${this.formModel.bankName}" added successfully.`);
         },
         error: (err) => {
           this.saving = false;
-          this.formError = err?.error?.message || 'Failed to add bank.';
+          const msg = err?.error?.message || 'Failed to add bank.';
+          this.formError = msg;
+          this.showError(msg);
           this.cdr.detectChanges();
         }
       });
@@ -166,11 +193,11 @@ export class BankList implements OnInit {
       next: () => {
         this.deletingId = null;
         this.loadBanks();
+        this.showSuccess(`Bank "${bank.bankName}" deleted successfully.`);
       },
       error: () => {
         this.deletingId = null;
-        this.errorMessage = `Failed to delete "${bank.bankName}".`;
-        this.cdr.detectChanges();
+        this.showError(`Failed to delete "${bank.bankName}".`);
       }
     });
   }

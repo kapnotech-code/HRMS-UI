@@ -2,10 +2,8 @@
 <div class="sidebar-backdrop" (click)="sidebarService.close()"></div>
 }
 <aside class="sidebar" [class.collapsed]="!sidebarService.isOpen()">
-
-  <!-- ===== Dashboard — standalone link, always visible, sits above the groups ===== -->
   <nav class="sidebar-top-nav">
-    @for (item of topLevelItems; track item.route) {
+    @for (item of visibleTopLevel; track item.route) {
     <a [routerLink]="item.route"
        routerLinkActive="active-link"
        class="sidebar-link sidebar-top-link"
@@ -15,8 +13,7 @@
     </a>
     }
   </nav>
-
-  @for (group of menuGroups; track group.label) {
+   @for (group of visibleMenuGroups; track group.label) {
   <div class="sidebar-group">
     <button class="sidebar-heading" (click)="group.open = !group.open">
       <span>{{ group.label }}</span>

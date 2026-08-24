@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { PermissionService } from '../../core/services/permission.service';
+import { MenuService } from '../../core/services/menu.service';
+import { Menu } from '../../shared/models/Menu/menu.model';
 
 interface PermissionRow {
   permissionId?: number;
@@ -11,6 +13,7 @@ interface PermissionRow {
   pageId: number;
   pageName: string;
   menuGroup: string;
+  menuId: number | null;
   canView: boolean;
   canAdd: boolean;
   canEdit: boolean;
@@ -34,8 +37,8 @@ export class PermissionList implements OnInit, OnDestroy {
   selectedRoleId: number = 0;
 
   groupedPermissions: { [group: string]: PermissionRow[] } = {};
+  menuOrder: string[] = [];
 
-  // ⭐ Expand/collapse state per group — collapsed (false) by default
   expandedGroups: { [group: string]: boolean } = {};
 
   loadingInitial = true;
@@ -47,9 +50,12 @@ export class PermissionList implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private roleSwitch$ = new Subject<void>();
+  private menuMap = new Map<number | null | undefined, string>();
+  private menuDisplayOrder: { menuId: number | null | undefined; name: string }[] = [];
 
   constructor(
     private permissionService: PermissionService,
+    private menuService: MenuService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -80,6 +86,9 @@ export class PermissionList implements OnInit, OnDestroy {
           console.error('Pages load nahi hue:', err);
           return of(null);
         })
+      ),
+      menus: this.menuService.getAll().pipe(
+        catchError(() => of([]))
       )
     })
       .pipe(
@@ -89,7 +98,7 @@ export class PermissionList implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         })
       )
-      .subscribe(({ roles, pages }) => {
+      .subscribe(({ roles, pages, menus }) => {
         if (roles === null || pages === null) {
           this.errorMessage = 'Failed to load Roles or Pages. Please check backend connection.';
           return;
@@ -97,6 +106,7 @@ export class PermissionList implements OnInit, OnDestroy {
 
         this.roles = (roles as any).data || roles || [];
         this.pages = ((pages as any).data || pages || []).filter((p: any) => p.isActive !== false);
+        this.buildMenuMap(menus as Menu[]);
 
         if (this.roles.length === 0) {
           this.errorMessage = 'No roles found. Please add roles first.';
@@ -106,6 +116,28 @@ export class PermissionList implements OnInit, OnDestroy {
 
         this.cdr.detectChanges();
       });
+  }
+
+  private buildMenuMap(menus: Menu[]): void {
+    this.menuMap.clear();
+    this.menuDisplayOrder = [];
+
+    const activeMenus = menus
+      .filter(m => m.isActive !== false)
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+
+    for (const menu of activeMenus) {
+      this.menuMap.set(menu.menuId, menu.menuName);
+      this.menuDisplayOrder.push({ menuId: menu.menuId, name: menu.menuName });
+    }
+
+    this.menuMap.set(null, 'Other');
+    this.menuDisplayOrder.push({ menuId: null, name: 'Other' });
+  }
+
+  private getMenuName(menuId: number | null | undefined): string {
+    if (!menuId && menuId !== 0) return 'Other';
+    return this.menuMap.get(menuId) || 'Other';
   }
 
   getRoleName(roleId: number): string {
@@ -123,31 +155,36 @@ export class PermissionList implements OnInit, OnDestroy {
 
   buildGroupedPermissions(): void {
     this.groupedPermissions = {};
+    this.menuOrder = [];
+
     this.permissions.forEach(row => {
-      const group = row.menuGroup?.trim() || 'Other';
+      const group = row.menuGroup || 'Other';
       if (!this.groupedPermissions[group]) {
         this.groupedPermissions[group] = [];
       }
       this.groupedPermissions[group].push(row);
     });
 
-    // ⭐ Sab groups collapsed se shuru honge, jab tak user click na kare
+    this.menuOrder = Object.keys(this.groupedPermissions).sort((a, b) => {
+      const indexA = this.menuDisplayOrder.findIndex(m => m.name === a);
+      const indexB = this.menuDisplayOrder.findIndex(m => m.name === b);
+      return indexA - indexB;
+    });
+
     this.expandedGroups = {};
-    Object.keys(this.groupedPermissions).forEach(group => {
+    this.menuOrder.forEach(group => {
       this.expandedGroups[group] = false;
     });
   }
 
   get groupNames(): string[] {
-    return Object.keys(this.groupedPermissions);
+    return this.menuOrder;
   }
 
-  // ⭐ Click par ek group open/close karo
   toggleGroup(group: string): void {
     this.expandedGroups[group] = !this.expandedGroups[group];
   }
 
-  // ⭐ Group ke andar kitne pages ki View permission on hai (chota counter dikhane ke liye)
   viewCount(group: string): number {
     return (this.groupedPermissions[group] || []).filter(p => p.canView).length;
   }
@@ -202,7 +239,8 @@ export class PermissionList implements OnInit, OnDestroy {
               roleId: requestedRoleId,
               pageId: page.pageId,
               pageName: page.pageName,
-              menuGroup: page.menuName || page.menuGroup || 'Other',
+              menuGroup: this.getMenuName(page.menuId) || 'Other',
+              menuId: page.menuId ?? null,
               canView: match?.canView ?? false,
               canAdd: match?.canAdd ?? false,
               canEdit: match?.canEdit ?? false,
@@ -218,10 +256,12 @@ export class PermissionList implements OnInit, OnDestroy {
         error: (err) => {
           console.error('Permissions load nahi hue:', err);
           this.permissions = this.pages.map((page: any) => ({
+            permissionId: undefined,
             roleId: requestedRoleId,
             pageId: page.pageId,
             pageName: page.pageName,
-            menuGroup: page.menuName || page.menuGroup || 'Other',
+            menuGroup: this.getMenuName(page.menuId) || 'Other',
+            menuId: page.menuId ?? null,
             canView: false,
             canAdd: false,
             canEdit: false,

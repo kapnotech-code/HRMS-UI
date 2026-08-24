@@ -27,7 +27,6 @@
   overflow-x: hidden;
 }
 
-  /* Optional: thin custom scrollbar for sidebar */
   .sidebar::-webkit-scrollbar {
     width: 4px;
   }
@@ -37,15 +36,74 @@
     border-radius: 4px;
   }
 
-.sidebar-toggle {
+/* --- Fixed hamburger toggle button (OUTSIDE the sliding sidebar) ---
+   Hidden by default (desktop). Shown only on mobile via media query below.
+   Stays fixed on screen so it's reachable even when sidebar is closed. */
+.sidebar-toggle-fixed {
   display: none;
-  border: none;
-  background: transparent;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--bg-sidebar);
+  border-radius: 10px;
   cursor: pointer;
-  padding: 8px 20px 14px 20px;
-  color: var(--text-muted);
-  font-size: 18px;
+  z-index: 45;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  transition: background 0.15s ease;
 }
+
+  .sidebar-toggle-fixed:hover {
+    background: var(--bg-hover);
+  }
+
+.hamburger-icon {
+  position: relative;
+  width: 18px;
+  height: 13px;
+  display: inline-block;
+}
+
+  .hamburger-icon span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.2s ease, top 0.25s ease;
+  }
+
+    .hamburger-icon span:nth-child(1) {
+      top: 0;
+    }
+
+    .hamburger-icon span:nth-child(2) {
+      top: 5.5px;
+    }
+
+    .hamburger-icon span:nth-child(3) {
+      top: 11px;
+    }
+
+  /* Animates into an "X" when sidebar is open */
+  .hamburger-icon.open span:nth-child(1) {
+    top: 5.5px;
+    transform: rotate(45deg);
+  }
+
+  .hamburger-icon.open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-icon.open span:nth-child(3) {
+    top: 5.5px;
+    transform: rotate(-45deg);
+  }
 
 /* --- Accordion Group --- */
 .sidebar-group {
@@ -165,15 +223,14 @@
 
 /* --- Mobile: slide-in drawer --- */
 @media (max-width: 600px) {
-  .sidebar-toggle {
-    display: block;
+  .sidebar-toggle-fixed {
+    display: flex;
   }
 
   .sidebar-backdrop {
     display: block;
     position: fixed;
     inset: 0;
-    top: 68px;
     background: rgba(15, 23, 42, 0.45);
     z-index: 35;
     animation: fadeIn 0.15s ease;
@@ -191,10 +248,11 @@
 
   .sidebar {
     position: fixed;
-    top: 68px;
+    top: 0;
     left: -240px;
     width: 240px;
-    height: calc(100vh - 68px);
+    height: 100vh;
+    padding-top: 64px;
     overflow-y: auto;
     z-index: 40;
     box-shadow: 4px 0 16px rgba(0,0,0,0.08);
@@ -202,6 +260,10 @@
   }
 
     .sidebar.collapsed {
+      left: -240px;
+    }
+
+    .sidebar:not(.collapsed) {
       left: 0;
     }
 

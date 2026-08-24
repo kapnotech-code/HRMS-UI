@@ -1,8 +1,20 @@
 <header class="app-header">
-  <div class="brand">
-    <div class="brand-icon"><i class="ti ti-building-skyscraper"></i></div>
-    <span>HRMS</span>
+  <div class="header-left">
+    <!-- Menu toggle — only visible on mobile (controlled via CSS) -->
+    <button class="menu-toggle-btn" (click)="sidebarService.toggle()" aria-label="Toggle menu">
+      <span class="hamburger-icon" [class.open]="sidebarService.isOpen()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+
+    <div class="brand">
+      <div class="brand-icon"><i class="ti ti-building-skyscraper"></i></div>
+      <span>HRMS</span>
+    </div>
   </div>
+
   <div class="header-right">
     <i class="ti ti-bell notif-icon"></i>
     <div class="divider"></div>

@@ -565,7 +565,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     this.closeDropdown();
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete ${this.fullName(emp)} (${emp.employeeCode})? This action cannot be undone.`
+      `Are you sure you want to permanently delete ${this.fullName(emp)} (${emp.employeeCode})? This action cannot be undone.`
     );
 
     if (!confirmed) return;
@@ -573,7 +573,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     this.deletingEmployeeId = emp.employeeID;
     this.cdr.detectChanges();
 
-    this.employeeService.delete(emp.employeeID).subscribe({
+    this.employeeService.delete(emp.employeeID, true).subscribe({   // ✅ FIX: hardDelete = true add kiya
       next: () => {
         alert('Employee deleted successfully.');
 
@@ -593,7 +593,6 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   // ===================================================
   // REPORTS DROPDOWN (custom — does not depend on Bootstrap JS)
   // ===================================================
@@ -850,7 +849,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
 
   exportToCsv(): void {
     if (!this.filteredEmployees.length) {
-      alert('Export karne ke liye koi record nahi hai.');
+      alert('No data for export.');
       return;
     }
 

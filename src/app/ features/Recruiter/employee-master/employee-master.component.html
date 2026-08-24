@@ -16,7 +16,6 @@
       <p class="subtitle">Add or update an employee record</p>
     </div>
     <div class="header-actions">
-
       <button class="btn btn-primary" (click)="newEmployee()">+ New Employee</button>
     </div>
   </div>
@@ -301,27 +300,28 @@
           <label>Work Location</label>
           <input type="text" name="workLocation" [(ngModel)]="formModel.workLocation" maxlength="100" />
         </div>
-
+        <!-- Manager — plain manual text input, no dropdown -->
         <div class="field">
           <label>Manager</label>
-          <select name="managerID" [(ngModel)]="formModel.managerID">
-            <option [ngValue]="undefined">-- Select Manager --</option>
-            <option *ngFor="let m of managers" [ngValue]="m.id"
-                    [disabled]="m.id === formModel.employeeID">
-              {{ m.name }}
-            </option>
-          </select>
+          <input type="text"
+                 placeholder="Type manager's full name"
+                 [(ngModel)]="managerSearchText"
+                 name="managerSearch"
+                 (input)="onManagerInput()"
+                 (blur)="onManagerBlur()"
+                 autocomplete="off" />
         </div>
 
+        <!-- Reporting Manager — plain manual text input, no dropdown -->
         <div class="field">
           <label>Reporting Manager</label>
-          <select name="reportingManagerID" [(ngModel)]="formModel.reportingManagerID">
-            <option [ngValue]="undefined">-- Select Reporting Manager --</option>
-            <option *ngFor="let m of managers" [ngValue]="m.id"
-                    [disabled]="m.id === formModel.employeeID">
-              {{ m.name }}
-            </option>
-          </select>
+          <input type="text"
+                 placeholder="Type reporting manager's full name"
+                 [(ngModel)]="reportingManagerSearchText"
+                 name="reportingManagerSearch"
+                 (input)="onReportingManagerInput()"
+                 (blur)="onReportingManagerBlur()"
+                 autocomplete="off" />
         </div>
 
         <div class="field">
@@ -360,8 +360,6 @@
             <option *ngFor="let s of statusOptions" [ngValue]="s">{{ s }}</option>
           </select>
         </div>
-
-
 
       </div>
 

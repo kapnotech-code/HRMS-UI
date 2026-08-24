@@ -258,7 +258,23 @@
   gap: var(--sp-2);
   margin-bottom: var(--sp-4);
 }
+.search-box select {
+  border: none;
+  outline: none;
+  padding: 9px 4px;
+  font-size: 14px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 160px;
+}
 
+  .search-box select:focus {
+    outline: none;
+  }
 .search-box {
   display: flex;
   align-items: center;
@@ -280,12 +296,12 @@
     flex-shrink: 0;
   }
 
-  .search-box input {
+  .search-box input,
+  .search-box select {
     border: none;
     outline: none;
     padding: 9px 0;
     font-size: 14px;
-    width: 200px;
     background: transparent;
     color: var(--ink);
   }

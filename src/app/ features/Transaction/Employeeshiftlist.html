@@ -11,19 +11,23 @@
            [(ngModel)]="filterEmployeeId"
            class="filter-input" />
     <button class="btn btn-secondary" (click)="applyEmployeeFilter()">Filter</button>
-
-    <button class="btn btn-secondary" (click)="loadAll()">Refresh</button>
+    <button class="btn btn-secondary" (click)="clearFilter()">Clear</button>
+    <button class="btn btn-secondary" (click)="refresh()">Refresh</button>
   </div>
 
-  <!-- Messages -->
-  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
-  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <!-- Page-level messages (visible when modal is closed) -->
+  <div class="alert alert-error" *ngIf="errorMessage && !showForm">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage && !showForm">{{ successMessage }}</div>
 
-  <!-- Add/Edit Form -->
   <!-- Add/Edit Form (Popup Modal) -->
   <div class="modal-overlay" *ngIf="showForm" (click)="cancelForm()">
     <div class="form-panel" (click)="$event.stopPropagation()">
       <h3>{{ isEditMode ? 'Edit' : 'Add' }} Employee Shift</h3>
+
+      <!-- Inline alerts so they're visible even while the modal is open -->
+      <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+      <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
       <form (ngSubmit)="saveForm()" #shiftForm="ngForm">
         <div class="form-grid">
           <label>
@@ -98,7 +102,6 @@
           </td>
           <td class="actions-cell">
             <button class="btn btn-small" (click)="openEditForm(row)">Edit</button>
-
             <button class="btn btn-small btn-danger" (click)="deleteRow(row, true)">Delete</button>
           </td>
         </tr>

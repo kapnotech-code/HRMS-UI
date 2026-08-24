@@ -197,7 +197,8 @@ export class AttendancesLists implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        alert('Delete failed.');
+        const msg = err?.error?.message || 'Delete failed. Please try again.';
+        alert(msg);
       }
     });
   }
@@ -260,7 +261,8 @@ export class AttendancesLists implements OnInit {
         },
         error: (err) => {
           this.saving = false;
-          alert('Attendance update failed.');
+          const msg = err?.error?.message || 'Attendance update failed. Please try again.';
+          alert(msg);
           console.error(err);
           this.cdr.detectChanges();
         }
@@ -276,7 +278,8 @@ export class AttendancesLists implements OnInit {
         },
         error: (err) => {
           this.saving = false;
-          alert('Attendance save failed.');
+          const msg = err?.error?.message || 'Attendance save failed. Please try again.';
+          alert(msg);
           console.error(err);
           this.cdr.detectChanges();
         }

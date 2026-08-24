@@ -5,6 +5,7 @@ import { UserService } from '../../../core/services/user.service';
 import { UserResponse } from '../../../shared/models/User/userresponse';
 import { Role } from '../../../shared/models/Role/Role';
 import { UserRequest } from '../../../shared/models/User/UserRequest';
+import { FrontendPermissionService } from '../../../core/services/frontend-permission.service';
 
 @Component({
   selector: 'app-user-list',
@@ -17,7 +18,11 @@ export class UserListComponent implements OnInit {
   users: UserResponse[] = [];
   searchTerm = '';
   loading = false;
+
+  // ---- Page-level alerts (shown above the table) ----
+  // Kept separate so success (green) and error (red) never collide in the same message.
   errorMsg = '';
+  successMsg = '';
 
   // Modal state
   showModal = false;
@@ -26,6 +31,14 @@ export class UserListComponent implements OnInit {
   form!: FormGroup;
   saving = false;
   formError = '';
+
+  // Delete state (per-row loading indicator, same pattern as other list components)
+  deletingId: number | null = null;
+
+  // Permission flags (admin bypass)
+  canAdd = true;
+  canEdit = true;
+  canDelete = true;
 
   // Replace with a roles master API if available
   roles: Role[] = [
@@ -37,13 +50,15 @@ export class UserListComponent implements OnInit {
   constructor(
     private userService: UserService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private frontendPerm: FrontendPermissionService
   ) {
     this.buildForm();
   }
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadPermissions();
   }
 
   buildForm(): void {
@@ -68,11 +83,20 @@ export class UserListComponent implements OnInit {
       },
       error: (err: any) => {
         console.error(err);
-        this.errorMsg = 'Failed to load users. Please check the backend.';
+        this.errorMsg = err?.error?.message || 'Failed to load users. Please check the backend.';
         this.loading = false;
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private loadPermissions(): void {
+    const roleId = this.frontendPerm.getCurrentRoleId();
+    if (!roleId || roleId === 1) return;
+    this.canAdd = this.frontendPerm.canAddByUrl('/masters/users');
+    this.canEdit = this.frontendPerm.canEditByUrl('/masters/users');
+    this.canDelete = this.frontendPerm.canDeleteByUrl('/masters/users');
+    this.cdr.detectChanges();
   }
 
   onSearchChange(): void {
@@ -85,27 +109,34 @@ export class UserListComponent implements OnInit {
     return this.roles.find(r => r.roleId === roleId)?.roleName || '-';
   }
 
-  // Resolves the login name for both the table and the edit modal —
-  // the backend sometimes sends the value under `loginUserId`, sometimes under `loginName`.
   getLoginName(user: UserResponse): string {
     return user.loginUserId || user.loginName || '-';
+  }
+
+  private clearAlerts(): void {
+    this.errorMsg = '';
+    this.successMsg = '';
   }
 
   // ---- Modal open/close ----
 
   openAddModal(): void {
+    if (!this.canAdd) return;
     this.isEditMode = false;
     this.editingUserId = null;
     this.formError = '';
+    this.clearAlerts();
     this.buildForm();
     this.showModal = true;
     this.cdr.detectChanges();
   }
 
   openEditModal(user: UserResponse): void {
+    if (!this.canEdit) return;
     this.isEditMode = true;
     this.editingUserId = user.userId;
     this.formError = '';
+    this.clearAlerts();
     this.buildForm();
     // Password is not required in edit mode
     this.form.get('password')?.clearValidators();
@@ -135,6 +166,7 @@ export class UserListComponent implements OnInit {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.formError = 'Please fix the highlighted fields before saving.';
       return;
     }
 
@@ -150,63 +182,114 @@ export class UserListComponent implements OnInit {
       delete (payload as any).password;
     }
 
+    const userNameForMsg = payload.userName;
+
     if (this.isEditMode && this.editingUserId !== null) {
       this.userService.update(this.editingUserId, payload).subscribe({
-        next: () => {
+        next: (res: any) => {
           this.saving = false;
           this.showModal = false;
+          this.clearAlerts();
+          this.successMsg = res?.message || `User "${userNameForMsg}" updated successfully.`;
           this.loadUsers();
           this.cdr.detectChanges();
         },
         error: (err: any) => {
           console.error(err);
           this.saving = false;
-          this.formError = err?.error?.message || 'Update failed. Please try again.';
+          // Show the backend's exact reason (validation error, "User not found", etc.)
+          this.formError = err?.error?.message
+            || err?.error?.errors?.[Object.keys(err?.error?.errors || {})[0]]?.[0]
+            || `Update failed (HTTP ${err?.status ?? 'unknown'}). Please check the details and try again.`;
           this.cdr.detectChanges();
         }
       });
     } else {
       this.userService.create(payload).subscribe({
-        next: () => {
+        next: (res: any) => {
           this.saving = false;
           this.showModal = false;
+          this.clearAlerts();
+          this.successMsg = res?.message || `User "${userNameForMsg}" created successfully.`;
           this.loadUsers();
           this.cdr.detectChanges();
         },
         error: (err: any) => {
           console.error(err);
           this.saving = false;
-          this.formError = err?.error?.message || 'Save failed. Please try again.';
+          this.formError = err?.error?.message
+            || err?.error?.errors?.[Object.keys(err?.error?.errors || {})[0]]?.[0]
+            || `Save failed (HTTP ${err?.status ?? 'unknown'}). Please check the details and try again.`;
           this.cdr.detectChanges();
         }
       });
     }
   }
 
-  // ---- Row actions ----
+  // ---- Delete ----
 
-  toggleActive(user: UserResponse, isActive: boolean): void {
-    this.userService.setActive(user.userId, isActive).subscribe({
-      next: () => {
+  deleteUser(user: UserResponse): void {
+    if (!this.canDelete) return;
+    const confirmed = confirm(`Delete user "${user.userName}"? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    this.clearAlerts();
+    this.deletingId = user.userId;
+    this.cdr.detectChanges();
+
+    this.userService.delete(user.userId).subscribe({
+      next: (res: any) => {
+        console.log(res);
+        this.deletingId = null;
+        this.successMsg = res?.message || `User "${user.userName}" deleted successfully.`;
         this.loadUsers();
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         console.error(err);
-        this.errorMsg = 'Failed to update status.';
+        this.deletingId = null;
+        // Show the exact backend reason (e.g. "User not found", FK constraint error, etc.)
+        this.errorMsg = err?.error?.message
+          || `Failed to delete "${user.userName}  first delete from user roles" (HTTP ${err?.status ?? 'unknown'}).`;
         this.cdr.detectChanges();
       }
     });
   }
 
-  unlockUser(user: UserResponse): void {
-    if (!confirm(`Unlock ${user.userName}?`)) return;
-    this.userService.unlock(user.userId).subscribe({
-      next: () => {
+  // ---- Row actions ----
+
+  toggleActive(user: UserResponse, isActive: boolean): void {
+    this.clearAlerts();
+    this.userService.setActive(user.userId, isActive).subscribe({
+      next: (res: any) => {
+        this.successMsg = res?.message
+          || `User "${user.userName}" marked as ${isActive ? 'active' : 'inactive'}.`;
         this.loadUsers();
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         console.error(err);
-        this.errorMsg = 'Failed to unlock user.';
+        this.errorMsg = err?.error?.message
+          || `Failed to update status for "${user.userName}" (HTTP ${err?.status ?? 'unknown'}).`;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+
+  unlockUser(user: UserResponse): void {
+    if (!confirm(`Unlock ${user.userName}?`)) return;
+    this.clearAlerts();
+    this.userService.unlock(user.userId).subscribe({
+      next: (res: any) => {
+        this.successMsg = res?.message || `User "${user.userName}" unlocked successfully.`;
+        this.loadUsers();
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error(err);
+        this.errorMsg = err?.error?.message
+          || `Failed to unlock "${user.userName}" (HTTP ${err?.status ?? 'unknown'}).`;
         this.cdr.detectChanges();
       }
     });

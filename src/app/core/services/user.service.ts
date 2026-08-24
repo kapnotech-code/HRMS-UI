@@ -71,4 +71,7 @@ export class UserService {
       : `${this.baseUrl}/${id}/success-login`;
     return this.http.put<ApiResponse<null>>(url, {});
   }
+  delete(userId: number) {
+    return this.http.delete(`${this.baseUrl}/${userId}`);
+  }
 }

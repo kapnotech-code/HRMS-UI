@@ -140,6 +140,7 @@
   font-size: 13px;
   font-weight: 500;
   border-left: 3px solid transparent;
+  animation: fadeIn 0.2s ease;
 }
 
 .alert-error {
@@ -154,6 +155,12 @@
   border-left-color: #16a34a;
 }
 
+/* Alerts placed inside the modal form panel need tighter spacing than page-level ones */
+.form-panel .alert {
+  margin-top: 4px;
+  margin-bottom: 18px;
+}
+
 /* ---------- Add/Edit form panel ---------- */
 .form-panel {
   background: #ffffff;
@@ -165,7 +172,7 @@
 }
 
   .form-panel h3 {
-    margin: 0 0 16px 0;
+    margin: 0 0 12px 0;
     font-size: 16px;
     font-weight: 600;
     color: #111827;

@@ -78,7 +78,8 @@
                 <img *ngIf="isImageFile(doc.fileExtension)"
                      [src]="getFileUrl(doc.filePath)"
                      [alt]="doc.originalFileName"
-                     class="file-thumb" />
+                     class="file-thumb"
+                     (error)="doc.filePath=''" />
                 <!--<a class="file-link" [href]="getFileUrl(doc.filePath)" target="_blank">
                   <span *ngIf="!isImageFile(doc.fileExtension)">📄</span>
                   {{ doc.originalFileName || '-' }}

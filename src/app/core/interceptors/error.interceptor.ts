@@ -8,7 +8,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err) => {
-      if (err.status === 401) {
+      // Only auto-logout for auth endpoint failures
+      const isAuthEndpoint = req.url.includes('/api/Auth');
+
+      if (err.status === 401 && isAuthEndpoint) {
         localStorage.removeItem('token');
         router.navigate(['/login']);
       }

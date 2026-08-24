@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+
 import { DocumentsResponse } from '../../shared/models/documents/documents-response.model';
 
 @Injectable({
@@ -12,24 +13,33 @@ export class DocumentsService {
   constructor(private http: HttpClient) { }
 
   getAll(): Observable<DocumentsResponse[]> {
-    return this.http.get<DocumentsResponse[]>(`${this.baseUrl}`);
+    return this.http.get<any>(`${this.baseUrl}/GetAll`).pipe(
+      map((response: any) => {
+        const list = Array.isArray(response)
+          ? response
+          : (response?.data ?? []);
+        return list;
+      })
+    );
   }
 
   getById(id: number): Observable<DocumentsResponse> {
-    return this.http.get<DocumentsResponse>(`${this.baseUrl}/${id}`);
+    return this.http.get<any>(`${this.baseUrl}/${id}`).pipe(
+      map((response: any) => {
+        return (response?.data ?? response) as DocumentsResponse;
+      })
+    );
   }
 
-  // FormData used here (not DocumentsRequest) because file upload
-  // requires multipart/form-data, not a plain JSON body.
-  add(formData: FormData): Observable<number> {
-    return this.http.post<number>(`${this.baseUrl}`, formData);
+  add(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}`, formData);
   }
 
-  update(formData: FormData): Observable<number> {
-    return this.http.put<number>(`${this.baseUrl}`, formData);
+  update(formData: FormData): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}`, formData);
   }
 
-  delete(id: number): Observable<number> {
-    return this.http.delete<number>(`${this.baseUrl}/${id}`);
+  delete(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/${id}`);
   }
 }
