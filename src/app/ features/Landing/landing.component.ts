@@ -68,6 +68,10 @@ export class LandingComponent implements OnInit {
   isLoggedIn = false;
   userName: string = 'User';
 
+  // Hero Right Column Mode: 'auth' (Google/Apple/Email card) or 'preview' (Live SaaS tabs)
+  heroMode: 'auth' | 'preview' = 'auth';
+  loginEmail: string = '';
+
   // Hero Preview Interactive State
   activePreviewTab: 'dashboard' | 'attendance' | 'payroll' | 'reviews' = 'dashboard';
   isPunchedIn: boolean = true;
@@ -493,6 +497,39 @@ export class LandingComponent implements OnInit {
 
     // Fallback toast if section does not exist
     this.showToast(`${label || this.pretty(target)}: Exploring feature...`);
+  }
+
+  // Auth Card Handlers (Google, Apple, Email, Desktop App)
+  continueWithEmail(): void {
+    if (!this.loginEmail || !this.loginEmail.trim()) {
+      this.showToast('Please enter your email to continue.');
+      return;
+    }
+    const email = this.loginEmail.trim();
+    if (!email.includes('@')) {
+      this.showToast('Please enter a valid work email.');
+      return;
+    }
+    this.showToast(`Signing in with ${email}...`);
+    this.router.navigate(['/login'], { queryParams: { email } });
+  }
+
+  continueWithGoogle(): void {
+    this.showToast('Connecting to Google Single Sign-On...');
+    setTimeout(() => {
+      this.router.navigate(['/login']);
+    }, 600);
+  }
+
+  continueWithApple(): void {
+    this.showToast('Connecting to Apple Single Sign-On...');
+    setTimeout(() => {
+      this.router.navigate(['/login']);
+    }, 600);
+  }
+
+  downloadDesktopApp(): void {
+    this.showToast('HRMS Desktop application installer (Windows x64) started.');
   }
 
   // Punch In/Out simulation for the hero attendance preview

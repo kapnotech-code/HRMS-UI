@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap');
 
 :host {
   --green: #0f5c43;
@@ -660,9 +660,223 @@ a {
 /* ========================================================== */
 .hero-preview-wrapper {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Right Column Mode Switcher Bar */
+.hero-mode-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-switch-btn {
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  border-radius: var(--radius-pill);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.mode-switch-btn.active {
+  background: #ffffff;
+  color: var(--ink-900);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ========================================================== */
+/* Auth Card (Matching User Reference Image)                  */
+/* ========================================================== */
+.auth-card-wrapper {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.auth-card-top-title {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-card-top-title h2 {
+  font-family: 'Source Serif 4', 'Newsreader', Georgia, serif;
+  font-size: 44px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: #111827;
+  margin: 0 0 8px;
+  line-height: 1.1;
+}
+
+.auth-card-top-title p {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 17px;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.auth-card-box {
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 24px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.sso-btn {
+  width: 100%;
+  height: 48px;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sso-btn:hover {
+  background: #f9fafb;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.sso-svg {
+  flex-shrink: 0;
+}
+
+.auth-or-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 4px 0;
+}
+
+.auth-or-divider::before,
+.auth-or-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.auth-or-divider span {
+  padding: 0 14px;
+}
+
+.auth-input-wrapper {
+  width: 100%;
+}
+
+.auth-email-field {
+  width: 100%;
+  height: 48px;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-size: 14.5px;
+  color: #111827;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.auth-email-field::placeholder {
+  color: #9ca3af;
+}
+
+.auth-email-field:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.btn-email-continue {
+  width: 100%;
+  height: 48px;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 4px;
+}
+
+.btn-email-continue:hover {
+  background: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.desktop-download-wrap {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.desktop-download-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.desktop-download-pill:hover {
+  background: #f9fafb;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.desktop-download-pill svg {
+  color: #111827;
 }
 
 .saas-card-shell {
+  width: 100%;
   background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
