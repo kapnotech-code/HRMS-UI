@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import {
   EmployeeShiftRequest,
   EmployeeShiftResponse,
@@ -9,8 +10,7 @@ import {
   ApiMessage
 } from '../../shared/models/employeeshift/Employee shift';
 
-// Update this to match your API's actual base address (see environment.ts)
-const API_BASE = 'https://localhost:7135/api/EmployeeShift';
+const API_BASE = `${environment.apiUrl}/EmployeeShift`;
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeShiftService {

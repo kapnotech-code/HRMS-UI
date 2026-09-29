@@ -18,6 +18,8 @@
   <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
   <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
 
+  <p class="subtitle" *ngIf="!loading">{{ users.length }} user(s) found</p>
+
   <div class="table-wrap">
     <table class="data-table" *ngIf="!loading; else loadingTpl">
       <thead>
@@ -26,53 +28,60 @@
           <th>Login Name</th>
           <th>Email</th>
           <th>Role</th>
+          <th>Departments</th>
           <th>Status</th>
           <th>Failed Attempts</th>
-          <th>
-            Device
-          </th>
+          <th>Device</th>
           <th>Created</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
+        <!-- Every binding below is null-safe and uses helper methods that
+             never throw, so one odd record cannot blank out its row. -->
         <tr *ngFor="let user of users">
-          <td class="user-cell">{{ user.userName }}</td>
+          <td class="user-cell">{{ user?.userName || '-' }}</td>
           <td>{{ getLoginName(user) }}</td>
-          <td>{{ user.email || '-' }}</td>
-          <td>{{ getRoleName(user.roleId) }}</td>
+          <td>{{ user?.email || '-' }}</td>
+          <td>{{ getRoleName(user?.roleId) }}</td>
           <td>
-            <span class="badge" [class.badge-locked]="user.isLocked" [class.badge-active]="!user.isLocked">
-              {{ user.isLocked ? 'Locked' : 'Active' }}
+            <span *ngIf="getDepartmentNames(user).length > 0">
+              {{ getDepartmentNames(user).join(', ') }}
+            </span>
+            <span *ngIf="getDepartmentNames(user).length === 0" class="text-muted">—</span>
+          </td>
+          <td>
+            <span class="badge" [class.badge-locked]="user?.isLocked" [class.badge-active]="!user?.isLocked">
+              {{ user?.isLocked ? 'Locked' : 'Active' }}
             </span>
           </td>
           <td>
-            <span [class.text-danger]="user.failedLoginCount >= 5">
-              {{ user.failedLoginCount }} / 5
+            <span [class.text-danger]="getFailedCount(user) >= 5">
+              {{ getFailedCount(user) }} / 5
             </span>
           </td>
-          <td>{{ user.deviceId || '-' }}</td>
-          <td>{{ user.createdDate | date: 'dd-MMM-yyyy' }}</td>
+          <td>{{ user?.deviceId || '-' }}</td>
+          <td>{{ formatCreated(user?.createdDate) }}</td>
           <td class="actions-cell">
             <button class="action-btn" [disabled]="!canEdit" (click)="openEditModal(user)">
               Edit
             </button>
 
             <button class="action-btn unlock"
-                    *ngIf="user.isLocked"
+                    *ngIf="user?.isLocked"
                     (click)="unlockUser(user)">
               Unlock
             </button>
 
             <button class="action-btn delete"
-                    [disabled]="deletingId === user.userId || !canDelete"
+                    [disabled]="isDeleting(user) || !canDelete"
                     (click)="deleteUser(user)">
-              {{ deletingId === user.userId ? 'Deleting...' : 'Delete' }}
+              {{ isDeleting(user) ? 'Deleting...' : 'Delete' }}
             </button>
           </td>
         </tr>
         <tr *ngIf="users.length === 0">
-          <td colspan="9" class="empty-row">No users found.</td>
+          <td colspan="10" class="empty-row">No users found.</td>
         </tr>
       </tbody>
     </table>
@@ -134,6 +143,25 @@
           <span class="error-text" *ngIf="form.get('roleId')?.touched && form.get('roleId')?.invalid">
             Please select a role.
           </span>
+        </div>
+
+        <div class="form-row">
+          <label>Departments *</label>
+          <div class="department-checkboxes" *ngIf="departments.length > 0; else noDepartments">
+            <div *ngFor="let dept of departments" class="checkbox-item">
+              <label>
+                <input type="checkbox" [value]="dept.departmentID" (change)="onDepartmentChange(dept.departmentID, $event)"
+                       [checked]="form.get('departmentIds')?.value?.includes(dept.departmentID)">
+                {{ dept.departmentName }}
+              </label>
+            </div>
+            <span class="error-text" *ngIf="form.get('departmentIds')?.touched && (!form.get('departmentIds')?.value || form.get('departmentIds')?.value.length === 0)">
+              At least one department is required.
+            </span>
+          </div>
+          <ng-template #noDepartments>
+            <span class="text-muted">Loading departments...</span>
+          </ng-template>
         </div>
 
         <div class="form-row">

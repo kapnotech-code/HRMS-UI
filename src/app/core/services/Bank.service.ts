@@ -4,12 +4,13 @@ import { Observable } from 'rxjs';
 import { BankRequest } from '../../shared/models/Bank/Bankrequest';
 import { BankResponse } from '../../shared/models/Bank/Bankresponse';
 import { ApiResponse } from '../../shared/models/Bank/ApiResponse';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BankService {
-  private readonly apiUrl = 'https://localhost:7135/api/Bank';
+  private readonly apiUrl = `${environment.apiUrl}/Bank`;
 
   constructor(private http: HttpClient) { }
 

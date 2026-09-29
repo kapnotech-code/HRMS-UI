@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { EmployeeShiftService } from '../../core/services/Employeeshift.service';
 import { EmployeeShiftRequest, EmployeeShiftResponse } from '../../shared/models/employeeshift/Employee shift';
 import { EmployeeService } from '../../core/services/employee.service';
-import { EmployeeResponse } from '../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../shared/models/employee/employee-response';
 import { ShiftService } from '../../core/services/shift.service';
 
 @Component({
@@ -159,7 +159,7 @@ export class EmployeeShiftListComponent implements OnInit {
       employeeShiftID: Number(row.employeeShiftID),
       employeeID: Number(row.employeeID),
       shiftID: Number(row.shiftID),
-      effectiveFrom: row.effectiveFrom?.substring(0, 10),
+      effectiveFrom: row.effectiveFrom.substring(0, 10),
       effectiveTo: row.effectiveTo ? row.effectiveTo.substring(0, 10) : null
     };
     this.clearMessages();

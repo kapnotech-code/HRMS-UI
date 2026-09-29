@@ -93,7 +93,7 @@ export class SalaryComponentListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.components = res.data || [];
+          this.components = res || [];
           this.applyFilter();
           this.loading = false;
           this.cdr.detectChanges();

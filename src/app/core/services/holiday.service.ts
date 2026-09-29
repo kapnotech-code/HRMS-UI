@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../../shared/models/api-response';
 import { HolidayRequest } from '../../shared/models/Holidays/HolidayRequest';
 
@@ -14,13 +14,17 @@ export class HolidayService {
   constructor(private http: HttpClient) { }
 
   // GET api/Holiday
-  getAll(): Observable<ApiResponse<HolidayResponse[]>> {
-    return this.http.get<ApiResponse<HolidayResponse[]>>(`${this.apiUrl}`);
+  getAll(): Observable<HolidayResponse[]> {
+    return this.http.get<ApiResponse<HolidayResponse[]>>(`${this.apiUrl}`).pipe(
+      map(res => res.data ?? [])
+    );
   }
 
   // GET api/Holiday/{id}
-  getById(id: number): Observable<ApiResponse<HolidayResponse>> {
-    return this.http.get<ApiResponse<HolidayResponse>>(`${this.apiUrl}/${id}`);
+  getById(id: number): Observable<HolidayResponse> {
+    return this.http.get<ApiResponse<HolidayResponse>>(`${this.apiUrl}/${id}`).pipe(
+      map(res => res.data!)
+    );
   }
 
   // POST api/Holiday

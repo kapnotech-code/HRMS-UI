@@ -1,12 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 import {
   PayrollResponse,
   PayrollRequest,
-  PayrollApiResponse
+  PayrollApiResponse,
+  PayrollRazorpayOrderRequest,
+  PayrollRazorpayOrderResponse,
+  PayrollRazorpayVerifyRequest,
+  PayrollRazorpayVerifyResponse
 } from '../../shared/models/payroll/payroll.model';
+import { ApiResponse } from '../../shared/models/api-response';
 
 
 @Injectable({
@@ -15,12 +22,15 @@ import {
 export class PayrollService {
 
   private apiUrl =
-    'https://localhost:7135/api/Payroll';
+    `${environment.apiUrl}/Payroll`;
+
+  private paymentApiUrl =
+    `${environment.apiUrl}/Payment`;
 
 
   constructor(
     private http: HttpClient
-  ) {}
+  ) { }
 
 
   // =========================================================
@@ -607,4 +617,339 @@ export class PayrollService {
 
   }
 
+  // =========================================================
+  // GET BY EMPLOYEE
+  // GET: api/Payroll/GetByEmployee/{employeeId}
+  // =========================================================
+
+  getByEmployee(
+    employeeId: number
+  ):
+
+    Observable<
+      PayrollApiResponse<PayrollResponse[]>
+    > {
+
+    return this.http
+
+      .get<
+        PayrollApiResponse<any[]>
+      >(
+        `${this.apiUrl}/GetByEmployee/${employeeId}`
+      )
+      .pipe(
+        map(response => {
+
+          const list = Array.isArray((response as any))
+            ? (response as any)
+            : ((response as any)?.data ?? []);
+
+          return {
+
+            success: true,
+            message: '',
+            data: this.mapPayrollList(list)
+
+          };
+
+        })
+
+      );
+
+  }
+
+  // =========================================================
+  // GET ALL FILTERED
+  // GET: api/Payroll/GetAllFiltered?employeeId=&departmentId=
+  // =========================================================
+
+  getAllFiltered(
+    employeeId?: number,
+    departmentId?: number
+  ):
+
+    Observable<
+      PayrollApiResponse<PayrollResponse[]>
+    > {
+
+    let url = `${this.apiUrl}/GetAllFiltered`;
+    const params: string[] = [];
+    if (employeeId !== undefined && employeeId !== null) {
+      params.push(`employeeId=${employeeId}`);
+    }
+    if (departmentId !== undefined && departmentId !== null) {
+      params.push(`departmentId=${departmentId}`);
+    }
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
+    }
+
+    return this.http
+
+      .get<
+        PayrollApiResponse<any[]>
+      >(url)
+
+      .pipe(
+
+        map(response => {
+
+          const list = Array.isArray((response as any))
+            ? (response as any)
+            : ((response as any)?.data ?? []);
+
+          return {
+
+            success: true,
+            message: '',
+            data: this.mapPayrollList(list)
+
+          };
+
+        })
+
+      );
+
+  }
+
+  // =========================================================
+  // REVIEW
+  // POST: api/Payroll/Review/{id}
+  // =========================================================
+
+  review(
+    id: number
+  ):
+
+    Observable<
+      ApiResponse<any>
+    > {
+
+    return this.http
+
+      .post<
+        ApiResponse<any>
+      >(
+        `${this.apiUrl}/Review/${id}`,
+        null
+      );
+
+  }
+
+  // =========================================================
+  // APPROVE
+  // POST: api/Payroll/Approve/{id}
+  // =========================================================
+
+  approve(
+    id: number
+  ):
+
+    Observable<
+      ApiResponse<any>
+    > {
+
+    return this.http
+
+      .post<
+        ApiResponse<any>
+      >(
+        `${this.apiUrl}/Approve/${id}`,
+        null
+      );
+
+  }
+
+  // =========================================================
+  // PROCESS
+  // POST: api/Payroll/Process/{id}
+  // =========================================================
+
+  process(
+    id: number
+  ):
+
+    Observable<
+      ApiResponse<any>
+    > {
+
+    return this.http
+
+      .post<
+        ApiResponse<any>
+      >(
+        `${this.apiUrl}/Process/${id}`,
+        null
+      );
+
+  }
+
+  // =========================================================
+  // MARK PAID
+  // POST: api/Payroll/MarkPaid/{id}
+  // =========================================================
+
+  // =========================================================
+  // MARK PAID
+  // POST: api/Payroll/MarkPaid/{id}
+  // =========================================================
+
+  markPaid(
+    id: number
+  ):
+
+    Observable<
+      ApiResponse<any>
+    > {
+
+      return this.http
+
+        .post<
+          ApiResponse<any>
+        >(
+          `${this.apiUrl}/MarkPaid/${id}`,
+          null
+        );
+
+    }
+
+  // =========================================================
+  // RAZORPAY PAYMENT INTEGRATION
+  //
+  // Uses the shared Payment controller endpoints:
+  //   POST api/Payment/CreateOrder
+  //   POST api/Payment/Verify
+  // Same as subscription checkout flow but with payroll-specific
+  // request body (payrollId instead of planId).
+  // =========================================================
+
+  createPayrollRazorpayOrder(
+    request: PayrollRazorpayOrderRequest
+  ):
+
+    Observable<
+      PayrollRazorpayOrderResponse
+    > {
+
+      return this.http
+
+        .post<ApiResponse<any>>(
+          `${this.paymentApiUrl}/CreateOrder`,
+          request
+        )
+
+        .pipe(
+
+          map(response => this.normalizePayrollRazorpayOrder(response)),
+          catchError(error => {
+            const msg = error?.error?.message || error?.message || 'Failed to create Razorpay order';
+            return of({
+              success: false,
+              orderId: '',
+              keyId: '',
+              amount: 0,
+              currency: 'INR',
+              name: '',
+              description: '',
+              payrollId: request.payrollId,
+              employeeId: request.employeeId,
+              message: msg
+            } as PayrollRazorpayOrderResponse);
+          })
+
+        );
+
+    }
+
+  private normalizePayrollRazorpayOrder(response: ApiResponse<any>): PayrollRazorpayOrderResponse {
+    const data = response?.data;
+
+    if (!response?.success || !data) {
+      return {
+        success: false,
+        orderId: '',
+        keyId: '',
+        amount: 0,
+        currency: 'INR',
+        name: '',
+        description: '',
+        payrollId: 0,
+        employeeId: 0,
+        message: response?.message || 'Failed to create Razorpay order'
+      } as PayrollRazorpayOrderResponse;
+    }
+
+    return {
+      success: this.toBoolean(this.pick(data, ['success', 'Success'])),
+      orderId: this.pick(data, ['orderId', 'OrderId']) ?? '',
+      keyId: this.pick(data, ['keyId', 'KeyId']) ?? '',
+      amount: Number(this.pick(data, ['amount', 'Amount']) ?? 0),
+      currency: this.pick(data, ['currency', 'Currency']) ?? 'INR',
+      name: this.pick(data, ['name', 'Name']) ?? '',
+      description: this.pick(data, ['description', 'Description']) ?? '',
+      payrollId: Number(this.pick(data, ['payrollId', 'PayrollId']) ?? 0),
+      employeeId: Number(this.pick(data, ['employeeId', 'EmployeeId']) ?? 0),
+      message: this.pick(data, ['message', 'Message']) ?? response?.message
+    } as PayrollRazorpayOrderResponse;
+  }
+
+  verifyPayrollRazorpayPayment(
+    request: PayrollRazorpayVerifyRequest
+  ):
+
+    Observable<
+      PayrollRazorpayVerifyResponse
+    > {
+
+      return this.http
+
+        .post<ApiResponse<any>>(
+          `${this.paymentApiUrl}/Verify`,
+          request
+        )
+
+        .pipe(
+
+          map(response => this.normalizePayrollRazorpayVerify(response)),
+          catchError(error => {
+            const msg = error?.error?.message || error?.message || 'Failed to verify payment';
+            return of({
+              success: false,
+              message: msg,
+              paymentId: 0,
+              paymentStatus: 'Failed'
+            } as PayrollRazorpayVerifyResponse);
+          })
+
+        );
+
+    }
+
+  private normalizePayrollRazorpayVerify(response: ApiResponse<any>): PayrollRazorpayVerifyResponse {
+    const data = response?.data;
+
+    if (!response?.success || !data) {
+      return {
+        success: false,
+        message: response?.message || 'Failed to verify payment',
+        paymentId: 0,
+        paymentStatus: 'Failed'
+      } as PayrollRazorpayVerifyResponse;
+    }
+
+    return {
+      success: this.toBoolean(this.pick(data, ['success', 'Success'])),
+      message: this.pick(data, ['message', 'Message']) ?? response?.message ?? '',
+      paymentId: Number(this.pick(data, ['paymentId', 'PaymentId']) ?? 0),
+      paymentStatus: this.toBoolean(this.pick(data, ['paymentStatus', 'PaymentStatus'])) ? 'Completed' : 'Failed'
+    } as PayrollRazorpayVerifyResponse;
+  }
+
+  private toBoolean(value: any): boolean {
+    if (value === undefined || value === null) return false;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    const str = String(value).toLowerCase();
+    return str === 'true' || str === '1' || str === 'yes';
+  }
 }

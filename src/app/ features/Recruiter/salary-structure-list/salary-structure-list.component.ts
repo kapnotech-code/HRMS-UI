@@ -46,7 +46,7 @@ export class SalaryStructurePageComponent implements OnInit {
     this.service.getAll().subscribe({
       next: (response) => {
         console.log('Salary Structure Response:', response);
-        this.structures = response?.data ?? [];
+        this.structures = response ?? [];
         this.loading = false;
         this.cdr.detectChanges();
       },

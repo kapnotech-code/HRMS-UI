@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../../shared/models/api-response';
 import { environment } from '../../../environments/environment';
 import {
@@ -19,16 +19,22 @@ export class AttendanceService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<ApiResponse<AttendanceResponse[]>> {
-    return this.http.get<ApiResponse<AttendanceResponse[]>>(this.apiUrl);
+  getAll(): Observable<AttendanceResponse[]> {
+    return this.http.get<ApiResponse<AttendanceResponse[]>>(this.apiUrl).pipe(
+      map(res => res.data ?? [])
+    );
   }
 
-  getById(id: number): Observable<ApiResponse<AttendanceResponse>> {
-    return this.http.get<ApiResponse<AttendanceResponse>>(`${this.apiUrl}/${id}`);
+  getById(id: number): Observable<AttendanceResponse> {
+    return this.http.get<ApiResponse<AttendanceResponse>>(`${this.apiUrl}/${id}`).pipe(
+      map(res => res.data!)
+    );
   }
 
-  getByEmployee(employeeId: number): Observable<ApiResponse<AttendanceResponse[]>> {
-    return this.http.get<ApiResponse<AttendanceResponse[]>>(`${this.apiUrl}/employee/${employeeId}`);
+  getByEmployee(employeeId: number): Observable<AttendanceResponse[]> {
+    return this.http.get<ApiResponse<AttendanceResponse[]>>(`${this.apiUrl}/employee/${employeeId}`).pipe(
+      map(res => res.data ?? [])
+    );
   }
 
   add(request: AttendanceRequest): Observable<ApiResponse<any>> {

@@ -1,0 +1,223 @@
+<div class="review-details" [class.public-mode]="isPublicMode">
+  <div class="page-header" *ngIf="!isPublicMode">
+    <div class="header-row">
+      <div>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="goBack()">
+          ← Back
+        </button>
+        <h1 class="page-title">Review Details</h1>
+        <p class="page-subtitle">Review ID: {{ review?.id }}</p>
+      </div>
+      <div *ngIf="review" class="header-status">
+        <span class="badge" [ngClass]="getStatusBadgeClass(review.status)">
+          {{ getStatusLabel(review.status) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="public-header" *ngIf="isPublicMode">
+    <div class="company-brand">
+      <div class="logo">HRMS</div>
+      <div class="tagline">Performance Review</div>
+    </div>
+    <div *ngIf="review" class="public-status">
+      <span class="badge" [ngClass]="getStatusBadgeClass(review.status)">
+        {{ getStatusLabel(review.status) }}
+      </span>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Loading review details…</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="alert alert-error">
+    <span>{{ errorMsg }}</span>
+    <button class="btn btn-outline-primary btn-sm" (click)="retry()">Retry</button>
+  </div>
+
+  <div *ngIf="successMsg" class="alert alert-success">
+    {{ successMsg }}
+  </div>
+
+  <app-subscription-required *ngIf="!isPublicMode"></app-subscription-required>
+
+  <div *ngIf="!loading && !errorMsg && review" class="content-area">
+
+    <!-- ===== Basic Info ===== -->
+    <div class="section-card">
+      <h3 class="section-title">Review Information</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Review ID</span>
+          <span class="info-value">#{{ review.id }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Year</span>
+          <span class="info-value">{{ review.year }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Review Type</span>
+          <span class="info-value">{{ review.reviewType }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Due Date</span>
+          <span class="info-value">{{ formatDate(review.dueDate) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Visibility</span>
+          <span class="info-value">{{ review.visibility || 'Internal' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Status</span>
+          <span class="info-value">
+            <span class="badge" [ngClass]="getStatusBadgeClass(review.status)">
+              {{ getStatusLabel(review.status) }}
+            </span>
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Submitted At</span>
+          <span class="info-value">{{ formatDate(review.submittedAt) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Participants ===== -->
+    <div class="section-card">
+      <h3 class="section-title">Participants</h3>
+      <div class="participants-grid">
+        <div class="participant-card">
+          <div class="participant-icon reviewer-icon">👤</div>
+          <div class="participant-info">
+            <span class="participant-role">Reviewer</span>
+            <span class="participant-name">{{ review.reviewer }}</span>
+          </div>
+        </div>
+        <div class="participant-card">
+          <div class="participant-icon reviewee-icon">👤</div>
+          <div class="participant-info">
+            <span class="participant-role">Reviewee</span>
+            <span class="participant-name">{{ review.reviewee }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Rating ===== -->
+    <div class="section-card">
+      <h3 class="section-title">Rating</h3>
+      <div class="rating-section">
+        <div *ngIf="canEdit()" class="rating-edit">
+          <label class="rating-label">Select Rating</label>
+          <div class="star-rating-input">
+            <span *ngFor="let star of [1,2,3,4,5]" 
+                  class="star-input"
+                  [class.filled]="formData.rating >= star"
+                  [class.half]="formData.rating === star - 0.5"
+                  (click)="formData.rating = star"
+                  (keydown.enter)="formData.rating = star"
+                  tabindex="0"
+                  role="button"
+                  aria-label="Rate {{ star }} stars">
+              ★
+            </span>
+          </div>
+          <span class="rating-display">{{ getStarRating(formData.rating) }} ({{ formData.rating }}/5)</span>
+        </div>
+        <div *ngIf="!canEdit()" class="rating-display-only">
+          <span class="rating-stars">{{ getStarRating(review.rating) }}</span>
+          <span class="rating-value">{{ review.rating ? (review.rating + '/5') : 'Not rated' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Comments ===== -->
+    <div class="section-card">
+      <h3 class="section-title">Comments</h3>
+      <div *ngIf="canEdit()" class="form-field">
+        <textarea 
+          [(ngModel)]="formData.comments" 
+          class="form-control" 
+          rows="4" 
+          placeholder="Enter comments..."
+          aria-label="Comments">
+        </textarea>
+      </div>
+      <div *ngIf="!canEdit()" class="content-display">
+        <p>{{ review.comments || 'No comments provided.' }}</p>
+      </div>
+    </div>
+
+    <!-- ===== Strengths ===== -->
+    <div class="section-card">
+      <h3 class="section-title">Strengths</h3>
+      <div *ngIf="canEdit()" class="form-field">
+        <textarea 
+          [(ngModel)]="formData.strengths" 
+          class="form-control" 
+          rows="3" 
+          placeholder="Enter strengths..."
+          aria-label="Strengths">
+        </textarea>
+      </div>
+      <div *ngIf="!canEdit()" class="content-display">
+        <p>{{ review.strengths || 'No strengths listed.' }}</p>
+      </div>
+    </div>
+
+    <!-- ===== Improvements ===== -->
+    <div class="section-card">
+      <h3 class="section-title">Areas for Improvement</h3>
+      <div *ngIf="canEdit()" class="form-field">
+        <textarea 
+          [(ngModel)]="formData.improvements" 
+          class="form-control" 
+          rows="3" 
+          placeholder="Enter areas for improvement..."
+          aria-label="Improvements">
+        </textarea>
+      </div>
+      <div *ngIf="!canEdit()" class="content-display">
+        <p>{{ review.improvements || 'No improvements listed.' }}</p>
+      </div>
+    </div>
+
+    <!-- ===== Visibility (Edit Mode) ===== -->
+    <div *ngIf="canEdit()" class="section-card">
+      <h3 class="section-title">Visibility</h3>
+      <div class="form-field">
+        <select [(ngModel)]="formData.visibility" class="form-select" aria-label="Visibility">
+          <option value="Internal">Internal</option>
+          <option value="Public">Public</option>
+          <option value="Confidential">Confidential</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ===== Actions ===== -->
+    <div class="actions-bar" [class.public-actions]="isPublicMode">
+      <button type="button" class="btn btn-outline-secondary" (click)="goBack()" *ngIf="!isPublicMode">
+        ← Back
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeWindow()" *ngIf="isPublicMode">
+        Close
+      </button>
+      <div *ngIf="canEdit()" class="actions-primary">
+        <button type="button" class="btn btn-outline-primary" (click)="saveDraft()" [disabled]="saving" *ngIf="!isPublicMode">
+          <span *ngIf="saving" class="spinner-sm"></span>
+          Save Draft
+        </button>
+        <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="saving">
+          <span *ngIf="saving" class="spinner-sm"></span>
+          {{ isPublicMode ? 'Submit Review' : 'Submit Review' }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

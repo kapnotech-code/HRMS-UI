@@ -53,16 +53,16 @@ export class SalaryStructureService {
   }
 
   // GET: api/SalaryStructure/GetAll
-  getAll(): Observable<ApiResponse<SalaryStructureResponse[]>> {
+  getAll(): Observable<SalaryStructureResponse[]> {
     return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/GetAll`).pipe(
-      map(res => ({ ...res, data: this.mapStructureList(res.data) }))
+      map(res => this.mapStructureList(res.data ?? []))
     );
   }
 
   // GET: api/SalaryStructure/GetById/5
-  getById(id: number): Observable<ApiResponse<SalaryStructureResponse>> {
+  getById(id: number): Observable<SalaryStructureResponse> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/GetById/${id}`).pipe(
-      map(res => ({ ...res, data: this.mapStructure(res.data) }))
+      map(res => this.mapStructure(res.data))
     );
   }
 

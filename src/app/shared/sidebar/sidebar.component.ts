@@ -60,6 +60,22 @@ export class SidebarComponent implements OnInit {
         { label: 'Report Attendance', icon: '🕒', route: '/transactions/master-attendance' },
         { label: 'Leave', icon: '🏖️', route: '/transactions/leave-transactions' },
         { label: 'Mark Attendance', icon: '🕒', route: '/masters/attendance' },
+        { label: 'Schedule Master', icon: '🗓️', route: '/masters/schedule-master' },
+        { label: 'Schedule Employee', icon: '👥', route: '/transactions/schedule-employee' },
+        { label: 'Schedule Transaction', icon: '📝', route: '/transactions/schedule-transaction' },
+        { label: 'Schedule Email', icon: '✉️', route: '/transactions/schedule-email' },
+        { label: 'Yearly Paid', icon: '💰', route: '/transactions/yearly-paid' },
+        
+      ]
+    },
+    {
+      label: 'Reviews',
+      open: false,
+      items: [
+        { label: 'Review Dashboard', icon: '📊', route: '/transactions/review' },
+        { label: 'Pending Reviews', icon: '⏳', route: '/transactions/review/pending' },
+        
+        { label: 'Review History', icon: '🕘', route: '/transactions/review/history' },
       ]
     },
     {
@@ -68,22 +84,33 @@ export class SidebarComponent implements OnInit {
       items: [
         { label: 'Employee', icon: '👨‍💼', route: '/Recruiter/employee-master' },
         { label: 'Report', icon: '📑', route: '/Recruiter/Report' },
+       
+       ]
+    },
+    {
+      label: 'Payroll',
+      open: false,
+      items: [
+
+        { label: 'Salary Component', icon: '💰', route: '/payroll/salary' },
+        { label: 'Payroll', icon: '📈', route: '/Recruiter/payroll' },
+        { label: 'Payroll Details', icon: '🧾', route: '/Recruiter/payroll-details' },
+        { label: 'Payroll Adjustment', icon: '⚙️', route: '/Recruiter/payroll-adjustment' },
         { label: 'Salary Component', icon: '💵', route: '/Recruiter/salary-component' },
         { label: 'Salary Structure', icon: '🧩', route: '/Recruiter/salary-structure' },
         { label: 'Structure Components', icon: '🔗', route: '/Recruiter/salary-structure-components' },
         { label: 'Employee Salary', icon: '🧾', route: '/Recruiter/employee-salary' },
         { label: 'Employee Salary Components', icon: '💰', route: '/Recruiter/employee-salary-components' },
         { label: 'Salary Revisions', icon: '📈', route: '/Recruiter/salary-revisions' },
-        { label: 'Payroll', icon: '📈', route: '/Recruiter/payroll' },
-        { label: 'Payroll Details', icon: '🧾', route: '/Recruiter/payroll-details' },
-        { label: 'Payroll Adjustment', icon: '⚙️', route: '/Recruiter/payroll-adjustment' },
       ]
+
     },
     {
-      label: 'Payroll',
+      label: 'Subscriptions',
       open: false,
       items: [
-        { label: 'Salary Component', icon: '💰', route: '/payroll/salary' },
+        { label: 'Subscription Plans', icon: '📋', route: '/subscriptions/plans' },
+        { label: 'My Subscription', icon: '👤', route: '/subscriptions/my-subscription' },
       ]
     }
   ];

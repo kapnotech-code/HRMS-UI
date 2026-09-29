@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../app/core/services/Auth.service';
+import { SidebarService } from '../../../app/core/services/Sidebar.service';
 import { LoginRequest } from '../../../app/shared/models/Login/LoginRequest';
 
 @Component({
@@ -21,6 +22,7 @@ export class Login {
 
   constructor(
     private authService: AuthService,
+    private sidebarService: SidebarService,
     private router: Router,
     private route: ActivatedRoute
   ) { }
@@ -61,9 +63,11 @@ export class Login {
 
         if (token) {
           this.authService.saveToken(token);
+          this.sidebarService.open();
           console.log('TOKEN SAVED:', localStorage.getItem('token'));
 
-          this.router.navigateByUrl('/dashboard').then(success => {
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+          this.router.navigateByUrl(returnUrl).then(success => {
             if (!success) {
               console.error('Navigation blocked — check authGuard / isLoggedIn().');
               this.errorMessage = 'Login hua, lekin dashboard open nahi ho paya.';

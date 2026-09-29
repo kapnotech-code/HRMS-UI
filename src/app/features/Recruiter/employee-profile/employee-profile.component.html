@@ -1,0 +1,72 @@
+<div class="home">
+  <section class="banner">
+    <div>
+      <p class="greet">Hello,</p>
+      <h1>{{ getFullName() }} 👋</h1>
+      <p class="sub">{{ today | date:'EEEE, d MMMM y' }}</p>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <div class="stat-icon">👤</div>
+      <div>
+        <strong>{{ employee?.employeeCode || '—' }}</strong>
+        <span>Employee Code</span>
+        <small>Reference ID</small>
+      </div>
+    </div>
+<div class="stat">
+        <div class="stat-icon">📋</div>
+        <div>
+          <strong>{{ employee?.employeeStatus || '—' }}</strong>
+          <span>Status</span>
+          <small>{{ employee?.isActive ? 'Active' : 'Inactive' }}</small>
+        </div>
+      </div>
+    <div class="stat">
+      <div class="stat-icon">📅</div>
+      <div>
+        <strong>{{ formatDate(employee?.dateOfJoining) }}</strong>
+        <span>Joining Date</span>
+        <small>Since onboarding</small>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">💼</div>
+      <div>
+        <strong>{{ employee?.department || '—' }}</strong>
+        <span>Department</span>
+        <small>{{ employee?.designation || '—' }}</small>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h3>Employee Details</h3>
+      <div class="detail-row"><span>Full Name</span><strong>{{ getFullName() }}</strong></div>
+      <div class="detail-row"><span>Email</span><strong>{{ employee?.email || '—' }}</strong></div>
+      <div class="detail-row"><span>Phone</span><strong>{{ employee?.phone || '—' }}</strong></div>
+      <div class="detail-row"><span>Designation</span><strong>{{ employee?.designation || '—' }}</strong></div>
+      <div class="detail-row"><span>Department</span><strong>{{ employee?.department || '—' }}</strong></div>
+      <div class="detail-row"><span>Date of Birth</span><strong>{{ formatDate(employee?.dateOfBirth) }}</strong></div>
+      <div class="detail-row"><span>Gender</span><strong>{{ employee?.gender || '—' }}</strong></div>
+      <div class="detail-row"><span>Address</span><strong>{{ employee?.currentAddress || '—' }}</strong></div>
+    </section>
+
+    <section class="card">
+      <h3>Quick Links</h3>
+      <div class="quick">
+        <a [routerLink]="['/Recruiter/EmployeeMaster']">
+          <span class="q-icon">👥</span>
+          <span>Employee Master</span>
+        </a>
+        <a [routerLink]="['/Recruiter/Report']">
+          <span class="q-icon">📊</span>
+          <span>Reports</span>
+        </a>
+      </div>
+    </section>
+  </div>
+</div>

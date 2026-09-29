@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DocumentCategory, DocumentCategoryFilter } from '../../shared/models/documentcategory/document';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentCategoryService {
 
-  private apiUrl = 'https://localhost:7135/api/DocumentCategory';
+  private apiUrl = `${environment.apiUrl}/DocumentCategory`;
 
   constructor(private http: HttpClient) { }
 

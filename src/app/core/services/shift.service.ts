@@ -1,7 +1,7 @@
 // core/services/shift.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../../shared/models/api-response';
 import { ShiftResponse } from '../../shared/models/ShiftResponse/ShiftResponse';
 import { ShiftRequest } from '../../shared/models/ShiftResponse/Shiftrequest';
@@ -15,12 +15,16 @@ export class ShiftService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<ApiResponse<ShiftResponse[]>> {
-    return this.http.get<ApiResponse<ShiftResponse[]>>(`${this.apiUrl}`);
+  getAll(): Observable<ShiftResponse[]> {
+    return this.http.get<ApiResponse<ShiftResponse[]>>(`${this.apiUrl}`).pipe(
+      map(res => res.data ?? [])
+    );
   }
 
-  getById(id: number): Observable<ApiResponse<ShiftResponse>> {
-    return this.http.get<ApiResponse<ShiftResponse>>(`${this.apiUrl}/${id}`);
+  getById(id: number): Observable<ShiftResponse> {
+    return this.http.get<ApiResponse<ShiftResponse>>(`${this.apiUrl}/${id}`).pipe(
+      map(res => res.data!)
+    );
   }
 
   create(payload: ShiftRequest): Observable<ApiResponse<any>> {

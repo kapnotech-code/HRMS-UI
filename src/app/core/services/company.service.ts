@@ -4,12 +4,13 @@ import { Observable } from 'rxjs';
 import { CompanyRequest } from '../../shared/models/companylist/CompanyRequest';
 import { CompanyResponse } from '../../shared/models/companylist/CompanyResponse';
 import { ApiResponse } from '../../shared/models/companylist/ ApiResponse';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EmployerService {
-  private readonly apiUrl = 'https://localhost:7135/api/Employer';
+  private readonly apiUrl = `${environment.apiUrl}/Employer`;
 
   constructor(private http: HttpClient) { }
 

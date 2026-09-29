@@ -1,5 +1,4 @@
 <div class="emp-master-page">
-
   <!-- ============================================= -->
   <!-- TOAST POPUP — auto-hides after a few seconds   -->
   <!-- ============================================= -->
@@ -13,10 +12,12 @@
   <div class="page-header">
     <div>
       <h2>Employee Master</h2>
-      <p class="subtitle">Add or update an employee record</p>
+      <p class="subtitle">Add, view, update or delete employee records</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" (click)="newEmployee()">+ New Employee</button>
+      <button class="btn btn-primary" (click)="newEmployee()" [disabled]="!canAdd">
+        + New Employee
+      </button>
     </div>
   </div>
 
@@ -27,27 +28,38 @@
   <!-- ============ SEARCH / SYNCED DROPDOWNS ============ -->
   <div class="search-card">
     <div class="search-grid">
-
       <!-- Employee Code combobox -->
       <div class="combo-wrapper">
         <label>Employee Code</label>
-        <input type="text"
-               placeholder="Search by code..."
-               [(ngModel)]="codeSearchText"
-               name="codeSearch"
-               (focus)="codeOptionsOpen = true"
-               (input)="onCodeInput()"
-               (blur)="codeOptionsOpen = false"
-               autocomplete="off" />
-        <ul class="combo-dropdown" *ngIf="codeOptionsOpen && filteredByCode.length" (mousedown)="$event.preventDefault()">
-          <li *ngFor="let emp of filteredByCode"
-              [class.active]="emp.employeeID === selectedEmployeeId"
-              (click)="selectByCode(emp)">
+        <input
+          type="text"
+          placeholder="Search by code..."
+          [(ngModel)]="codeSearchText"
+          name="codeSearch"
+          (focus)="codeOptionsOpen = true"
+          (input)="onCodeInput()"
+          (blur)="codeOptionsOpen = false"
+          autocomplete="off"
+        />
+        <ul
+          class="combo-dropdown"
+          *ngIf="codeOptionsOpen && filteredByCode.length"
+          (mousedown)="$event.preventDefault()"
+        >
+          <li
+            *ngFor="let emp of filteredByCode"
+            [class.active]="emp.employeeID === selectedEmployeeId"
+            (click)="selectByCode(emp)"
+          >
             <span class="combo-code">{{ emp.employeeCode }}</span>
             <span class="combo-name">{{ fullName(emp) }}</span>
           </li>
         </ul>
-        <ul class="combo-dropdown" *ngIf="codeOptionsOpen && !filteredByCode.length" (mousedown)="$event.preventDefault()">
+        <ul
+          class="combo-dropdown"
+          *ngIf="codeOptionsOpen && !filteredByCode.length"
+          (mousedown)="$event.preventDefault()"
+        >
           <li class="combo-empty">No matching employee code</li>
         </ul>
       </div>
@@ -55,57 +67,101 @@
       <!-- Employee Name combobox -->
       <div class="combo-wrapper">
         <label>Employee Name</label>
-        <input type="text"
-               placeholder="Search by name..."
-               [(ngModel)]="nameSearchText"
-               name="nameSearch"
-               (focus)="nameOptionsOpen = true"
-               (input)="onNameInput()"
-               (blur)="nameOptionsOpen = false"
-               autocomplete="off" />
-        <ul class="combo-dropdown" *ngIf="nameOptionsOpen && filteredByName.length" (mousedown)="$event.preventDefault()">
-          <li *ngFor="let emp of filteredByName"
-              [class.active]="emp.employeeID === selectedEmployeeId"
-              (click)="selectByName(emp)">
+        <input
+          type="text"
+          placeholder="Search by name..."
+          [(ngModel)]="nameSearchText"
+          name="nameSearch"
+          (focus)="nameOptionsOpen = true"
+          (input)="onNameInput()"
+          (blur)="nameOptionsOpen = false"
+          autocomplete="off"
+        />
+        <ul
+          class="combo-dropdown"
+          *ngIf="nameOptionsOpen && filteredByName.length"
+          (mousedown)="$event.preventDefault()"
+        >
+          <li
+            *ngFor="let emp of filteredByName"
+            [class.active]="emp.employeeID === selectedEmployeeId"
+            (click)="selectByName(emp)"
+          >
             <span class="combo-name">{{ fullName(emp) }}</span>
             <span class="combo-code">{{ emp.employeeCode }}</span>
           </li>
         </ul>
-        <ul class="combo-dropdown" *ngIf="nameOptionsOpen && !filteredByName.length" (mousedown)="$event.preventDefault()">
+        <ul
+          class="combo-dropdown"
+          *ngIf="nameOptionsOpen && !filteredByName.length"
+          (mousedown)="$event.preventDefault()"
+        >
           <li class="combo-empty">No matching employee name</li>
         </ul>
       </div>
 
-      <button class="btn btn-link clear-btn" type="button" (click)="clearSelection()" *ngIf="selectedEmployeeId">
+      <button
+        class="btn btn-link clear-btn"
+        type="button"
+        (click)="clearSelection()"
+        *ngIf="selectedEmployeeId"
+      >
         Clear selection
       </button>
     </div>
   </div>
 
   <!-- ============ EMPLOYEE FORM ============ -->
-  <div class="form-card" #formPanel>
-    <h3>{{ isEditMode ? 'Edit Employee' : 'Add New Employee' }}</h3>
+  <div class="form-card" #formPanel *ngIf="showForm">
+    <div class="form-card-header">
+      <h3>{{ isEditMode ? 'Edit Employee' : 'Add New Employee' }}</h3>
+      <button
+        type="button"
+        class="btn btn-link btn-close-form"
+        (click)="closeForm()"
+        [disabled]="saving"
+      >
+        ✕
+      </button>
+    </div>
 
     <form #employeeForm="ngForm" (ngSubmit)="saveForm()" novalidate>
-
       <!-- ---------- Basic Information ---------- -->
       <h4 class="form-section-title">Basic Information</h4>
       <div class="form-grid">
-
         <div class="field">
           <label>Employee Code <span class="req">*</span></label>
-          <input type="text" name="employeeCode" [(ngModel)]="formModel.employeeCode"
-                 [disabled]="isEditMode" required maxlength="20" placeholder="e.g. EMP-1042" />
+          <input
+            type="text"
+            name="employeeCode"
+            [(ngModel)]="formModel.employeeCode"
+            [disabled]="isEditMode"
+            required
+            maxlength="20"
+            placeholder="e.g. EMP-1042"
+          />
         </div>
 
         <div class="field">
           <label>First Name <span class="req">*</span></label>
-          <input type="text" name="firstName" [(ngModel)]="formModel.firstName" required maxlength="50" />
+          <input
+            type="text"
+            name="firstName"
+            [(ngModel)]="formModel.firstName"
+            required
+            maxlength="50"
+          />
         </div>
 
         <div class="field">
           <label>Last Name <span class="req">*</span></label>
-          <input type="text" name="lastName" [(ngModel)]="formModel.lastName" required maxlength="50" />
+          <input
+            type="text"
+            name="lastName"
+            [(ngModel)]="formModel.lastName"
+            required
+            maxlength="50"
+          />
         </div>
 
         <div class="field">
@@ -120,7 +176,12 @@
 
         <div class="field">
           <label>Alternate Phone</label>
-          <input type="tel" name="alternatePhone" [(ngModel)]="formModel.alternatePhone" maxlength="15" />
+          <input
+            type="tel"
+            name="alternatePhone"
+            [(ngModel)]="formModel.alternatePhone"
+            maxlength="15"
+          />
         </div>
 
         <div class="field">
@@ -154,7 +215,12 @@
 
         <div class="field">
           <label>Nationality</label>
-          <input type="text" name="nationality" [(ngModel)]="formModel.nationality" maxlength="50" />
+          <input
+            type="text"
+            name="nationality"
+            [(ngModel)]="formModel.nationality"
+            maxlength="50"
+          />
         </div>
 
         <div class="field">
@@ -169,18 +235,26 @@
 
         <div class="field">
           <label>Highest Qualification</label>
-          <input type="text" name="highestQualification" [(ngModel)]="formModel.highestQualification" maxlength="100" />
+          <input
+            type="text"
+            name="highestQualification"
+            [(ngModel)]="formModel.highestQualification"
+            maxlength="100"
+          />
         </div>
-
       </div>
 
       <!-- ---------- Identity Documents ---------- -->
       <h4 class="form-section-title">Identity Documents</h4>
       <div class="form-grid">
-
         <div class="field">
           <label>Aadhar Number</label>
-          <input type="text" name="aadharNumber" [(ngModel)]="formModel.aadharNumber" maxlength="20" />
+          <input
+            type="text"
+            name="aadharNumber"
+            [(ngModel)]="formModel.aadharNumber"
+            maxlength="20"
+          />
         </div>
 
         <div class="field">
@@ -190,23 +264,34 @@
 
         <div class="field">
           <label>Passport Number</label>
-          <input type="text" name="passportNumber" [(ngModel)]="formModel.passportNumber" maxlength="20" />
+          <input
+            type="text"
+            name="passportNumber"
+            [(ngModel)]="formModel.passportNumber"
+            maxlength="20"
+          />
         </div>
-
       </div>
 
       <!-- ---------- Address ---------- -->
       <h4 class="form-section-title">Address</h4>
       <div class="form-grid">
-
         <div class="field field-wide">
           <label>Current Address</label>
-          <textarea name="currentAddress" [(ngModel)]="formModel.currentAddress" rows="2"></textarea>
+          <textarea
+            name="currentAddress"
+            [(ngModel)]="formModel.currentAddress"
+            rows="2"
+          ></textarea>
         </div>
 
         <div class="field field-wide">
           <label>Permanent Address</label>
-          <textarea name="permanentAddress" [(ngModel)]="formModel.permanentAddress" rows="2"></textarea>
+          <textarea
+            name="permanentAddress"
+            [(ngModel)]="formModel.permanentAddress"
+            rows="2"
+          ></textarea>
         </div>
 
         <div class="field">
@@ -228,34 +313,45 @@
           <label>Pin Code</label>
           <input type="text" name="pinCode" [(ngModel)]="formModel.pinCode" maxlength="10" />
         </div>
-
       </div>
 
       <!-- ---------- Emergency Contact ---------- -->
       <h4 class="form-section-title">Emergency Contact</h4>
       <div class="form-grid">
-
         <div class="field">
           <label>Contact Name</label>
-          <input type="text" name="emergencyContactName" [(ngModel)]="formModel.emergencyContactName" maxlength="100" />
+          <input
+            type="text"
+            name="emergencyContactName"
+            [(ngModel)]="formModel.emergencyContactName"
+            maxlength="100"
+          />
         </div>
 
         <div class="field">
           <label>Contact Phone</label>
-          <input type="tel" name="emergencyContactPhone" [(ngModel)]="formModel.emergencyContactPhone" maxlength="15" />
+          <input
+            type="tel"
+            name="emergencyContactPhone"
+            [(ngModel)]="formModel.emergencyContactPhone"
+            maxlength="15"
+          />
         </div>
 
         <div class="field">
           <label>Relation</label>
-          <input type="text" name="emergencyContactRelation" [(ngModel)]="formModel.emergencyContactRelation" maxlength="50" />
+          <input
+            type="text"
+            name="emergencyContactRelation"
+            [(ngModel)]="formModel.emergencyContactRelation"
+            maxlength="50"
+          />
         </div>
-
       </div>
 
       <!-- ---------- Employment Details ---------- -->
       <h4 class="form-section-title">Employment Details</h4>
       <div class="form-grid">
-
         <div class="field">
           <label>Company</label>
           <select name="companyID" [(ngModel)]="formModel.companyID">
@@ -298,30 +394,38 @@
 
         <div class="field">
           <label>Work Location</label>
-          <input type="text" name="workLocation" [(ngModel)]="formModel.workLocation" maxlength="100" />
-        </div>
-        <!-- Manager — plain manual text input, no dropdown -->
-        <div class="field">
-          <label>Manager</label>
-          <input type="text"
-                 placeholder="Type manager's full name"
-                 [(ngModel)]="managerSearchText"
-                 name="managerSearch"
-                 (input)="onManagerInput()"
-                 (blur)="onManagerBlur()"
-                 autocomplete="off" />
+          <input
+            type="text"
+            name="workLocation"
+            [(ngModel)]="formModel.workLocation"
+            maxlength="100"
+          />
         </div>
 
-        <!-- Reporting Manager — plain manual text input, no dropdown -->
+        <div class="field">
+          <label>Manager</label>
+          <input
+            type="text"
+            placeholder="Type manager's full name"
+            [(ngModel)]="managerSearchText"
+            name="managerSearch"
+            (input)="onManagerInput()"
+            (blur)="onManagerBlur()"
+            autocomplete="off"
+          />
+        </div>
+
         <div class="field">
           <label>Reporting Manager</label>
-          <input type="text"
-                 placeholder="Type reporting manager's full name"
-                 [(ngModel)]="reportingManagerSearchText"
-                 name="reportingManagerSearch"
-                 (input)="onReportingManagerInput()"
-                 (blur)="onReportingManagerBlur()"
-                 autocomplete="off" />
+          <input
+            type="text"
+            placeholder="Type reporting manager's full name"
+            [(ngModel)]="reportingManagerSearchText"
+            name="reportingManagerSearch"
+            (input)="onReportingManagerInput()"
+            (blur)="onReportingManagerBlur()"
+            autocomplete="off"
+          />
         </div>
 
         <div class="field">
@@ -360,13 +464,11 @@
             <option *ngFor="let s of statusOptions" [ngValue]="s">{{ s }}</option>
           </select>
         </div>
-
       </div>
 
       <!-- ---------- Bank & Statutory Details ---------- -->
       <h4 class="form-section-title">Bank &amp; Statutory Details</h4>
       <div class="form-grid">
-
         <div class="field">
           <label>Bank Name</label>
           <input type="text" name="bankName" [(ngModel)]="formModel.bankName" maxlength="100" />
@@ -374,7 +476,12 @@
 
         <div class="field">
           <label>Bank Account Number</label>
-          <input type="text" name="bankAccountNumber" [(ngModel)]="formModel.bankAccountNumber" maxlength="30" />
+          <input
+            type="text"
+            name="bankAccountNumber"
+            [(ngModel)]="formModel.bankAccountNumber"
+            maxlength="30"
+          />
         </div>
 
         <div class="field">
@@ -396,58 +503,205 @@
           <label>ESIC Number</label>
           <input type="text" name="esicNumber" [(ngModel)]="formModel.esicNumber" maxlength="30" />
         </div>
-
       </div>
 
-      <!-- ---------- Attachments ---------- -->
-      <h4 class="form-section-title">Attachments</h4>
+      <!-- ---------- Attachments: Profile Picture & Resume ---------- -->
+      <h4 class="form-section-title">Profile Picture &amp; Resume</h4>
       <div class="form-grid">
-
         <div class="field">
           <label>Profile Picture</label>
           <div class="upload-box">
-            <input type="file" accept="image/*" (change)="onProfilePicSelected($event)"
-                   [disabled]="uploadingProfilePic" #profilePicInput hidden />
-            <button type="button" class="btn btn-small" (click)="profilePicInput.click()" [disabled]="uploadingProfilePic">
-              {{ uploadingProfilePic ? 'Uploading...' : (formModel.profilePicturePath ? 'Change File' : 'Choose File') }}
-            </button>
-            <a *ngIf="formModel.profilePicturePath && !uploadingProfilePic"
-               [href]="formModel.profilePicturePath" target="_blank" class="upload-file-link">View current</a>
-            <button *ngIf="formModel.profilePicturePath" type="button" class="btn btn-link"
-                    (click)="removeProfilePic()" [disabled]="uploadingProfilePic">
-              Remove
-            </button>
+            <div
+              class="pic-preview"
+              *ngIf="formModel.profilePicturePath && isImageUrl(formModel.profilePicturePath)"
+            >
+              <img
+                class="pic-thumb"
+                [src]="getProfilePicUrl(formModel.profilePicturePath)"
+                alt="preview"
+              />
+            </div>
+            <div class="upload-controls">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onProfilePicSelected($event)"
+                [disabled]="uploadingProfilePic"
+                #profilePicInput
+                hidden
+              />
+              <button
+                type="button"
+                class="btn btn-small"
+                (click)="profilePicInput.click()"
+                [disabled]="uploadingProfilePic"
+              >
+                {{
+                  uploadingProfilePic
+                    ? 'Uploading...'
+                    : formModel.profilePicturePath
+                      ? 'Change Photo'
+                      : 'Choose File'
+                }}
+              </button>
+              <a
+                *ngIf="formModel.profilePicturePath && !uploadingProfilePic"
+                [href]="getProfilePicUrl(formModel.profilePicturePath)"
+                target="_blank"
+                class="upload-file-link"
+                >View full</a
+              >
+              <button
+                *ngIf="formModel.profilePicturePath"
+                type="button"
+                class="btn btn-link"
+                (click)="removeProfilePic()"
+                [disabled]="uploadingProfilePic"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         </div>
 
         <div class="field">
           <label>Resume</label>
           <div class="upload-box">
-            <input type="file" accept=".pdf,.doc,.docx" (change)="onResumeSelected($event)"
-                   [disabled]="uploadingResume" #resumeInput hidden />
-            <button type="button" class="btn btn-small" (click)="resumeInput.click()" [disabled]="uploadingResume">
-              {{ uploadingResume ? 'Uploading...' : (formModel.resumePath ? 'Change File' : 'Choose File') }}
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              (change)="onResumeSelected($event)"
+              [disabled]="uploadingResume"
+              #resumeInput
+              hidden
+            />
+            <button
+              type="button"
+              class="btn btn-small"
+              (click)="resumeInput.click()"
+              [disabled]="uploadingResume"
+            >
+              {{
+                uploadingResume
+                  ? 'Uploading...'
+                  : formModel.resumePath
+                    ? 'Change File'
+                    : 'Choose File'
+              }}
             </button>
-            <a *ngIf="formModel.resumePath && !uploadingResume"
-               [href]="formModel.resumePath" target="_blank" class="upload-file-link">View current</a>
-            <button *ngIf="formModel.resumePath" type="button" class="btn btn-link"
-                    (click)="removeResume()" [disabled]="uploadingResume">
+            <a
+              *ngIf="formModel.resumePath && !uploadingResume"
+              [href]="formModel.resumePath"
+              target="_blank"
+              class="upload-file-link"
+              >View current</a
+            >
+            <button
+              *ngIf="formModel.resumePath"
+              type="button"
+              class="btn btn-link"
+              (click)="removeResume()"
+              [disabled]="uploadingResume"
+            >
               Remove
             </button>
           </div>
         </div>
-
       </div>
 
+      <!-- ---------- Attachments: Additional Documents ---------- -->
+      <h4 class="form-section-title">Additional Documents</h4>
+      <div class="form-grid">
+        <div class="field">
+          <label>Upload Document</label>
+          <div class="upload-box">
+            <input
+              type="file"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+              (change)="onDocumentSelected($event)"
+              [disabled]="uploadingDocument"
+              #documentInput
+              hidden
+            />
+            <button
+              type="button"
+              class="btn btn-small"
+              (click)="documentInput.click()"
+              [disabled]="uploadingDocument"
+            >
+              {{ uploadingDocument ? 'Uploading...' : 'Choose File' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="field field-wide">
+          <div class="doc-list" *ngIf="documentFiles.length">
+            <div class="doc-item" *ngFor="let doc of documentFiles; let i = index">
+              <span class="doc-name" title="{{ doc.file.name }}">{{ doc.file.name }}</span>
+              <span class="doc-size">{{ formatFileSize(doc.file.size) }}</span>
+              <a
+                *ngIf="doc.previewUrl"
+                [href]="doc.previewUrl"
+                target="_blank"
+                class="upload-file-link"
+                >View</a
+              >
+              <button
+                type="button"
+                class="btn-icon btn-delete"
+                title="Remove"
+                (click)="removeDocument(i)"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+          <p *ngIf="!documentFiles.length" class="doc-placeholder">
+            No additional documents uploaded.
+          </p>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : (isEditMode ? 'Update Employee' : 'Save Employee') }}
+          {{ saving ? 'Saving...' : isEditMode ? 'Update Employee' : 'Save Employee' }}
         </button>
         <button type="button" class="btn btn-link" (click)="newEmployee()" [disabled]="saving">
           Clear
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          *ngIf="isEditMode && canDelete"
+          (click)="confirmDeleteFromForm()"
+          [disabled]="saving"
+        >
+          Delete
         </button>
       </div>
     </form>
   </div>
 
+  <!-- Empty state when no employee is selected -->
+  <div class="empty-state" *ngIf="!showForm && !loading">
+    <div class="empty-icon">👥</div>
+    <h4>Select an employee or click "New Employee" to get started.</h4>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-backdrop" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3>Confirm Delete</h3>
+      <p *ngIf="employeeToDelete">
+        Are you sure you want to delete
+        <strong>{{ employeeToDelete.employeeCode }} — {{ fullName(employeeToDelete) }}</strong
+        >? This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-link" (click)="cancelDelete()">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteEmployee()">Delete</button>
+      </div>
+    </div>
+  </div>
 </div>

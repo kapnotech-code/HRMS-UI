@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { EmployeeService } from '../../../core/services/employee.service';
@@ -10,7 +11,7 @@ import { DepartmentService } from '../../../core/services/Department.Service';
 import { DesignationService } from '../../../core/services/designation.service';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { LeaveRequestService } from '../../../core/services/leave.service';
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 
 interface Option {
   id: number;
@@ -42,8 +43,8 @@ interface ImageLoadState {
   selector: 'app-employee-report',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './Employee report.component.html',
-  styleUrls: ['./Employee report.component.css']
+  templateUrl: './Employee-report.component.html',
+  styleUrls: ['./Employee-report.component.css']
 })
 export class EmployeeReportComponent implements OnInit, OnDestroy {
   // ---------- Data ----------
@@ -115,8 +116,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
   qrCodeUrl = '';
 
   // ---------- File resolution ----------
- 
-  private readonly fileBaseUrl = 'https://localhost:7135';
+  private readonly fileBaseUrl = environment.apiUrl.replace('/api', '');
 
 
   private profileImageState = new Map<number, ImageLoadState>();
@@ -181,7 +181,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.employeeService.getAll().subscribe({
       next: (res: any) => {
-        this.employees = res.data ?? [];
+        this.employees = res ?? [];
         this.applyFilters();
         this.loading = false;
         this.cdr.detectChanges();
@@ -205,7 +205,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
 
     this.departmentService.getAll().subscribe({
       next: (res: any) => {
-        this.departments = (res.data ?? []).map((d: any) => ({ id: d.departmentID, name: d.departmentName }));
+        this.departments = (res ?? []).map((d: any) => ({ id: d.departmentID, name: d.departmentName }));
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Department master load failed:', err)
@@ -213,7 +213,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
 
     this.designationService.getAll().subscribe({
       next: (res: any) => {
-        this.designations = (res.data ?? []).map((d: any) => ({ id: d.designationID, name: d.designationName }));
+        this.designations = (res ?? []).map((d: any) => ({ id: d.designationID, name: d.designationName }));
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Designation master load failed:', err)
@@ -694,7 +694,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     // matching the pattern already used in AttendanceList.ts.
     this.attendanceService.getByEmployee(employeeId).subscribe({
       next: (res: any) => {
-        this.attendanceRecords = res.data ?? [];
+        this.attendanceRecords = res ?? [];
         this.computeAttendanceSummary();
         this.attendanceLoading = false;
         this.cdr.detectChanges();
@@ -892,3 +892,4 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     window.URL.revokeObjectURL(url);
   }
 }
+

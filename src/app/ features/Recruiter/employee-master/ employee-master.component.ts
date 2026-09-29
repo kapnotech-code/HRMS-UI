@@ -1,16 +1,17 @@
 import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 // ⚠️ Verify these import paths match your actual project structure
 import { EmployeeService } from '../../../core/services/employee.service';
+import { FrontendPermissionService } from '../../../core/services/frontend-permission.service';
 import { DepartmentService } from '../../../core/services/Department.Service';
 import { DesignationService } from '../../../core/services/designation.service';
 import { ShiftService } from '../../../core/services/shift.service';
 
 import { EmployeeRequest } from '../../../shared/models/employee/employee-request';
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 import { EmployerService } from '../../../core/services/company.service';
 
 interface Option {
@@ -28,10 +29,9 @@ interface Option2 {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './employee-master.component.html',
-  styleUrls: ['./employee-master.component.css']
+  styleUrls: ['./employee-master.component.css'],
 })
 export class EmployeeMasterComponent implements OnInit {
-
   @ViewChild('formPanel') formPanel!: ElementRef<HTMLElement>;
   @ViewChild('employeeForm') employeeForm!: NgForm;
 
@@ -48,7 +48,7 @@ export class EmployeeMasterComponent implements OnInit {
   genderOptions: Option2[] = [
     { value: 'M', label: 'Male' },
     { value: 'F', label: 'Female' },
-    { value: 'O', label: 'Other' }
+    { value: 'O', label: 'Other' },
   ];
   maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
   bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -60,6 +60,18 @@ export class EmployeeMasterComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   isEditMode = false;
+
+  // permissions
+  canAdd = true;
+  canEdit = true;
+  canDelete = true;
+
+  // delete confirmation
+  showDeleteConfirm = false;
+  employeeToDelete: EmployeeResponse | null = null;
+
+  // form visibility
+  showForm = false;
 
   // ---------- Toast popup state ----------
   showToast = false;
@@ -83,6 +95,8 @@ export class EmployeeMasterComponent implements OnInit {
   // ---------- File upload state ----------
   uploadingProfilePic = false;
   uploadingResume = false;
+  uploadingDocument = false;
+  documentFiles: { file: File; previewUrl: string }[] = [];
 
   // Set from the :id route param (when navigated here from the employee list
   // page's Edit button). Applied once employees have finished loading.
@@ -90,15 +104,20 @@ export class EmployeeMasterComponent implements OnInit {
 
   formModel: EmployeeRequest = this.emptyForm();
 
+  // Navigate to the Reports page after a successful save
+  navigateAfterSave = true;
+
   constructor(
     private employeeService: EmployeeService,
     private departmentService: DepartmentService,
     private designationService: DesignationService,
     private shiftService: ShiftService,
     private companyService: EmployerService,
+    private frontendPerm: FrontendPermissionService,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef   // FIX: needed so toast/messages reliably update the view
-  ) { }
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -106,6 +125,16 @@ export class EmployeeMasterComponent implements OnInit {
 
     this.loadEmployees();
     this.loadDropdownMasters();
+    this.loadPermissions();
+  }
+
+  loadPermissions(): void {
+    const roleId = this.frontendPerm.getCurrentRoleId();
+    if (!roleId || roleId === 1) return;
+    this.canAdd = this.frontendPerm.canAddByUrl('/Recruiter/employee-master');
+    this.canEdit = this.frontendPerm.canEditByUrl('/Recruiter/employee-master');
+    this.canDelete = this.frontendPerm.canDeleteByUrl('/Recruiter/employee-master');
+    this.cdr.detectChanges();
   }
 
   // ===================================================
@@ -147,19 +176,30 @@ export class EmployeeMasterComponent implements OnInit {
     this.loading = true;
     this.clearMessages();
     this.employeeService.getAll().subscribe({
-      next: (res: any) => {
-        this.employees = res.data ?? [];
+      next: (emps: EmployeeResponse[]) => {
+        this.employees = emps ?? [];
         this.filteredByCode = this.employees;
         this.filteredByName = this.employees;
-        this.managers = this.employees.map(e => ({ id: e.employeeID, name: this.fullName(e) }));
+        this.managers = this.employees.map((e) => ({ id: e.employeeID, name: this.fullName(e) }));
         this.loading = false;
 
         // If we arrived here via /Recruiter/employee-master/:id, load that
         // employee into the form now that the list (and managers) are ready.
         if (this.pendingEditId != null) {
-          const target = this.employees.find(e => e.employeeID === this.pendingEditId);
+          const target = this.employees.find((e) => e.employeeID === this.pendingEditId);
           if (target) {
             this.applySelection(target);
+          } else {
+            // Fallback: fetch the single employee by ID
+            this.employeeService.getById(this.pendingEditId).subscribe({
+              next: (emp: EmployeeResponse) => {
+                if (emp) {
+                  this.applySelection(emp);
+                }
+                this.cdr.detectChanges();
+              },
+              error: () => this.cdr.detectChanges(),
+            });
           }
           this.pendingEditId = null;
         }
@@ -168,42 +208,69 @@ export class EmployeeMasterComponent implements OnInit {
       error: (err) => {
         this.errorMessage = 'Failed to load employees. ' + this.extractError(err);
         this.loading = false;
+
+        // Even on list load failure, try to load by :id if present
+        if (this.pendingEditId != null) {
+          this.employeeService.getById(this.pendingEditId).subscribe({
+            next: (emp: EmployeeResponse) => {
+              if (emp) {
+                this.employees = [emp, ...this.employees];
+                this.applySelection(emp);
+              }
+              this.cdr.detectChanges();
+            },
+            error: () => this.cdr.detectChanges(),
+          });
+          this.pendingEditId = null;
+        }
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
   loadDropdownMasters(): void {
     this.companyService.getAll().subscribe({
       next: (res: any) => {
-        this.companies = (res.data ?? []).map((c: any) => ({ id: c.companyID, name: c.companyName }));
+        this.companies = (res.data ?? []).map((c: any) => ({
+          id: c.companyID,
+          name: c.companyName,
+        }));
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Company master load failed:', err)
+      error: (err) => console.error('Company master load failed:', err),
     });
 
     this.departmentService.getAll().subscribe({
       next: (res: any) => {
-        this.departments = (res.data ?? []).map((d: any) => ({ id: d.departmentID, name: d.departmentName }));
+        this.departments = (Array.isArray(res) ? res : (res.data ?? [])).map((d: any) => ({
+          id: d.departmentID,
+          name: d.departmentName,
+        }));
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Department master load failed:', err)
+      error: (err) => console.error('Department master load failed:', err),
     });
 
     this.designationService.getAll().subscribe({
       next: (res: any) => {
-        this.designations = (res.data ?? []).map((d: any) => ({ id: d.designationID, name: d.designationName }));
+        this.designations = (Array.isArray(res) ? res : (res.data ?? [])).map((d: any) => ({
+          id: d.designationID,
+          name: d.designationName,
+        }));
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Designation master load failed:', err)
+      error: (err) => console.error('Designation master load failed:', err),
     });
 
     this.shiftService.getAll().subscribe({
       next: (res: any) => {
-        this.shifts = (res.data ?? []).map((s: any) => ({ id: s.shiftID, name: s.shiftName }));
+        this.shifts = (Array.isArray(res) ? res : (res.data ?? [])).map((s: any) => ({
+          id: s.shiftID,
+          name: s.shiftName,
+        }));
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Shift master load failed:', err)
+      error: (err) => console.error('Shift master load failed:', err),
     });
   }
 
@@ -212,22 +279,26 @@ export class EmployeeMasterComponent implements OnInit {
   // ===================================================
 
   fullName(emp: EmployeeResponse): string {
-    return `${emp.firstName ?? ''} ${emp.lastName ?? ''}`.trim();
+    return (
+      `${emp.firstName ?? ''} ${emp.lastName ?? ''}`.trim() ||
+      emp.employeeName ||
+      `Employee #${emp.employeeID}`
+    );
   }
 
   onCodeInput(): void {
     this.codeOptionsOpen = true;
     const term = this.codeSearchText.toLowerCase();
-    this.filteredByCode = this.employees.filter(e =>
-      (e.employeeCode ?? '').toLowerCase().includes(term)
+    this.filteredByCode = this.employees.filter((e) =>
+      (e.employeeCode ?? '').toLowerCase().includes(term),
     );
   }
 
   onNameInput(): void {
     this.nameOptionsOpen = true;
     const term = this.nameSearchText.toLowerCase();
-    this.filteredByName = this.employees.filter(e =>
-      this.fullName(e).toLowerCase().includes(term)
+    this.filteredByName = this.employees.filter((e) =>
+      this.fullName(e).toLowerCase().includes(term),
     );
   }
 
@@ -244,6 +315,7 @@ export class EmployeeMasterComponent implements OnInit {
   // Called by the dropdowns AND when arriving via /:id from the list page
   private applySelection(emp: EmployeeResponse): void {
     this.selectedEmployeeId = emp.employeeID;
+    this.showForm = true;
     this.codeSearchText = emp.employeeCode;
     this.nameSearchText = this.fullName(emp);
     this.loadFormFromEmployee(emp);
@@ -259,7 +331,10 @@ export class EmployeeMasterComponent implements OnInit {
   }
 
   private scrollToForm(): void {
-    setTimeout(() => this.formPanel?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+    setTimeout(
+      () => this.formPanel?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      0,
+    );
   }
 
   // ===================================================
@@ -277,13 +352,13 @@ export class EmployeeMasterComponent implements OnInit {
       this.formModel.managerID = undefined;
       return;
     }
-    const match = this.managers.find(m => m.name.toLowerCase() === term);
+    const match = this.managers.find((m) => m.name.toLowerCase() === term);
     this.formModel.managerID = match ? match.id : undefined;
   }
 
   onManagerBlur(): void {
     const term = this.managerSearchText.trim().toLowerCase();
-    const match = this.managers.find(m => m.name.toLowerCase() === term);
+    const match = this.managers.find((m) => m.name.toLowerCase() === term);
     this.formModel.managerID = match ? match.id : undefined;
     if (!match) {
       this.managerSearchText = '';
@@ -293,7 +368,7 @@ export class EmployeeMasterComponent implements OnInit {
 
   onReportingManagerInput(): void {
     const term = this.reportingManagerSearchText.trim().toLowerCase();
-    const match = term ? this.managers.find(m => m.name.toLowerCase() === term) : undefined;
+    const match = term ? this.managers.find((m) => m.name.toLowerCase() === term) : undefined;
     this.formModel.reportingManagerID = match ? match.id : undefined;
     // NOTE: reportingManagerSearchText ko yahan kabhi touch nahi karte —
     // jo user type kare wahi text box mein rahega, sirf ID silently resolve hoti hai
@@ -301,7 +376,7 @@ export class EmployeeMasterComponent implements OnInit {
 
   onReportingManagerBlur(): void {
     const term = this.reportingManagerSearchText.trim().toLowerCase();
-    const match = term ? this.managers.find(m => m.name.toLowerCase() === term) : undefined;
+    const match = term ? this.managers.find((m) => m.name.toLowerCase() === term) : undefined;
     this.formModel.reportingManagerID = match ? match.id : undefined;
     // Text clear NAHI karna — pehle yahi line thi jo blur hote hi field khaali kar deti thi
   }
@@ -309,7 +384,7 @@ export class EmployeeMasterComponent implements OnInit {
   // Manager array se naam dhoondhne ka helper — edit mode prefill ke liye
   private managerNameById(id: number | undefined | null): string {
     if (id == null) return '';
-    return this.managers.find(m => m.id === id)?.name ?? '';
+    return this.managers.find((m) => m.id === id)?.name ?? '';
   }
 
   // ===================================================
@@ -339,7 +414,7 @@ export class EmployeeMasterComponent implements OnInit {
         this.uploadingProfilePic = false;
         this.showToastMessage('error', 'Profile picture upload failed. ' + this.extractError(err));
         this.cdr.detectChanges();
-      }
+      },
     });
     input.value = '';
   }
@@ -367,7 +442,7 @@ export class EmployeeMasterComponent implements OnInit {
         this.uploadingResume = false;
         this.showToastMessage('error', 'Resume upload failed. ' + this.extractError(err));
         this.cdr.detectChanges();
-      }
+      },
     });
     input.value = '';
   }
@@ -398,7 +473,7 @@ export class EmployeeMasterComponent implements OnInit {
       dateOfJoining: this.today(),
 
       // Job details
-      department: '',
+      department: undefined,
       designation: '',
       salary: undefined,
       managerID: undefined,
@@ -450,7 +525,7 @@ export class EmployeeMasterComponent implements OnInit {
 
       // Attachments
       profilePicturePath: '',
-      resumePath: ''
+      resumePath: '',
     };
   }
 
@@ -477,7 +552,10 @@ export class EmployeeMasterComponent implements OnInit {
       dateOfBirth: this.toDateInput(emp.dateOfBirth),
       dateOfJoining: emp.dateOfJoining ? emp.dateOfJoining.substring(0, 10) : this.today(),
 
-      department: emp.department,
+      department:
+        typeof emp.department === 'string'
+          ? this.departments.find((d) => d.id === Number(emp.department))?.name || emp.department
+          : (emp.department as unknown as number | null),
       designation: emp.designation,
       salary: emp.salary,
       managerID: emp.managerID,
@@ -523,8 +601,8 @@ export class EmployeeMasterComponent implements OnInit {
       esicNumber: emp.esicNumber,
 
       profilePicturePath: emp.profilePicturePath,
-      resumePath: emp.resumePath
-    };
+      resumePath: emp.resumePath,
+    } as unknown as EmployeeRequest;
 
     // Manager / Reporting Manager text fields prefill karo, warna edit mode
     // mein khaali dikhenge jabki formModel mein ID already set hai.
@@ -534,6 +612,7 @@ export class EmployeeMasterComponent implements OnInit {
 
   newEmployee(): void {
     this.isEditMode = false;
+    this.showForm = true;
     this.formModel = this.emptyForm();
     this.clearSelection();
     this.clearMessages();
@@ -541,8 +620,16 @@ export class EmployeeMasterComponent implements OnInit {
     // Manager text fields bhi reset karo
     this.managerSearchText = '';
     this.reportingManagerSearchText = '';
+    this.documentFiles = [];
 
     this.employeeForm?.resetForm(this.formModel);
+  }
+
+  closeForm(): void {
+    this.showForm = false;
+    this.clearSelection();
+    this.newEmployee();
+    this.cdr.detectChanges();
   }
 
   saveForm(): void {
@@ -572,7 +659,6 @@ export class EmployeeMasterComponent implements OnInit {
     this.saving = true;
 
     if (this.isEditMode && this.formModel.employeeID) {
-
       // UPDATE
       this.employeeService.update(this.formModel.employeeID, this.formModel).subscribe({
         next: (res: any) => {
@@ -586,6 +672,9 @@ export class EmployeeMasterComponent implements OnInit {
           window.dispatchEvent(new CustomEvent('employeeListChanged'));
 
           this.newEmployee();
+          if (this.navigateAfterSave) {
+            this.router.navigate(['/Recruiter/Report']);
+          }
           this.cdr.detectChanges();
         },
         error: (err) => {
@@ -595,11 +684,9 @@ export class EmployeeMasterComponent implements OnInit {
           this.showToastMessage('error', this.errorMessage);
 
           this.cdr.detectChanges();
-        }
+        },
       });
-
     } else {
-
       // ADD
       this.employeeService.add(this.formModel).subscribe({
         next: (res: any) => {
@@ -613,6 +700,10 @@ export class EmployeeMasterComponent implements OnInit {
 
           window.dispatchEvent(new CustomEvent('employeeListChanged'));
 
+          if (this.navigateAfterSave) {
+            this.router.navigate(['/Recruiter/Report']);
+          }
+
           this.cdr.detectChanges();
         },
         error: (err) => {
@@ -622,7 +713,7 @@ export class EmployeeMasterComponent implements OnInit {
           this.showToastMessage('error', this.errorMessage);
 
           this.cdr.detectChanges();
-        }
+        },
       });
     }
   }
@@ -637,5 +728,182 @@ export class EmployeeMasterComponent implements OnInit {
     if (typeof err?.error === 'string') return err.error;
     if (err?.message) return err.message;
     return 'Please check the server connection.';
+  }
+
+  // ===================================================
+  // DELETE
+  // ===================================================
+
+  confirmDelete(emp: EmployeeResponse): void {
+    this.employeeToDelete = emp;
+    this.showDeleteConfirm = true;
+    this.cdr.detectChanges();
+  }
+
+  confirmDeleteFromForm(): void {
+    if (!this.formModel.employeeID) return;
+    const emp = this.employees.find((e) => e.employeeID === this.formModel.employeeID);
+    this.employeeToDelete =
+      emp ??
+      ({
+        employeeID: this.formModel.employeeID,
+        employeeCode: this.formModel.employeeCode,
+        firstName: this.formModel.firstName || '',
+        lastName: this.formModel.lastName || '',
+        email: this.formModel.email || '',
+        phone: this.formModel.phone || '',
+        department: this.formModel.department ?? '',
+        designation: this.formModel.designation ?? '',
+        employeeStatus: this.formModel.employeeStatus ?? '',
+        companyID: this.formModel.companyID ?? 0,
+        isActive: this.formModel.isActive ?? true,
+        dateOfBirth: this.formModel.dateOfBirth ?? '',
+        dateOfJoining: this.formModel.dateOfJoining ?? '',
+        gender: this.formModel.gender ?? '',
+        salary: this.formModel.salary ?? 0,
+        managerID: this.formModel.managerID ?? 0,
+        reportingManagerID: this.formModel.reportingManagerID ?? 0,
+        employmentType: this.formModel.employmentType ?? '',
+        workLocation: this.formModel.workLocation ?? '',
+        shiftType: this.formModel.shiftType ?? '',
+        probationEndDate: this.formModel.probationEndDate ?? '',
+        confirmationDate: this.formModel.confirmationDate ?? '',
+        exitDate: this.formModel.exitDate ?? '',
+        exitReason: this.formModel.exitReason ?? '',
+        fatherName: this.formModel.fatherName ?? '',
+        motherName: this.formModel.motherName ?? '',
+        maritalStatus: this.formModel.maritalStatus ?? '',
+        bloodGroup: this.formModel.bloodGroup ?? '',
+        nationality: this.formModel.nationality ?? '',
+        aadharNumber: this.formModel.aadharNumber ?? '',
+        panNumber: this.formModel.panNumber ?? '',
+        passportNumber: this.formModel.passportNumber ?? '',
+        alternatePhone: this.formModel.alternatePhone ?? '',
+        currentAddress: this.formModel.currentAddress ?? '',
+        permanentAddress: this.formModel.permanentAddress ?? '',
+        city: this.formModel.city ?? '',
+        state: this.formModel.state ?? '',
+        country: this.formModel.country ?? '',
+        pinCode: this.formModel.pinCode ?? '',
+        emergencyContactName: this.formModel.emergencyContactName ?? '',
+        emergencyContactPhone: this.formModel.emergencyContactPhone ?? '',
+        emergencyContactRelation: this.formModel.emergencyContactRelation ?? '',
+        bankName: this.formModel.bankName ?? '',
+        bankAccountNumber: this.formModel.bankAccountNumber ?? '',
+        ifscCode: this.formModel.ifscCode ?? '',
+        uan: this.formModel.uan ?? '',
+        pfNumber: this.formModel.pfNumber ?? '',
+        esicNumber: this.formModel.esicNumber ?? '',
+        highestQualification: this.formModel.highestQualification ?? '',
+        profilePicturePath: this.formModel.profilePicturePath ?? '',
+        resumePath: this.formModel.resumePath ?? '',
+        createdDate: '',
+        modifiedDate: '',
+      } as EmployeeResponse);
+    this.showDeleteConfirm = true;
+    this.cdr.detectChanges();
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm = false;
+    this.employeeToDelete = null;
+  }
+
+  deleteEmployee(): void {
+    if (!this.employeeToDelete) return;
+    const emp = this.employeeToDelete;
+
+    this.employeeService.delete(emp.employeeID).subscribe({
+      next: () => {
+        this.showDeleteConfirm = false;
+        this.employeeToDelete = null;
+        this.showToastMessage('success', 'Employee deleted successfully.');
+        this.loadEmployees();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorMessage = 'Delete failed. ' + this.extractError(err);
+        this.showToastMessage('error', this.errorMessage);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ===================================================
+  // HELPERS
+  // ===================================================
+
+  getProfilePicUrl(path: string | undefined): string {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return `${window.location.origin}/${path}`;
+  }
+
+  isImageUrl(path: string | undefined): boolean {
+    if (!path) return false;
+    const lower = path.toLowerCase();
+    return lower.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/) !== null;
+  }
+
+  getStatusBadgeClass(status: string): string {
+    const s = (status || '').toLowerCase();
+    if (s === 'active' || s === 'Active') return 'badge-active';
+    if (s === 'inactive' || s === 'Inactive') return 'badge-inactive';
+    if (s === 'on leave' || s === 'On Leave') return 'badge-leave';
+    if (s === 'resigned' || s === 'Resigned') return 'badge-resigned';
+    return 'badge-inactive';
+  }
+
+  // ===================================================
+  // ADDITIONAL DOCUMENT UPLOAD
+  // ===================================================
+
+  onDocumentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 10 * 1024 * 1024) {
+        this.showToastMessage('error', `File "${file.name}" exceeds 10MB limit.`);
+        continue;
+      }
+
+      this.uploadingDocument = true;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'document');
+
+      this.employeeService.uploadFile(file, 'document').subscribe({
+        next: (res: any) => {
+          const filePath = res.data?.filePath ?? res.filePath ?? '';
+          this.documentFiles.push({ file, previewUrl: filePath });
+          this.uploadingDocument = false;
+          this.showToastMessage('success', `Document "${file.name}" uploaded.`);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.uploadingDocument = false;
+          this.showToastMessage(
+            'error',
+            `Upload failed for "${file.name}". ` + this.extractError(err),
+          );
+          this.cdr.detectChanges();
+        },
+      });
+    }
+    input.value = '';
+  }
+
+  removeDocument(index: number): void {
+    this.documentFiles.splice(index, 1);
+    this.cdr.detectChanges();
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 }

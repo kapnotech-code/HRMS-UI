@@ -1,0 +1,205 @@
+<div class="page-container">
+
+  <!-- ===== PAGE HEADER ===== -->
+  <div class="page-header">
+    <div>
+      <h2>Schedule Employee Mapping</h2>
+      <p class="page-subtitle">Map eligible employees to the selected schedule</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="navigateToProcess()" [disabled]="!scheduleId">
+        ← Back to Schedule Master
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SCHEDULE SELECTOR (when no schedule ID in URL) ===== -->
+  <div class="schedule-selector-card" *ngIf="showScheduleSelector && !loading">
+    <div class="schedule-selector-content">
+      <label class="schedule-selector-label">Select Schedule</label>
+      <select class="schedule-selector" [(ngModel)]="scheduleId" (ngModelChange)="onScheduleChange()">
+        <option [ngValue]="null">-- Choose a Schedule --</option>
+        <option *ngFor="let s of schedules" [ngValue]="s.sM_Id">
+          {{ s.sM_ScheduleName }} ({{ s.sM_Year }}) - {{ s.sM_ScheduleType }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ===== ERROR ===== -->
+  <p *ngIf="errorMessage" class="error-text" role="alert">
+    {{ errorMessage }}
+  </p>
+
+  <!-- ===== SUCCESS MESSAGE ===== -->
+  <div *ngIf="showSuccessMessage" class="success-message" role="status">
+    <span class="success-icon" aria-hidden="true">✅</span>
+    <span>{{ successMessage }}</span>
+    <button class="btn-primary" (click)="processSchedule()" style="margin-left: 16px;" [disabled]="processing">
+      {{ processing ? 'Processing...' : 'Process Schedule' }}
+    </button>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner" aria-hidden="true"></div>
+    <span>Loading…</span>
+  </div>
+
+  <!-- ===== SCHEDULE INFO ===== -->
+  <div class="schedule-info-card" *ngIf="schedule && !loading">
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Schedule Name</span>
+        <span class="info-value">{{ getScheduleName() }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Schedule Type</span>
+        <span class="info-value">{{ getScheduleType() }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Year</span>
+        <span class="info-value">{{ schedule.sM_Year }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Start Date</span>
+        <span class="info-value">{{ formatDate(schedule.sM_StartDate) }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">End Date</span>
+        <span class="info-value">{{ formatDate(schedule.sM_EndDate) }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Status</span>
+        <span class="info-value">
+          <span class="badge" [class.badge-active]="isScheduleActive()" [class.badge-inactive]="!isScheduleActive()">
+            {{ getStatus() || (schedule.sM_IsActive ? 'Active' : 'Inactive') }}
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AVAILABLE EMPLOYEES (TO MAP) ===== -->
+  <div class="section-card" *ngIf="!loading && availableEmployees.length > 0">
+    <div class="section-header">
+      <h3 class="section-title">Available Employees</h3>
+      <span class="section-count">{{ availableEmployees.length }} available</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 50px;">
+              <input type="checkbox" [(ngModel)]="selectAll" (change)="toggleSelectAll()" aria-label="Select all" />
+            </th>
+            <th scope="col">Employee ID</th>
+            <th scope="col">Employee Name</th>
+            <th scope="col">Department</th>
+            <th scope="col">Designation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let emp of availableEmployees">
+            <td>
+              <input type="checkbox"
+                     [checked]="isEmployeeSelected(emp.employeeID)"
+                     (change)="toggleEmployee(emp.employeeID)"
+                     aria-label="Select {{ emp.employeeName || emp.employeeID }}" />
+            </td>
+            <td data-label="Employee ID">{{ emp.employeeID }}</td>
+            <td data-label="Employee Name">
+              {{ emp.employeeName || (emp.firstName + ' ' + emp.lastName) || ('Employee #' + emp.employeeID) }}
+            </td>
+            <td data-label="Department">{{ emp.department || '-' }}</td>
+            <td data-label="Designation">{{ emp.designation || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-actions" *ngIf="canAdd">
+      <button class="btn-primary" (click)="saveMapping()" [disabled]="selectedEmployeeIds.length === 0 || saving">
+        <span class="btn-spinner" *ngIf="saving" aria-hidden="true"></span>
+        {{ saving ? 'Mapping...' : 'Map Selected Employees' }} ({{ selectedEmployeeIds.length }})
+      </button>
+      <button class="btn-primary" (click)="processSchedule()" [disabled]="mappedEmployees.length === 0 || !canProcess || processing" style="margin-left: 10px;">
+        <span class="btn-spinner" *ngIf="processing" aria-hidden="true"></span>
+        {{ processing ? 'Processing...' : 'Process Schedule' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && availableEmployees.length === 0">
+    <span class="empty-icon">✅</span>
+    <p>All employees are already mapped to this schedule.</p>
+  </div>
+
+  <!-- ===== MAPPED EMPLOYEES ===== -->
+  <div class="section-card" *ngIf="!loading && mappedEmployees.length > 0">
+    <div class="section-header">
+      <h3 class="section-title">Mapped Employees</h3>
+      <span class="section-count">{{ mappedEmployees.length }} mapped</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Employee ID</th>
+            <th scope="col">Employee Name</th>
+            <th scope="col">Department</th>
+            <th scope="col">Designation</th>
+            <th scope="col">Status</th>
+            <th scope="col">Eligible</th>
+            <th scope="col">Review Required</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of mappedEmployees; let i = index">
+            <td data-label="#">{{ i + 1 }}</td>
+            <td data-label="Employee ID">{{ m.sE_EmployeeId }}</td>
+            <td data-label="Employee Name">{{ m.employeeName }}</td>
+            <td data-label="Department">{{ getEmployeeDepartment(m.sE_EmployeeId) }}</td>
+            <td data-label="Designation">{{ getEmployeeDesignation(m.sE_EmployeeId) }}</td>
+            <td data-label="Status">
+              <span class="badge" [ngClass]="getStatusBadgeClass(m.sE_Status)">
+                {{ getStatusLabel(m.sE_Status) }}
+              </span>
+            </td>
+            <td data-label="Eligible">
+              <span class="badge" [class.badge-eligible]="m.sE_Eligible" [class.badge-noteligible]="!m.sE_Eligible">
+                {{ m.sE_Eligible ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td data-label="Review Required">
+              <span class="badge" [class.badge-eligible]="m.sE_ReviewRequired" [class.badge-noteligible]="!m.sE_ReviewRequired">
+                {{ m.sE_ReviewRequired ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td data-label="Actions">
+              <div class="row-actions">
+                <button class="btn-delete"
+                        (click)="removeMapping(m)"
+                        [disabled]="!canDelete"
+                        *ngIf="canDelete"
+                        [attr.aria-label]="'Remove ' + m.employeeName">
+                  Remove
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && mappedEmployees.length === 0 && availableEmployees.length > 0">
+    <span class="empty-icon">📭</span>
+    <p>No employees mapped yet. Select from available employees above and click "Map Selected Employees".</p>
+  </div>
+
+</div>

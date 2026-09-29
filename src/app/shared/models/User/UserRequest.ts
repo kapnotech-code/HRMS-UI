@@ -14,4 +14,5 @@ export interface UserRequest {
 
   deviceId: string;
 
+  departmentIds?: string;
 }

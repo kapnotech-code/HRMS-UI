@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import {
   ApiResponse,
   SalaryStructureComponentRequest,
@@ -11,7 +12,7 @@ import {
   providedIn: 'root'
 })
 export class SalaryStructureComponentService {
-  private apiUrl = 'https://localhost:7135/api/SalaryStructureComponents';
+  private apiUrl = `${environment.apiUrl}/SalaryStructureComponents`;
 
   constructor(private http: HttpClient) { }
 

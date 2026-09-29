@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../../shared/models/api-response';
 import { DepartmentRequest } from '../../shared/models/DepartmentResponse/DepartmentRequest';
 import { DepartmentResponse } from '../../shared/models/DepartmentResponse/DepartmentResponse';
@@ -12,12 +12,16 @@ export class DepartmentService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<ApiResponse<DepartmentResponse[]>> {
-    return this.http.get<ApiResponse<DepartmentResponse[]>>(`${this.apiUrl}/GetAll`);
+  getAll(): Observable<DepartmentResponse[]> {
+    return this.http.get<ApiResponse<DepartmentResponse[]>>(`${this.apiUrl}/GetAll`).pipe(
+      map(res => res.data ?? [])
+    );
   }
 
-  getById(id: number): Observable<ApiResponse<DepartmentResponse>> {
-    return this.http.get<ApiResponse<DepartmentResponse>>(`${this.apiUrl}/GetById/${id}`);
+  getById(id: number): Observable<DepartmentResponse> {
+    return this.http.get<ApiResponse<DepartmentResponse>>(`${this.apiUrl}/GetById/${id}`).pipe(
+      map(res => res.data!)
+    );
   }
 
   create(data: DepartmentRequest): Observable<ApiResponse<any>> {

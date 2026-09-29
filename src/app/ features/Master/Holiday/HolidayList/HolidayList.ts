@@ -53,7 +53,7 @@ export class HolidayList implements OnInit {
     this.loading = true;
     this.holidayService.getAll().subscribe({
       next: (res) => {
-        this.holidays = res.data || [];
+        this.holidays = res || [];
         this.applyFilter();
         this.loading = false;
         this.cdr.detectChanges();

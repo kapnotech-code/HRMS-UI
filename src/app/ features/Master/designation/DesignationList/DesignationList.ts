@@ -89,7 +89,7 @@ export class DesignationList implements OnInit {
     this.loading = true;
     this.designationService.getAll().subscribe({
       next: (res) => {
-        this.designations = res.data || res || [];
+        this.designations = res || [];
         this.applyFilter();
         this.loading = false;
         this.populateEditForm(); // data aane ke baad edit form fill karne ki dobara koshish

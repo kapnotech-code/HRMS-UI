@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 import {
   EmployeeSalaryComponent,
@@ -12,7 +13,7 @@ import {
 })
 export class EmployeeSalaryComponentsService {
   private readonly apiUrl =
-    'https://localhost:7135/api/EmployeeSalaryComponents';
+    `${environment.apiUrl}/EmployeeSalaryComponents`;
 
   constructor(private http: HttpClient) { }
 

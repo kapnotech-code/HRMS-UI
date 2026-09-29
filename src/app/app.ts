@@ -41,9 +41,28 @@ export class App implements OnInit {
         const token = localStorage.getItem('token');
         const currentUrl = event.urlAfterRedirects;
 
+        // Public routes that should NOT show layout (header/sidebar)
+        const publicRoutes = [
+          '/',
+          '/home',
+          '/landing',
+          '/login',
+          '/register',
+          '/onboarding',
+          '/onboarding-checklist',
+          '/employee-profiles',
+          '/plans',
+          '/subscriptions/plans',
+          '/review/public/'
+        ];
+        const isPublicRoute =
+          currentUrl === '/' ||
+          publicRoutes.some(route => currentUrl === route || (route !== '/' && currentUrl.startsWith(route)));
+
         this.showLayout =
           !!token &&
-          currentUrl !== '/login';
+          this.authService.isLoggedIn() &&
+          !isPublicRoute;
 
         if (this.showLayout) {
           this.loadUserPermissions();
@@ -66,17 +85,11 @@ export class App implements OnInit {
     this.frontendPerm.initialize().subscribe({
       next: () => {
         this.frontendPerm.loadPermissionsForRole(roleId).subscribe({
-          next: () => {
-            console.log('[App] Permissions loaded for role:', roleId);
-          },
-          error: (err) => {
-            console.error('[App] Failed to load permissions:', err);
-          }
+          next: () => {},
+          error: () => {}
         });
       },
-      error: () => {
-        console.error('[App] Failed to initialize pages');
-      }
+      error: () => {}
     });
   }
 }

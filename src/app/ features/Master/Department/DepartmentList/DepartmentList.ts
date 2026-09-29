@@ -80,7 +80,7 @@ export class DepartmentList implements OnInit {
     this.loading = true;
     this.departmentService.getAll().subscribe({
       next: (res) => {
-        this.departments = res.data || [];
+        this.departments = res || [];
         this.applyFilter();
         this.loading = false;
         this.cdr.detectChanges();

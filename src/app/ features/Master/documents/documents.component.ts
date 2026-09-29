@@ -12,7 +12,7 @@ import { DocumentTypesResponse } from '../../../shared/models/Documentsnew/docum
 // Actual Employee service. Adjust the model path to match your actual filename
 // (the original snippet used 'employee-response'; ".model" suffix convention followed like the other files)
 import { EmployeeService } from '../../../core/services/employee.service';
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 
 // Company service — the actual class name in the file is "EmployerService" (inside company.service.ts),
 // so it's aliased "as CompanyService" so the rest of the code below works unchanged.

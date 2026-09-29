@@ -59,7 +59,7 @@ export class SalaryStructureComponentListComponent implements OnInit {
   loadLookups(): void {
     this.structureService.getAll().subscribe({
       next: (res) => {
-        this.structures = res?.data ?? [];
+        this.structures = res ?? [];
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to load structures for dropdown:', err)
@@ -67,7 +67,7 @@ export class SalaryStructureComponentListComponent implements OnInit {
 
     this.componentService.getAll().subscribe({
       next: (res) => {
-        this.components = res?.data ?? [];
+        this.components = res ?? [];
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to load components for dropdown:', err)
@@ -80,7 +80,7 @@ export class SalaryStructureComponentListComponent implements OnInit {
 
     this.service.getAll().subscribe({
       next: (response) => {
-        this.mappings = response?.data ?? [];
+        this.mappings = response.data ?? [];
         this.loading = false;
         this.cdr.detectChanges();
       },

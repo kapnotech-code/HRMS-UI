@@ -8,7 +8,7 @@ import { LeaveTypeService } from '../../../../core/services/leavetype.service';
 
 import { AttendanceResponse } from '../../../../shared/models/Attendance/AttendanceRequest/attendanceRequest';
 import { LeaveRequest, LeaveResponse } from '../../../../shared/models/Leave/leaverequest/leaverequest';
-import { EmployeeResponse } from '../../../../shared/models/employee/ employee-response'; 
+import { EmployeeResponse } from '../../../../shared/models/employee/employee-response'; 
 import { LeaveTypeResponse } from '../../../../shared/models/leavetype/leave-type-response/leave-type-response';
 
 type TabType = 'records' | 'applyLeave' | 'approveLeave' | 'absentees';

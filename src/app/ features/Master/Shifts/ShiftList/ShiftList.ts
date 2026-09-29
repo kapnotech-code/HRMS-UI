@@ -98,7 +98,7 @@ export class ShiftList implements OnInit {
     this.loading = true;
     this.shiftService.getAll().subscribe({
       next: (res) => {
-        this.shifts = res.data || [];
+        this.shifts = res || [];
         this.applyFilter();
         this.loading = false;
         this.cdr.detectChanges();

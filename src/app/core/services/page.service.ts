@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Page } from '../../shared/models/Pag/Page';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn:'root'
 })
 export class PageService {
 
-  private apiUrl =
-    'https://localhost:7135/api/Page';
+  private apiUrl = `${environment.apiUrl}/Page`;
 
   constructor(
     private http:HttpClient

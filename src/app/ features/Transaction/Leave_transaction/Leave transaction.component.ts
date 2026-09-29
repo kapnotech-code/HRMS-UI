@@ -6,7 +6,7 @@ import { forkJoin } from 'rxjs';
 import { LeaveRequest, LeaveResponse } from '../../../shared/models/Leave/leaverequest/leaverequest';
 import { LeaveBalanceRequest, LeaveBalanceResponse } from '../../../shared/models/Leave balance.model.ts/Request/Leave balance.model';
 import { LeaveTypeResponse } from '../../../shared/models/leavetype/leave-type-response/leave-type-response';
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 import { LeaveRequestService } from '../../../core/services/leaverequest.service';
 import { LeaveBalanceService } from '../../../core/services/leavebalance.service';
 import { LeaveTypeService } from '../../../core/services/leavetype.service';

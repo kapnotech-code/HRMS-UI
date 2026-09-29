@@ -18,7 +18,7 @@ import {
 import { EmployeeSalaryService } from '../../../core/services/Employee salary.service';
 import { EmployeeSalaryResponseModel } from '../../../shared/models/Employee salary/Employee salary.model';
 import { EmployeeService } from '../../../core/services/employee.service';
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 
 @Component({
   selector: 'app-employee-salary-components',
@@ -135,7 +135,7 @@ export class EmployeeSalaryComponentsComponent
     // records come back and we build the ES_Id -> label map.
     this.employeeService.getAll().subscribe({
       next: res => {
-        const employees: EmployeeResponse[] = res.data ?? [];
+        const employees: EmployeeResponse[] = res ?? [];
         this.employeeNameById = new Map(
           employees.map(e => [e.employeeID, this.formatEmployeeName(e)])
         );

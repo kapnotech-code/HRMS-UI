@@ -17,20 +17,45 @@ export class UserService {
   getAll(search?: string): Observable<UserResponse[]> {
     const url = search ? `${this.baseUrl}?search=${encodeURIComponent(search)}` : this.baseUrl;
     return this.http
-      .get<ApiResponse<UserResponse[]>>(url)
-      .pipe(map((res: ApiResponse<UserResponse[]>) => res.data));
+      .get(url)
+      .pipe(
+        map((res: any) => {
+          // Handle both wrapped (ApiResponse) and direct array responses
+          if (res && Array.isArray(res)) {
+            return res;
+          }
+          if (res && res.data && Array.isArray(res.data)) {
+            return res.data;
+          }
+          return [];
+        })
+      );
   }
 
   getById(id: number): Observable<UserResponse> {
     return this.http
-      .get<ApiResponse<UserResponse>>(`${this.baseUrl}/${id}`)
-      .pipe(map((res: ApiResponse<UserResponse>) => res.data));
+      .get(`${this.baseUrl}/${id}`)
+      .pipe(
+        map((res: any) => {
+          if (res && res.data) {
+            return res.data;
+          }
+          return res;
+        })
+      );
   }
 
   getByLoginName(loginName: string): Observable<UserResponse> {
     return this.http
-      .get<ApiResponse<UserResponse>>(`${this.baseUrl}/login/${loginName}`)
-      .pipe(map((res: ApiResponse<UserResponse>) => res.data));
+      .get(`${this.baseUrl}/login/${loginName}`)
+      .pipe(
+        map((res: any) => {
+          if (res && res.data) {
+            return res.data;
+          }
+          return res;
+        })
+      );
   }
 
   create(request: UserRequest): Observable<{ userId: number }> {
@@ -71,7 +96,10 @@ export class UserService {
       : `${this.baseUrl}/${id}/success-login`;
     return this.http.put<ApiResponse<null>>(url, {});
   }
-  delete(userId: number) {
-    return this.http.delete(`${this.baseUrl}/${userId}`);
+
+  // FIX: the line was corrupted ("returfix usme data nahia rha ...") so the
+  // file could not compile. Now a proper `return` with a typed response.
+  delete(userId: number): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.baseUrl}/${userId}`);
   }
 }

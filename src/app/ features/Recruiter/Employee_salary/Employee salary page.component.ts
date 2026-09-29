@@ -8,7 +8,7 @@ import {
 } from '../../../shared/models/Employee salary/Employee salary.model';
 import { EmployeeSalaryService } from '../../../core/services/Employee salary.service';
 
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { SalaryStructureResponse } from '../../../shared/models/salary-structure/salary-structure';
 import { SalaryStructureService } from '../../../core/services/salary-structure.service';
@@ -84,10 +84,10 @@ export class EmployeeSalaryPageComponent implements OnInit {
   // LOOKUPS (Employee, Salary Structure, Company names)
   // =========================
   fetchLookups(): void {
-    // EmployeeService.getAll() returns ApiResponse<EmployeeResponse[]> — unwrap via res.data.
+    // EmployeeService.getAll() returns EmployeeResponse[] — already unwrapped.
     this.employeeService.getAll().subscribe({
       next: (res) => {
-        this.employees = res.data ?? [];
+        this.employees = res ?? [];
         this.employeeNameById = new Map(
           this.employees.map((e) => [e.employeeID, this.formatEmployeeName(e)])
         );
@@ -98,10 +98,10 @@ export class EmployeeSalaryPageComponent implements OnInit {
       },
     });
 
-    // SalaryStructureService.getAll() also returns ApiResponse<SalaryStructureResponse[]>.
+    // SalaryStructureService.getAll() returns SalaryStructureResponse[].
     this.salaryStructureService.getAll().subscribe({
       next: (res) => {
-        this.salaryStructures = res.data ?? [];
+        this.salaryStructures = res ?? [];
         this.structureNameById = new Map(
           this.salaryStructures.map((s) => [s.ss_Id, s.ss_StructureName])
         );

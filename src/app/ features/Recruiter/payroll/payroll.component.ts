@@ -9,7 +9,7 @@ import {
 } from '../../../shared/models/payroll/payroll.model';
 
 import { EmployeeService } from '../../../core/services/employee.service';
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 
 @Component({
   selector: 'app-payroll',

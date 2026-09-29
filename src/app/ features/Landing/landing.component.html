@@ -1,0 +1,1104 @@
+<div class="landing-page" id="top">
+
+  <!-- ======================================================== -->
+  <!-- Top Navigation Header                                    -->
+  <!-- ======================================================== -->
+  <header class="landing-header">
+    <div class="container header-container">
+      
+      <!-- Brand Logo -->
+      <a class="brand-logo" (click)="go('top')" role="button" tabindex="0">
+        <div class="logo-mark">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="36" height="36" rx="10" fill="url(#brandGrad)" />
+            <path d="M18 7C18 7 11 11.5 11 19C11 23 14 26.5 18 29C22 26.5 25 23 25 19C25 11.5 18 7 18 7Z" fill="white" fill-opacity="0.25" />
+            <path d="M18 10V26M18 17C14.5 15.5 13 13 13 13M18 20C21.5 18.5 23 16 23 16" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+            <defs>
+              <linearGradient id="brandGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#0f5c43" />
+                <stop offset="1" stop-color="#14835e" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text-group">
+          <span class="logo-title">HRMS</span>
+          <span class="logo-badge">Cloud HR</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Items -->
+      <nav class="desktop-nav" aria-label="Main Navigation">
+        <ng-container *ngFor="let item of navItems">
+          
+          <!-- Dropdown Trigger -->
+          <div class="nav-item-dropdown" *ngIf="item.hasDropdown">
+            <button
+              type="button"
+              class="nav-link"
+              [class.active]="menuOpen === item.key"
+              (click)="toggleMenu(item.key)"
+              aria-haspopup="true"
+              [attr.aria-expanded]="menuOpen === item.key">
+              {{ item.label }}
+              <span class="nav-arrow" [class.rotated]="menuOpen === item.key">▾</span>
+            </button>
+
+            <!-- Mega Menu Dropdown -->
+            <div class="mega-menu" *ngIf="menuOpen === item.key">
+              <div class="mega-columns">
+                <div class="mega-col" *ngFor="let col of menus[item.key]">
+                  <div class="mega-col-title">{{ col.title }}</div>
+                  <div class="mega-items-list">
+                    <button
+                      type="button"
+                      class="mega-item"
+                      *ngFor="let menuItem of col.items"
+                      (click)="go(menuItem.target, menuItem.label)">
+                      <div class="mega-item-icon">{{ menuItem.icon }}</div>
+                      <div class="mega-item-body">
+                        <div class="mega-item-header">
+                          <span class="mega-item-label">{{ menuItem.label }}</span>
+                          <span class="mega-item-badge" *ngIf="menuItem.badge">{{ menuItem.badge }}</span>
+                        </div>
+                        <p class="mega-item-desc" *ngIf="menuItem.desc">{{ menuItem.desc }}</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct Link -->
+          <button
+            *ngIf="!item.hasDropdown"
+            type="button"
+            class="nav-link"
+            (click)="go(item.target || item.key, item.label)">
+            {{ item.label }}
+          </button>
+        </ng-container>
+      </nav>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <!-- If Logged In -->
+        <ng-container *ngIf="isLoggedIn">
+          <div class="user-chip">
+            <span class="user-avatar">👤</span>
+            <span class="user-greeting">{{ userName }}</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" (click)="go('dashboard')">
+            Dashboard →
+          </button>
+        </ng-container>
+
+        <!-- If Public Visitor -->
+        <ng-container *ngIf="!isLoggedIn">
+          <button type="button" class="btn btn-ghost-text" (click)="go('login')">
+            Sign In
+          </button>
+          <button type="button" class="btn btn-outline-nav btn-sm" (click)="openDemoModal()">
+            Book Demo
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" (click)="go('register')">
+            Get Started
+          </button>
+        </ng-container>
+
+        <!-- Mobile Hamburger Button -->
+        <button
+          type="button"
+          class="mobile-toggle"
+          aria-label="Toggle navigation menu"
+          (click)="toggleMobileMenu()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-nav-drawer" *ngIf="mobileMenuOpen">
+      <div class="mobile-nav-links">
+        <button type="button" class="mobile-nav-link" (click)="go('features')">Features & Modules</button>
+        <button type="button" class="mobile-nav-link" (click)="go('onboarding')">Onboarding Wizard</button>
+        <button type="button" class="mobile-nav-link" (click)="go('onboarding-checklist')">Onboarding Checklist</button>
+        <button type="button" class="mobile-nav-link" (click)="go('calculator')">ROI Calculator</button>
+        <button type="button" class="mobile-nav-link" (click)="go('pricing')">Pricing Plans</button>
+        <button type="button" class="mobile-nav-link" (click)="go('faq')">FAQs</button>
+      </div>
+      <div class="mobile-drawer-actions">
+        <button type="button" class="btn btn-primary btn-block" (click)="go('register')">Start Free Trial</button>
+        <button type="button" class="btn btn-outline btn-block" (click)="go('login')">Sign In</button>
+        <button type="button" class="btn btn-secondary btn-block" (click)="openDemoModal()">Request Demo</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- Hero Section with Interactive SaaS Preview               -->
+  <!-- ======================================================== -->
+  <section class="hero-section">
+    <div class="container hero-container">
+      
+      <!-- Left Column: Copy & Actions -->
+      <div class="hero-content">
+        <div class="hero-pill-badge">
+          <span class="badge-dot"></span>
+          <span>Next-Generation HR & Payroll Automation</span>
+        </div>
+
+        <h1 class="hero-heading">
+          People first.<br>
+          <span class="text-gradient">Work smarter.</span>
+        </h1>
+
+        <p class="hero-lead">
+          Everything your organization needs to manage people, payroll, attendance,
+          shift rosters, leave requests, and 360° reviews — unified in one lightning-fast platform.
+        </p>
+
+        <!-- Hero CTAs -->
+        <div class="hero-actions">
+          <button type="button" class="btn btn-primary btn-lg" (click)="go('register')">
+            <span>Start 14-Day Free Trial</span>
+            <span class="btn-arrow">→</span>
+          </button>
+          
+          <button type="button" class="btn btn-outline btn-lg" (click)="go('onboarding')">
+            <span>Interactive Onboarding</span>
+          </button>
+          
+          <button type="button" class="btn btn-ghost btn-lg" (click)="openDemoModal()">
+            <span>📅 Book Demo</span>
+          </button>
+        </div>
+
+        <!-- Trust Metric Highlights -->
+        <div class="hero-trust-bar">
+          <div class="trust-faces">
+            <span>👩‍💼</span><span>👨‍💻</span><span>🧑‍💼</span><span>👩‍🔬</span>
+          </div>
+          <div class="trust-text">
+            <strong>Trusted by 500+ fast-growing companies</strong>
+            <small>99.9% Payroll Accuracy • Zero Spreadsheet Hassles</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive SaaS Application Preview -->
+      <div class="hero-preview-wrapper">
+        <div class="saas-card-shell">
+          
+          <!-- Top Window Bar -->
+          <div class="saas-window-bar">
+            <div class="window-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="window-title">HRMS Enterprise Platform • Live Preview</div>
+            <div class="live-indicator">
+              <span class="pulse-dot"></span> System Live
+            </div>
+          </div>
+
+          <!-- Interactive Tab Switcher -->
+          <div class="saas-tabs-header">
+            <button
+              type="button"
+              class="saas-tab"
+              [class.active]="activePreviewTab === 'dashboard'"
+              (click)="activePreviewTab = 'dashboard'">
+              📊 Dashboard
+            </button>
+            <button
+              type="button"
+              class="saas-tab"
+              [class.active]="activePreviewTab === 'attendance'"
+              (click)="activePreviewTab = 'attendance'">
+              ⏱️ Attendance & Shifts
+            </button>
+            <button
+              type="button"
+              class="saas-tab"
+              [class.active]="activePreviewTab === 'payroll'"
+              (click)="activePreviewTab = 'payroll'">
+              💵 Payroll Calculator
+            </button>
+            <button
+              type="button"
+              class="saas-tab"
+              [class.active]="activePreviewTab === 'reviews'"
+              (click)="activePreviewTab = 'reviews'">
+              🎯 360° Reviews
+            </button>
+          </div>
+
+          <!-- Tab 1: Executive Dashboard -->
+          <div class="saas-tab-body" *ngIf="activePreviewTab === 'dashboard'">
+            <!-- KPI Counters -->
+            <div class="mock-kpi-grid">
+              <div class="mock-kpi-card">
+                <span class="kpi-label">Total Workforce</span>
+                <span class="kpi-val">248</span>
+                <span class="kpi-sub positive">+12 this month</span>
+              </div>
+              <div class="mock-kpi-card">
+                <span class="kpi-label">Present Today</span>
+                <span class="kpi-val text-green">234</span>
+                <span class="kpi-sub">94.3% attendance</span>
+              </div>
+              <div class="mock-kpi-card">
+                <span class="kpi-label">On Leave</span>
+                <span class="kpi-val">8</span>
+                <span class="kpi-sub">Approved leaves</span>
+              </div>
+              <div class="mock-kpi-card">
+                <span class="kpi-label">Monthly Payroll</span>
+                <span class="kpi-val text-blue">Done</span>
+                <span class="kpi-sub positive">100% on schedule</span>
+              </div>
+            </div>
+
+            <!-- Two-column charts / widget -->
+            <div class="mock-visuals-grid">
+              <!-- Attendance donut -->
+              <div class="mock-card">
+                <div class="mock-card-header">
+                  <span>Today's Attendance Pulse</span>
+                  <span class="badge-mini">Real-time</span>
+                </div>
+                <div class="donut-chart-wrapper">
+                  <div class="donut-circle">
+                    <span class="donut-percent">94%</span>
+                    <small>On Duty</small>
+                  </div>
+                  <div class="donut-legend">
+                    <div><span class="leg-dot on-time"></span> In Office: <b>184</b></div>
+                    <div><span class="leg-dot remote"></span> Remote: <b>50</b></div>
+                    <div><span class="leg-dot leave"></span> Leave: <b>8</b></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Department distribution -->
+              <div class="mock-card">
+                <div class="mock-card-header">
+                  <span>Department Headcount</span>
+                  <button type="button" class="btn-micro" (click)="go('features')">View Org →</button>
+                </div>
+                <div class="dept-bars">
+                  <div class="dept-bar-row">
+                    <span>Engineering</span>
+                    <div class="bar-track"><div class="bar-fill" style="width: 44%"></div></div>
+                    <span>98</span>
+                  </div>
+                  <div class="dept-bar-row">
+                    <span>Sales & Mktg</span>
+                    <div class="bar-track"><div class="bar-fill" style="width: 32%"></div></div>
+                    <span>68</span>
+                  </div>
+                  <div class="dept-bar-row">
+                    <span>Operations</span>
+                    <div class="bar-track"><div class="bar-fill" style="width: 20%"></div></div>
+                    <span>42</span>
+                  </div>
+                  <div class="dept-bar-row">
+                    <span>HR & Finance</span>
+                    <div class="bar-track"><div class="bar-fill" style="width: 16%"></div></div>
+                    <span>40</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Alert -->
+            <div class="mock-banner">
+              <span class="banner-icon">🔔</span>
+              <span>Pending Approvals: <b>3 Leave Requests</b> & <b>2 Shift Swaps</b> awaiting review.</span>
+              <button type="button" class="btn btn-sm btn-primary ml-auto" (click)="go('login')">Approve Now</button>
+            </div>
+          </div>
+
+          <!-- Tab 2: Attendance & Shifts -->
+          <div class="saas-tab-body" *ngIf="activePreviewTab === 'attendance'">
+            <div class="attendance-interactive-box">
+              <div class="punch-widget">
+                <div class="punch-info">
+                  <span class="punch-status-badge" [class.punched-in]="isPunchedIn">
+                    {{ isPunchedIn ? '🟢 Punched In' : '🔴 Punched Out' }}
+                  </span>
+                  <h3>Punched in at {{ punchTime }}</h3>
+                  <p>Shift: <b>{{ selectedShift }}</b></p>
+                </div>
+                <button
+                  type="button"
+                  class="btn"
+                  [class.btn-danger]="isPunchedIn"
+                  [class.btn-primary]="!isPunchedIn"
+                  (click)="togglePunch()">
+                  {{ isPunchedIn ? '⏱️ Clock Out' : '⏱️ Clock In' }}
+                </button>
+              </div>
+
+              <div class="shifts-roster-preview">
+                <div class="roster-title">Current Active Shifts Today</div>
+                <div class="roster-grid">
+                  <div class="shift-pill">
+                    <span class="shift-name">🌅 Morning Shift</span>
+                    <span class="shift-time">07:00 - 15:30</span>
+                    <span class="shift-count">42 on shift</span>
+                  </div>
+                  <div class="shift-pill active">
+                    <span class="shift-name">☀️ General Shift</span>
+                    <span class="shift-time">09:30 - 18:00</span>
+                    <span class="shift-count">164 on shift</span>
+                  </div>
+                  <div class="shift-pill">
+                    <span class="shift-name">🌙 Night Shift</span>
+                    <span class="shift-time">18:00 - 02:30</span>
+                    <span class="shift-count">28 on shift</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="leave-balance-preview">
+                <div class="leave-card">
+                  <span>Casual Leave</span>
+                  <b>8 / 12 Days Left</b>
+                  <div class="progress-mini"><div class="fill" style="width: 66%"></div></div>
+                </div>
+                <div class="leave-card">
+                  <span>Sick Leave</span>
+                  <b>5 / 7 Days Left</b>
+                  <div class="progress-mini"><div class="fill" style="width: 71%"></div></div>
+                </div>
+                <div class="leave-card">
+                  <span>Earned Leave</span>
+                  <b>14 / 18 Days Left</b>
+                  <div class="progress-mini"><div class="fill" style="width: 77%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Payroll Calculator Simulator -->
+          <div class="saas-tab-body" *ngIf="activePreviewTab === 'payroll'">
+            <div class="payroll-simulator-box">
+              <div class="simulator-lead">
+                <span>Interactive Salary Structure Breakdown (Simulated Monthly Pay)</span>
+              </div>
+              
+              <div class="salary-sliders-grid">
+                <div class="slider-field">
+                  <label>Basic Pay: <b>\${{ baseSalary | number }}</b></label>
+                  <input type="range" min="30000" max="120000" step="1000" [(ngModel)]="baseSalary" />
+                </div>
+                <div class="slider-field">
+                  <label>House Rent Allowance (HRA): <b>\${{ hraAllowance | number }}</b></label>
+                  <input type="range" min="5000" max="40000" step="500" [(ngModel)]="hraAllowance" />
+                </div>
+                <div class="slider-field">
+                  <label>Special Allowance: <b>\${{ specialAllowance | number }}</b></label>
+                  <input type="range" min="2000" max="30000" step="500" [(ngModel)]="specialAllowance" />
+                </div>
+              </div>
+
+              <div class="salary-calc-summary">
+                <div class="calc-col">
+                  <span>Gross Earnings</span>
+                  <b class="text-green">\${{ previewGrossSalary | number }}</b>
+                </div>
+                <div class="calc-col">
+                  <span>Statutory Deductions (PF/Tax)</span>
+                  <b class="text-muted">-\${{ previewTotalDeductions | number }}</b>
+                </div>
+                <div class="calc-col highlight">
+                  <span>Estimated Net Take-Home</span>
+                  <b class="text-primary">\${{ previewNetSalary | number }}</b>
+                </div>
+              </div>
+
+              <div class="calc-cta-row">
+                <small>⚡ Configurable for multiple salary structures, tax regimes, and automatic payslip generation.</small>
+                <button type="button" class="btn btn-sm btn-primary" (click)="go('register')">Try Payroll Engine →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: 360° Reviews -->
+          <div class="saas-tab-body" *ngIf="activePreviewTab === 'reviews'">
+            <div class="review-preview-box">
+              <div class="review-person-card">
+                <div class="review-avatar">👩‍💻</div>
+                <div class="review-person-info">
+                  <h4>Priya Sharma</h4>
+                  <p>Lead Full Stack Engineer • Product Engineering</p>
+                </div>
+                <div class="review-score-badge">
+                  <span class="score-num">4.8</span>
+                  <span class="score-stars">★★★★★</span>
+                </div>
+              </div>
+
+              <div class="review-metrics-bars">
+                <div class="rm-row">
+                  <span>Technical Execution & Code Quality</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 96%"></div></div>
+                  <span>96%</span>
+                </div>
+                <div class="rm-row">
+                  <span>Collaboration & Cross-functional Mentorship</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 92%"></div></div>
+                  <span>92%</span>
+                </div>
+                <div class="rm-row">
+                  <span>Initiative & Product Ownership</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 94%"></div></div>
+                  <span>94%</span>
+                </div>
+              </div>
+
+              <div class="review-feedback-quote">
+                “Outstanding leadership during the Q3 cloud migration. Consistently supports junior teammates and delivers features with stellar stability.”
+                <span class="reviewer-tag">— Engineering Director Review</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Social Proof & Trusted Companies Strip                    -->
+  <!-- ======================================================== -->
+  <section class="trust-marquee-section">
+    <div class="container">
+      <p class="trust-marquee-heading">TRUSTED BY INNOVATIVE ORGANIZATIONS WORLDWIDE</p>
+      <div class="logos-strip">
+        <span class="client-logo">🏢 TechNova Global</span>
+        <span class="client-logo">🌿 BioHealth Systems</span>
+        <span class="client-logo">🚀 ApexScale Digital</span>
+        <span class="client-logo">⚙️ Vertex Precision</span>
+        <span class="client-logo">📦 CloudLogix Fleet</span>
+        <span class="client-logo">🏦 Horizon Capital</span>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card" *ngFor="let m of metrics">
+          <div class="metric-icon">{{ m.icon }}</div>
+          <div class="metric-value">{{ m.value }}</div>
+          <div class="metric-label">{{ m.label }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Core Platform Modules Deep-Dive (Features Section)        -->
+  <!-- ======================================================== -->
+  <section class="section features-section" id="features">
+    <div class="container">
+      
+      <div class="section-header">
+        <span class="section-badge">Core HR Architecture</span>
+        <h2 class="section-title">Everything your HR department needs, built right in.</h2>
+        <p class="section-subtitle">
+          Eliminate disconnected point solutions. HRMS gives you an integrated suite where
+          attendance flows directly into payroll, reviews inform salary revisions, and onboarding is automated.
+        </p>
+      </div>
+
+      <div class="feature-modules-grid">
+        <div class="module-card" *ngFor="let mod of featureModules">
+          <div class="module-card-top">
+            <span class="module-icon">{{ mod.icon }}</span>
+            <span class="module-tag">{{ mod.tag }}</span>
+          </div>
+          <h3 class="module-title">{{ mod.title }}</h3>
+          <p class="module-description">{{ mod.description }}</p>
+          
+          <ul class="module-benefits-list">
+            <li *ngFor="let b of mod.benefits">
+              <span class="benefit-check">✓</span>
+              <span>{{ b }}</span>
+            </li>
+          </ul>
+
+          <div class="module-action">
+            <button type="button" class="btn-link" (click)="go('register', mod.title)">
+              Explore {{ mod.tag }} →
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Interactive Tools Spotlight: Onboarding & Checklist       -->
+  <!-- ======================================================== -->
+  <section class="section interactive-spotlight-section">
+    <div class="container">
+      <div class="spotlight-card">
+        <div class="spotlight-content">
+          <span class="spotlight-badge">🚀 Live Interactive Tools</span>
+          <h2>Experience HRMS Right Now — No Sign Up Required</h2>
+          <p>
+            Test drive our built-in interactive onboarding tools. Run through a simulated company setup
+            or verify pre-boarding requirements with our interactive checklists.
+          </p>
+
+          <div class="spotlight-actions">
+            <button type="button" class="btn btn-primary btn-pill" (click)="go('onboarding')">
+              Launch Onboarding Wizard →
+            </button>
+            <button type="button" class="btn btn-outline btn-pill" (click)="go('onboarding-checklist')">
+              Open Pre-Hire Checklist Tool →
+            </button>
+          </div>
+        </div>
+
+        <div class="spotlight-visual">
+          <div class="mini-wizard-card">
+            <div class="mwc-step active">
+              <span class="mwc-num">1</span>
+              <div>
+                <b>Company Information</b>
+                <small>Organization name, country, industry</small>
+              </div>
+            </div>
+            <div class="mwc-step">
+              <span class="mwc-num">2</span>
+              <div>
+                <b>Admin Account Setup</b>
+                <small>Secure role and workspace credentials</small>
+              </div>
+            </div>
+            <div class="mwc-step">
+              <span class="mwc-num">3</span>
+              <div>
+                <b>Employee & Shift Master</b>
+                <small>Roster configurations & salary structures</small>
+              </div>
+            </div>
+            <div class="mwc-step">
+              <span class="mwc-num">4</span>
+              <div>
+                <b>Go-Live & Review</b>
+                <small>Complete setup in under 5 minutes</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Interactive ROI & Time-Savings Calculator                -->
+  <!-- ======================================================== -->
+  <section class="section calculator-section" id="calculator">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Business Impact</span>
+        <h2 class="section-title">Calculate Your Organization's Time & Cost Savings</h2>
+        <p class="section-subtitle">
+          See how automating manual HR tasks, payroll calculations, and attendance tracking with HRMS delivers direct ROI.
+        </p>
+      </div>
+
+      <div class="calculator-box">
+        <div class="calc-input-panel">
+          <label class="calc-slider-label">
+            <span>Your Workforce Size:</span>
+            <span class="calc-slider-val">{{ calculatorEmployees }} Employees</span>
+          </label>
+          <input
+            type="range"
+            min="10"
+            max="500"
+            step="5"
+            [(ngModel)]="calculatorEmployees"
+            class="calc-slider" />
+          <div class="slider-ticks">
+            <span>10 Employees</span>
+            <span>150 Employees</span>
+            <span>300 Employees</span>
+            <span>500 Employees</span>
+          </div>
+
+          <p class="calc-explainer">
+            Based on eliminating manual spreadsheet entries, paper-based leave approvals,
+            and automating multi-component salary distribution.
+          </p>
+        </div>
+
+        <div class="calc-results-panel">
+          <div class="calc-result-tile">
+            <span class="crt-icon">⏱️</span>
+            <div class="crt-number">{{ calculatedHoursSavedPerMonth }} hrs</div>
+            <div class="crt-label">HR Admin Time Saved Per Month</div>
+          </div>
+
+          <div class="calc-result-tile">
+            <span class="crt-icon">⚡</span>
+            <div class="crt-number">{{ calculatedPayrollTime }}</div>
+            <div class="crt-label">Total Monthly Payroll Execution Time</div>
+          </div>
+
+          <div class="calc-result-tile highlight">
+            <span class="crt-icon">💰</span>
+            <div class="crt-number">\${{ calculatedAnnualDollarSavings | number }}</div>
+            <div class="crt-label">Estimated Annual Cost Savings</div>
+          </div>
+
+          <div class="calc-bottom-cta">
+            <button type="button" class="btn btn-primary btn-block" (click)="go('register')">
+              Reclaim These Hours Today →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Solutions by Company Size & Role                          -->
+  <!-- ======================================================== -->
+  <section class="section solutions-section" id="solutions">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Tailored For You</span>
+        <h2 class="section-title">Built for Teams of Every Size and Stage</h2>
+        <p class="section-subtitle">
+          Whether you are a 5-person startup or a 1,000-person enterprise, HRMS provides the exact tools you need.
+        </p>
+      </div>
+
+      <div class="solutions-grid">
+        <div class="solution-card">
+          <div class="sol-icon">🌱</div>
+          <h3>Startups & Boutiques</h3>
+          <p>
+            Set up in 10 minutes. Manage early team members, track attendance, and prevent compliance errors without hiring an entire HR department.
+          </p>
+          <ul class="sol-features">
+            <li>✓ Free forever starter tier</li>
+            <li>✓ Self-service employee profiles</li>
+            <li>✓ Simple leave and holiday calendar</li>
+          </ul>
+          <button type="button" class="btn btn-outline btn-sm" (click)="go('register')">Explore Startup Plan</button>
+        </div>
+
+        <div class="solution-card featured">
+          <div class="sol-badge">Popular</div>
+          <div class="sol-icon">🌿</div>
+          <h3>Growing Companies (20 - 150)</h3>
+          <p>
+            Scale smoothly with automated multi-tier payroll, custom salary allowances, shift rosters, and objective performance appraisal cycles.
+          </p>
+          <ul class="sol-features">
+            <li>✓ Full payroll automation & payslips</li>
+            <li>✓ Shift scheduling & schedule email alerts</li>
+            <li>✓ 360° reviews and goal appraisals</li>
+          </ul>
+          <button type="button" class="btn btn-primary btn-sm" (click)="go('register')">Start Free Trial</button>
+        </div>
+
+        <div class="solution-card">
+          <div class="sol-icon">🏢</div>
+          <h3>Enterprises (150+)</h3>
+          <p>
+            Multi-branch support, granular role-based permissions matrix, document category security, custom salary components, and dedicated SLA.
+          </p>
+          <ul class="sol-features">
+            <li>✓ Dynamic permission matrix governance</li>
+            <li>✓ Multi-department salary revision logs</li>
+            <li>✓ Priority 24/7 dedicated support</li>
+          </ul>
+          <button type="button" class="btn btn-outline btn-sm" (click)="openDemoModal()">Talk to Enterprise Sales</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Transparent Pricing Plans Section                         -->
+  <!-- ======================================================== -->
+  <section class="section pricing-section" id="pricing">
+    <div class="container">
+      
+      <div class="section-header">
+        <span class="section-badge">Simple, Transparent Pricing</span>
+        <h2 class="section-title">Invest in your people, not complex software.</h2>
+        <p class="section-subtitle">
+          No hidden implementation fees. No surprise charges. Cancel or upgrade anytime.
+        </p>
+
+        <!-- Monthly vs Annual Toggle -->
+        <div class="pricing-toggle-box">
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="billingCycle === 'monthly'"
+            (click)="billingCycle = 'monthly'">
+            Monthly Billing
+          </button>
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="billingCycle === 'yearly'"
+            (click)="billingCycle = 'yearly'">
+            Annual Billing
+            <span class="save-badge">Save 20%</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pricing Cards -->
+      <div class="pricing-grid">
+        <div
+          class="pricing-card"
+          *ngFor="let p of plans"
+          [class.featured-card]="p.popular">
+          
+          <div class="popular-ribbon" *ngIf="p.popular">Most Popular</div>
+          
+          <div class="p-header">
+            <span class="p-icon">{{ p.icon }}</span>
+            <h3 class="p-name">{{ p.name }}</h3>
+            <p class="p-tagline">{{ p.tagline }}</p>
+          </div>
+
+          <div class="p-price-box">
+            <ng-container *ngIf="billingCycle === 'yearly'">
+              <span class="price-val" *ngIf="p.yearlyPrice !== 'Custom'">\${{ p.yearlyPrice }}</span>
+              <span class="price-val" *ngIf="p.yearlyPrice === 'Custom'">Custom</span>
+              <span class="price-cycle" *ngIf="p.yearlyPrice !== 'Custom'">/ employee / month</span>
+            </ng-container>
+
+            <ng-container *ngIf="billingCycle === 'monthly'">
+              <span class="price-val" *ngIf="p.monthlyPrice !== 'Custom'">\${{ p.monthlyPrice }}</span>
+              <span class="price-val" *ngIf="p.monthlyPrice === 'Custom'">Custom</span>
+              <span class="price-cycle" *ngIf="p.monthlyPrice !== 'Custom'">/ employee / month</span>
+            </ng-container>
+          </div>
+
+          <button
+            type="button"
+            class="btn p-cta-btn"
+            [class.btn-primary]="p.popular"
+            [class.btn-outline]="!p.popular"
+            (click)="p.yearlyPrice === 'Custom' ? openDemoModal() : go('register', p.name)">
+            {{ p.ctaText }}
+          </button>
+
+          <div class="p-features-list">
+            <div class="p-features-title">What's included:</div>
+            <ul>
+              <li *ngFor="let f of p.features">
+                <span class="check-icon">✓</span>
+                <span>{{ f }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="pricing-bottom-note">
+        <span>Need a custom plan or non-profit discount? </span>
+        <button type="button" class="btn-link" (click)="openDemoModal()">Speak with our sales team →</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Customer Testimonials                                    -->
+  <!-- ======================================================== -->
+  <section class="section testimonials-section" id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Client Testimonials</span>
+        <h2 class="section-title">Loved by HR Leaders and Teams Everywhere</h2>
+        <p class="section-subtitle">
+          Discover why high-growth companies rely on HRMS to run daily operations without hitches.
+        </p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card" *ngFor="let t of testimonials">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-quote">“{{ t.quote }}”</p>
+          <div class="testimonial-author-box">
+            <span class="author-avatar">{{ t.avatar }}</span>
+            <div class="author-meta">
+              <strong class="author-name">{{ t.author }}</strong>
+              <span class="author-role">{{ t.role }}</span>
+              <small class="author-company">{{ t.company }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Frequently Asked Questions (Accordion)                   -->
+  <!-- ======================================================== -->
+  <section class="section faq-section" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Have Questions?</span>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-subtitle">
+          Everything you need to know about getting started, migrating your data, and using HRMS.
+        </p>
+      </div>
+
+      <div class="faq-accordion-list">
+        <div
+          class="faq-item"
+          *ngFor="let item of faqs; let i = index"
+          [class.open]="item.open">
+          
+          <button
+            type="button"
+            class="faq-question-btn"
+            (click)="toggleFaq(i)"
+            [attr.aria-expanded]="item.open">
+            <span class="faq-question-text">{{ item.question }}</span>
+            <span class="faq-toggle-icon">{{ item.open ? '−' : '+' }}</span>
+          </button>
+
+          <div class="faq-answer-panel" *ngIf="item.open">
+            <p>{{ item.answer }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- High-Converting Bottom Banner CTA                        -->
+  <!-- ======================================================== -->
+  <section class="bottom-cta-section">
+    <div class="container">
+      <div class="bottom-cta-box">
+        <div class="bcta-content">
+          <h2 class="bcta-title">Ready to modernize your workforce management?</h2>
+          <p class="bcta-lead">
+            Join hundreds of forward-thinking businesses. Set up your workspace in minutes
+            with zero credit card required.
+          </p>
+          <div class="bcta-actions">
+            <button type="button" class="btn btn-light btn-lg" (click)="go('register')">
+              Start 14-Day Free Trial →
+            </button>
+            <button type="button" class="btn btn-ghost-white btn-lg" (click)="openDemoModal()">
+              Schedule a Live Demo
+            </button>
+          </div>
+        </div>
+        <div class="bcta-stats-strip">
+          <div><b>99.9%</b> Payroll Accuracy</div>
+          <div><b>10 min</b> Fast Setup</div>
+          <div><b>24/7</b> Reliable Support</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- Footer                                                   -->
+  <!-- ======================================================== -->
+  <footer class="landing-footer">
+    <div class="container footer-content-grid">
+      
+      <!-- Brand column -->
+      <div class="footer-brand-col">
+        <div class="brand-logo footer-logo">
+          <div class="logo-mark">
+            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="36" height="36" rx="10" fill="#14835e" />
+              <path d="M18 10V26M18 17C14.5 15.5 13 13 13 13M18 20C21.5 18.5 23 16 23 16" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+          </div>
+          <span class="logo-title text-white">HRMS</span>
+        </div>
+        <p class="footer-tagline">
+          The all-in-one workforce and payroll platform designed for modern teams.
+          Empowering leaders and employees alike.
+        </p>
+        <div class="footer-security-badges">
+          <span>🔒 256-bit SSL</span>
+          <span>🛡️ ISO 27001</span>
+          <span>✅ GDPR Ready</span>
+        </div>
+      </div>
+
+      <!-- Links Column 1: Platform -->
+      <div class="footer-col">
+        <h4>Platform Modules</h4>
+        <ul>
+          <li><button type="button" (click)="go('features')">Employee Central</button></li>
+          <li><button type="button" (click)="go('features')">Time & Attendance</button></li>
+          <li><button type="button" (click)="go('features')">Shift Scheduling</button></li>
+          <li><button type="button" (click)="go('features')">Leave Management</button></li>
+          <li><button type="button" (click)="go('features')">Payroll Processing</button></li>
+          <li><button type="button" (click)="go('features')">360° Appraisals</button></li>
+        </ul>
+      </div>
+
+      <!-- Links Column 2: Tools & Resources -->
+      <div class="footer-col">
+        <h4>Interactive Tools</h4>
+        <ul>
+          <li><button type="button" (click)="go('onboarding')">Onboarding Wizard</button></li>
+          <li><button type="button" (click)="go('onboarding-checklist')">Onboarding Checklist</button></li>
+          <li><button type="button" (click)="go('calculator')">ROI Calculator</button></li>
+          <li><button type="button" (click)="go('pricing')">Subscription Plans</button></li>
+          <li><button type="button" (click)="go('faq')">Help & FAQ</button></li>
+        </ul>
+      </div>
+
+      <!-- Links Column 3: Company & Legal -->
+      <div class="footer-col">
+        <h4>Solutions & Roles</h4>
+        <ul>
+          <li><button type="button" (click)="go('solutions')">For Startups</button></li>
+          <li><button type="button" (click)="go('solutions')">For Growing Teams</button></li>
+          <li><button type="button" (click)="go('solutions')">For Enterprises</button></li>
+          <li><button type="button" (click)="go('solutions')">For HR Managers</button></li>
+          <li><button type="button" (click)="go('login')">Employee Self-Service</button></li>
+        </ul>
+      </div>
+
+      <!-- Links Column 4: Newsletter / Demo Request -->
+      <div class="footer-col footer-newsletter-col">
+        <h4>Stay Updated</h4>
+        <p class="footer-desc">Receive HR best practices, compliance updates, and feature launches.</p>
+        <div class="newsletter-form">
+          <input
+            type="email"
+            placeholder="Enter work email"
+            [(ngModel)]="newsletterEmail"
+            (keydown.enter)="submitNewsletter()" />
+          <button type="button" class="btn btn-primary btn-sm" (click)="submitNewsletter()">
+            Subscribe
+          </button>
+        </div>
+        <div class="social-links-row">
+          <button type="button" class="social-circle" aria-label="LinkedIn" (click)="showToast('HRMS LinkedIn community')">in</button>
+          <button type="button" class="social-circle" aria-label="Twitter / X" (click)="showToast('HRMS X community')">𝕏</button>
+          <button type="button" class="social-circle" aria-label="YouTube" (click)="showToast('HRMS Video tutorials')">▶</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="footer-bottom-bar">
+      <div class="container footer-bottom-container">
+        <span>© 2026 HRMS Corporation. All rights reserved.</span>
+        <div class="footer-bottom-links">
+          <button type="button" (click)="showToast('Privacy Policy: All data encrypted and protected.')">Privacy Policy</button>
+          <button type="button" (click)="showToast('Terms of Service: Standard SaaS terms apply.')">Terms of Service</button>
+          <button type="button" (click)="go('top')">Back to Top ↑</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================== -->
+  <!-- Book a Demo Modal Dialog                                 -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" *ngIf="isDemoModalOpen" (click)="closeDemoModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="demoModalTitle">
+      <button type="button" class="modal-close-btn" (click)="closeDemoModal()" aria-label="Close dialog">✕</button>
+
+      <ng-container *ngIf="!demoSubmitted">
+        <div class="modal-header">
+          <span class="modal-pill">Schedule Walkthrough</span>
+          <h3 id="demoModalTitle">See HRMS in Action</h3>
+          <p>Get a personalized 20-minute tour customized for your company's workforce size and payroll needs.</p>
+        </div>
+
+        <form class="modal-form" (submit)="submitDemoForm(); $event.preventDefault()">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="demoName">Full Name *</label>
+              <input id="demoName" type="text" [(ngModel)]="demoForm.name" name="name" placeholder="e.g. Sarah Jenkins" required />
+            </div>
+            <div class="form-group">
+              <label for="demoEmail">Work Email *</label>
+              <input id="demoEmail" type="email" [(ngModel)]="demoForm.email" name="email" placeholder="sarah@company.com" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="demoCompany">Company Name</label>
+              <input id="demoCompany" type="text" [(ngModel)]="demoForm.company" name="company" placeholder="e.g. Acme Tech" />
+            </div>
+            <div class="form-group">
+              <label for="demoTeamSize">Team Size</label>
+              <select id="demoTeamSize" [(ngModel)]="demoForm.teamSize" name="teamSize">
+                <option value="1-20">1 - 20 Employees</option>
+                <option value="21-50">21 - 50 Employees</option>
+                <option value="51-200">51 - 200 Employees</option>
+                <option value="200+">200+ Employees</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="demoPhone">Phone Number</label>
+            <input id="demoPhone" type="tel" [(ngModel)]="demoForm.phone" name="phone" placeholder="+1 (555) 000-0000" />
+          </div>
+
+          <div class="form-group">
+            <label for="demoNotes">What are your primary HR challenges?</label>
+            <textarea id="demoNotes" rows="2" [(ngModel)]="demoForm.notes" name="notes" placeholder="e.g. Payroll errors, shift rosters, employee onboarding..."></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+              Confirm & Request Demo →
+            </button>
+          </div>
+        </form>
+      </ng-container>
+
+      <!-- Success Confirmation State -->
+      <div class="modal-success-state" *ngIf="demoSubmitted">
+        <div class="success-icon-large">🎉</div>
+        <h3>Demo Request Confirmed!</h3>
+        <p>
+          Thank you, <b>{{ demoForm.name }}</b>! One of our HR platform specialists will reach out to
+          <b>{{ demoForm.email }}</b> within 24 hours with your live demonstration link.
+        </p>
+        <button type="button" class="btn btn-primary" (click)="closeDemoModal()">Done</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Message -->
+  <div class="toast-bubble" *ngIf="toastMsg" role="status" aria-live="polite">
+    <span>💡</span>
+    <span>{{ toastMsg }}</span>
+  </div>
+
+</div>

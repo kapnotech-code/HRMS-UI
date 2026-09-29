@@ -1,0 +1,132 @@
+<div class="review-dashboard">
+  <div class="page-header">
+    <h1 class="page-title">Review Dashboard</h1>
+    <p class="page-subtitle">Overview of all reviews — pending, in progress, and completed.</p>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Loading review data…</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="alert alert-error">
+    <span>{{ errorMsg }}</span>
+    <button class="btn btn-outline-primary btn-sm" (click)="retry()">Retry</button>
+  </div>
+
+  <app-subscription-required></app-subscription-required>
+
+  <div *ngIf="!loading && !errorMsg" class="content-area">
+
+    <!-- ===== Summary Cards ===== -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-value">{{ summary.totalReviews }}</div>
+        <div class="card-label">Total Reviews</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-value">{{ summary.pendingCount }}</div>
+        <div class="card-label">Pending Reviews</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-value">{{ summary.inProgressCount }}</div>
+        <div class="card-label">In Progress</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-value">{{ summary.completedCount }}</div>
+        <div class="card-label">Completed Reviews</div>
+      </div>
+    </div>
+
+    <!-- ===== Filter Tabs ===== -->
+    <div class="filter-tabs">
+      <button type="button"
+              class="tab-btn"
+              [class.active]="activeTab === 'all'"
+              (click)="setTab('all')">
+        All
+        <span class="tab-count">{{ getTabCount('all') }}</span>
+      </button>
+      <button type="button"
+              class="tab-btn"
+              [class.active]="activeTab === 'pending'"
+              (click)="setTab('pending')">
+        Pending
+        <span class="tab-count">{{ getTabCount('pending') }}</span>
+      </button>
+      <button type="button"
+              class="tab-btn"
+              [class.active]="activeTab === 'in-progress'"
+              (click)="setTab('in-progress')">
+        In Progress
+        <span class="tab-count">{{ getTabCount('in-progress') }}</span>
+      </button>
+      <button type="button"
+              class="tab-btn"
+              [class.active]="activeTab === 'completed'"
+              (click)="setTab('completed')">
+        Completed
+        <span class="tab-count">{{ getTabCount('completed') }}</span>
+      </button>
+    </div>
+
+    <!-- ===== Review Table ===== -->
+    <div class="table-wrapper">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Review ID</th>
+              <th>Year</th>
+              <th>Review Type</th>
+              <th>Reviewer</th>
+              <th>Reviewee</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let review of filteredReviews">
+              <td>{{ review.reviewId }}</td>
+              <td>{{ review.year }}</td>
+              <td>{{ review.reviewType }}</td>
+              <td>{{ review.reviewer }}</td>
+              <td>{{ review.reviewee }}</td>
+              <td>{{ review.dueDate | date }}</td>
+              <td>
+                <span class="badge" [ngClass]="statusBadgeClass(review.status)">
+                  {{ statusLabel(review.status) }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="viewReview(review)">
+                    View
+                  </button>
+                  <button type="button"
+                          class="btn btn-primary btn-sm"
+                          [class.btn-disabled]="normalizeStatus(review.status) === 'completed'"
+                          (click)="completeReview(review)">
+                    Complete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="filteredReviews.length === 0" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <p class="empty-text">No reviews found for this filter.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

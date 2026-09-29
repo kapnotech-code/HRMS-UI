@@ -53,6 +53,33 @@
     </div>
 
     <div class="form-row">
+      <label>Departments *</label>
+
+      <!-- FIX: departmentIds is a plain FormControl holding an array, not a
+           FormArray, so formArrayName was wrong here and has been removed.
+           The checkboxes are driven by onDepartmentChange(). -->
+      <div class="department-checkboxes">
+        <div *ngFor="let dept of departments" class="checkbox-item">
+          <label>
+            <input type="checkbox"
+                   [value]="dept.departmentID"
+                   (change)="onDepartmentChange(dept.departmentID, $event)"
+                   [checked]="form.get('departmentIds')?.value?.includes(dept.departmentID)">
+            {{ dept.departmentName }}
+          </label>
+        </div>
+      </div>
+
+      <span class="error-text" *ngIf="departmentsError">
+        {{ departmentsError }}
+      </span>
+
+      <span class="error-text" *ngIf="!departmentsError && form.get('departmentIds')?.touched && form.get('departmentIds')?.invalid">
+        At least one department is required.
+      </span>
+    </div>
+
+    <div class="form-row">
       <label for="deviceId">Device ID</label>
       <input id="deviceId" type="text" formControlName="deviceId" placeholder="Optional" />
     </div>
@@ -67,4 +94,3 @@
 
   <div class="loading" *ngIf="loading">Loading user...</div>
 </div>
-

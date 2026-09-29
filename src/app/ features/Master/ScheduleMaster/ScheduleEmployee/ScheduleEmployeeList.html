@@ -1,0 +1,107 @@
+<div class="page-container">
+
+  <!-- ===== PAGE HEADER ===== -->
+  <div class="page-header">
+    <div>
+      <h2>Schedule Employee Mappings</h2>
+      <p class="page-subtitle">View and manage all employee mappings across schedules</p>
+    </div>
+  </div>
+
+  <!-- ===== FILTERS ===== -->
+  <div class="filter-row">
+    <select [(ngModel)]="filterScheduleId" [ngModelOptions]="{standalone: true}">
+      <option [ngValue]="null">All Schedules</option>
+      <option *ngFor="let s of schedules" [ngValue]="s.sM_Id">
+        {{ s.sM_ScheduleName }} ({{ s.sM_Year }})
+      </option>
+    </select>
+
+    <select [(ngModel)]="filterStatus" [ngModelOptions]="{standalone: true}">
+      <option [ngValue]="">All Statuses</option>
+      <option value="Eligible">Eligible</option>
+      <option value="Pending">Pending</option>
+      <option value="NotEligible">Not Eligible</option>
+    </select>
+
+    <button class="btn-filter-apply" (click)="applyFilter()">Apply</button>
+    <button class="btn-filter-reset" (click)="resetFilter()">Reset</button>
+  </div>
+
+  <!-- ===== ERROR ===== -->
+  <p *ngIf="errorMessage" class="error-text" role="alert">
+    {{ errorMessage }}
+  </p>
+
+  <!-- ===== LOADING ===== -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner" aria-hidden="true"></div>
+    <span>Loading mappings…</span>
+  </div>
+
+  <!-- ===== TABLE ===== -->
+  <div class="table-wrap" *ngIf="!loading && !errorMessage">
+    <div class="results-count" *ngIf="filteredMappings.length">
+      {{ filteredMappings.length }} mapping{{ filteredMappings.length === 1 ? '' : 's' }} found
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Schedule</th>
+          <th scope="col">Employee ID</th>
+          <th scope="col">Employee Name</th>
+          <th scope="col">Status</th>
+          <th scope="col">Eligible</th>
+          <th scope="col">Review Required</th>
+          <th scope="col">Created At</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of filteredMappings; let i = index">
+          <td data-label="#">{{ i + 1 }}</td>
+          <td data-label="Schedule">{{ getScheduleName(m.sE_SM_Id) }}</td>
+          <td data-label="Employee ID">{{ m.sE_EmployeeId }}</td>
+          <td data-label="Employee Name">{{ m.employeeName }}</td>
+          <td data-label="Status">
+            <span class="badge" [ngClass]="getStatusBadgeClass(m.sE_Status)">
+              {{ getStatusLabel(m.sE_Status) }}
+            </span>
+          </td>
+          <td data-label="Eligible">
+            <span class="badge" [class.badge-eligible]="m.sE_Eligible" [class.badge-noteligible]="!m.sE_Eligible">
+              {{ m.sE_Eligible ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td data-label="Review Required">
+            <span class="badge" [class.badge-eligible]="m.sE_ReviewRequired" [class.badge-noteligible]="!m.sE_ReviewRequired">
+              {{ m.sE_ReviewRequired ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td data-label="Created At">{{ formatDate(m.sE_CreatedAt) }}</td>
+          <td data-label="Actions">
+            <div class="row-actions">
+              <button class="btn-view"
+                      (click)="navigateToMap(m.sE_SM_Id)"
+                      [attr.aria-label]="'Map employees for schedule ' + getScheduleName(m.sE_SM_Id)">
+                Map Employees
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="filteredMappings.length === 0">
+          <td colspan="9" class="no-data">
+            <div class="no-data-content">
+              <span class="no-data-icon" aria-hidden="true">📭</span>
+              <p>No mappings found.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

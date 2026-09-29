@@ -1,30 +1,37 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PermissionService {
 
-  private apiUrl = 'https://localhost:7135/api';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
   // Roles
-  getRoles(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/Roles/GetAll`);
+  getRoles(): Observable<any[]> {
+    return this.http.get<any>(`${this.apiUrl}/Roles/GetAll`).pipe(
+      map(res => (res?.data ?? res ?? []) as any[])
+    );
   }
 
   // Pages
-  getPages(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/Page`);
+  getPages(): Observable<any[]> {
+    return this.http.get<any>(`${this.apiUrl}/Page`).pipe(
+      map(res => (res?.data ?? res ?? []) as any[])
+    );
   }
 
   // Permissions By Role
-  getPermissions(roleId: number): Observable<any> {
-    return this.http.get(
+  getPermissions(roleId: number): Observable<any[]> {
+    return this.http.get<any>(
       `${this.apiUrl}/RolePagePermission/role/${roleId}`
+    ).pipe(
+      map(res => (res?.data ?? res ?? []) as any[])
     );
   }
 

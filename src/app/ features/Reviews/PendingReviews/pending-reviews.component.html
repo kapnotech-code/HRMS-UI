@@ -1,0 +1,80 @@
+<div class="pending-container">
+  <div class="page-header">
+    <div class="header-row">
+      <div>
+        <h1 class="page-title">Pending Reviews</h1>
+        <p class="page-subtitle">Reviews awaiting your action</p>
+      </div>
+      <a routerLink="/transactions/review" class="btn btn-outline-secondary">
+        ← Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Loading pending reviews...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="alert alert-error">
+    {{ errorMsg }}
+    <button class="btn btn-outline-primary btn-sm ms-2" (click)="retry()">Retry</button>
+  </div>
+
+  <app-subscription-required></app-subscription-required>
+
+  <div *ngIf="!loading && !errorMsg" class="content-area">
+    <div *ngIf="pendingReviews.length === 0" class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3 class="empty-title">No Pending Reviews</h3>
+      <p class="empty-text">You don't have any reviews pending your action at this time.</p>
+    </div>
+
+    <div *ngIf="pendingReviews.length > 0" class="reviews-list">
+      <div class="review-card" *ngFor="let review of pendingReviews">
+        <div class="review-header">
+          <div class="review-id">Review #{{ review.reviewId }}</div>
+          <span class="badge" [ngClass]="isOverdue(review.dueDate) ? 'badge-overdue' : 'badge-pending'">
+            {{ isOverdue(review.dueDate) ? 'Overdue' : (review.status || 'Pending') }}
+          </span>
+        </div>
+
+        <div class="review-details">
+          <div class="detail-row">
+            <span class="detail-label">Year:</span>
+            <span class="detail-value">{{ review.year }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value">{{ review.reviewType }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Reviewer:</span>
+            <span class="detail-value">{{ review.reviewer }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Reviewee:</span>
+            <span class="detail-value">{{ review.reviewee }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Due Date:</span>
+            <span class="detail-value">{{ review.dueDate | date }}</span>
+          </div>
+        </div>
+
+        <div class="review-actions">
+          <button type="button" class="btn btn-outline-primary btn-sm" 
+                  [routerLink]="['/transactions/review/details', review.reviewId]">
+            View
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" 
+                  [routerLink]="['/transactions/review/details', review.reviewId]">
+            Complete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DocumentTypesRequest, DocumentTypesResponse } from '../../shared/models/Documentsnew/documentsnew-typerequest.model';
-import { ApiResponse } from '../../ features/Master/Documentsnew/ApiResponse';
+import { ApiResponse } from '../../shared/models/api-response';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentTypesService {
-  private apiUrl = 'https://localhost:7135/api/DocumentTypes';
+  private apiUrl = `${environment.apiUrl}/DocumentTypes`;
 
   constructor(private http: HttpClient) { }
 

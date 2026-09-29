@@ -9,7 +9,7 @@ import {
 } from '../../../shared/models/Salary_revision/Salary revision.model';
 
 import { EmployeeService } from '../../../core/services/employee.service';
-import { EmployeeResponse } from '../../../shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 
 import { EmployeeSalaryService } from '../../../core/services/Employee salary.service';
 import { EmployeeSalaryResponseModel } from '../../../shared/models/Employee salary/Employee salary.model';
@@ -61,7 +61,7 @@ export class SalaryRevisionListComponent implements OnInit {
   loadLookups(): void {
     this.employeeService.getAll().subscribe({
       next: (res) => {
-        this.employees = res.data ?? [];
+        this.employees = res ?? [];
         this.employeeNameById = new Map(
           this.employees.map(e => [e.employeeID, this.formatEmployeeName(e)])
         );

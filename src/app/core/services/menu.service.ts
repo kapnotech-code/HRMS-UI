@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Menu, MenuTree } from '../../shared/models/Menu/menu.model';
+import { environment } from '../../../environments/environment';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -14,7 +15,7 @@ interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class MenuService {
-  private apiUrl = 'https://localhost:7135/api/Menu';
+  private apiUrl = `${environment.apiUrl}/Menu`;
 
   constructor(private http: HttpClient) { }
 

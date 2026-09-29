@@ -1,0 +1,101 @@
+<div class="history-container">
+  <div class="page-header">
+    <div class="header-row">
+      <div>
+        <h1 class="page-title">Review History</h1>
+        <p class="page-subtitle">View past and completed reviews</p>
+      </div>
+      <a routerLink="/transactions/review" class="btn btn-outline-secondary">
+        ← Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Loading review history...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="alert alert-error">
+    {{ errorMsg }}
+    <button class="btn btn-outline-primary btn-sm" (click)="retry()">Retry</button>
+  </div>
+
+  <app-subscription-required></app-subscription-required>
+
+  <div *ngIf="!loading && !errorMsg" class="content-area">
+    <div class="search-bar">
+      <input type="text" placeholder="Search by ID, type, reviewer, reviewee, status..."
+             [(ngModel)]="searchTerm"
+             (input)="applyFilter()"
+             class="search-input">
+      <span class="search-icon">🔍</span>
+    </div>
+
+    <div *ngIf="filteredHistory.length === 0" class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3 class="empty-title">No Reviews Found</h3>
+      <p class="empty-text">
+        {{ searchTerm ? 'No reviews match your search criteria.' : 'You have no review history at this time.' }}
+      </p>
+    </div>
+
+    <div *ngIf="filteredHistory.length > 0" class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Review ID</th>
+            <th>Year</th>
+            <th>Type</th>
+            <th>Reviewer</th>
+            <th>Reviewee</th>
+            <th>Rating</th>
+            <th>Status</th>
+            <th>Visibility</th>
+            <th>Submitted At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let h of filteredHistory">
+            <td>{{ h.reviewId }}</td>
+            <td>{{ h.year }}</td>
+            <td>{{ h.reviewType }}</td>
+            <td>{{ h.reviewer }}</td>
+            <td>{{ h.reviewee }}</td>
+            <td>
+              <span *ngIf="h.rating !== undefined && h.rating !== ''" class="rating">
+                {{ h.rating }}/5
+              </span>
+              <span *ngIf="h.rating === undefined || h.rating === ''" class="text-muted">-</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="
+                h.status === 'Approved' ? 'badge-approved' :
+                h.status === 'Rejected' ? 'badge-rejected' :
+                h.status === 'Correction' ? 'badge-correction' :
+                h.status === 'Resubmitted' ? 'badge-resubmitted' : 'badge-default'
+              ">
+                {{ h.status }}
+              </span>
+            </td>
+            <td>{{ h.visibility }}</td>
+            <td>{{ h.submittedAt | date }}</td>
+            <td>
+              <button type="button" class="btn btn-outline-primary btn-sm" 
+                      [routerLink]="['/transactions/review/details', h.reviewId]">
+                View
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="results-count" *ngIf="filteredHistory.length > 0">
+      Showing {{ filteredHistory.length }} of {{ history.length }} reviews
+    </div>
+  </div>
+</div>

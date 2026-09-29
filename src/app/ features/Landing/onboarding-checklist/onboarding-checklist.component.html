@@ -1,0 +1,134 @@
+<div class="onboarding-page">
+  <!-- ===== Top Header ===== -->
+  <header class="onboard-header">
+    <div class="container onboard-header-row">
+      <button type="button" class="logo" (click)="goHome()">
+        <div class="logo-icon">HR</div>
+        <span>HRMS</span>
+      </button>
+      <div class="onboard-progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progress"></div>
+        </div>
+        <span class="progress-text">{{ currentStep }} / {{ totalSteps }} steps</span>
+      </div>
+      <a routerLink="/login" class="onboard-skip">Skip for now</a>
+    </div>
+  </header>
+
+  <!-- ===== Steps ===== -->
+  <div class="container">
+    <nav class="step-nav">
+      <button type="button" class="step-item" [class.active]="currentStep === 1" (click)="currentStep = 1">
+        <span class="step-num">1</span>
+        <span class="step-label">{{ steps[0].label }}</span>
+      </button>
+      <button type="button" class="step-item" [class.active]="currentStep === 2" (click)="currentStep = 2">
+        <span class="step-num">2</span>
+        <span class="step-label">{{ steps[1].label }}</span>
+      </button>
+      <button type="button" class="step-item" [class.active]="currentStep === 3" (click)="currentStep = 3">
+        <span class="step-num">3</span>
+        <span class="step-label">{{ steps[2].label }}</span>
+      </button>
+      <button type="button" class="step-item" [class.active]="currentStep === 4" (click)="currentStep = 4">
+        <span class="step-num">4</span>
+        <span class="step-label">{{ steps[3].label }}</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===== Onboarding Checklist ===== -->
+  <div class="container checklist-container">
+    <div class="checklist-card">
+      <div class="checklist-header">
+        <h3>Onboarding Checklist</h3>
+        <span class="checklist-progress">{{ checklistProgress }}%</span>
+      </div>
+      <div class="checklist-bar">
+        <div class="checklist-fill" [style.width.%]="checklistProgress"></div>
+      </div>
+      <ul class="checklist-items">
+        <li *ngFor="let item of checklist" class="checklist-item" [class.done]="item.done">
+          <button type="button" class="check-box" (click)="toggleItem(item.id)">
+            <span *ngIf="item.done" class="check-mark">✓</span>
+          </button>
+          <span class="check-label" (click)="toggleItem(item.id)">{{ item.label }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== Step Details ===== -->
+  <main class="onboard-main container">
+    <div class="step-panel" *ngIf="currentStep === 1">
+      <h2 class="step-title">{{ steps[0].label }}</h2>
+      <p class="step-desc">{{ steps[0].description }}</p>
+
+      <div class="checklist-detail-card" *ngFor="let item of checklist; let i = index" [class.active]="i === 0">
+        <div class="detail-icon">{{ item.icon }}</div>
+        <div class="detail-content">
+          <h4>{{ item.label }}</h4>
+          <p>{{ item.description }}</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" (click)="nextStep()" *ngIf="i === 0">Start This Step</button>
+        <span class="status-badge" [class.completed]="item.done" *ngIf="i > 0">{{ item.done ? 'Completed' : 'Pending' }}</span>
+      </div>
+    </div>
+
+    <div class="step-panel" *ngIf="currentStep === 2">
+      <h2 class="step-title">{{ steps[1].label }}</h2>
+      <p class="step-desc">{{ steps[1].description }}</p>
+
+      <div class="checklist-detail-card" *ngFor="let item of checklist; let i = index" [class.active]="i === 1">
+        <div class="detail-icon">{{ item.icon }}</div>
+        <div class="detail-content">
+          <h4>{{ item.label }}</h4>
+          <p>{{ item.description }}</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" (click)="nextStep()" *ngIf="i === 1">Start This Step</button>
+        <span class="status-badge" [class.completed]="item.done" *ngIf="i !== 1">{{ item.done ? 'Completed' : 'Pending' }}</span>
+      </div>
+    </div>
+
+    <div class="step-panel" *ngIf="currentStep === 3">
+      <h2 class="step-title">{{ steps[2].label }}</h2>
+      <p class="step-desc">{{ steps[2].description }}</p>
+
+      <div class="checklist-detail-card" *ngFor="let item of checklist; let i = index" [class.active]="i === 2">
+        <div class="detail-icon">{{ item.icon }}</div>
+        <div class="detail-content">
+          <h4>{{ item.label }}</h4>
+          <p>{{ item.description }}</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" (click)="nextStep()" *ngIf="i === 2">Start This Step</button>
+        <span class="status-badge" [class.completed]="item.done" *ngIf="i !== 2">{{ item.done ? 'Completed' : 'Pending' }}</span>
+      </div>
+    </div>
+
+    <div class="step-panel" *ngIf="currentStep === 4">
+      <h2 class="step-title">{{ steps[3].label }}</h2>
+      <p class="step-desc">{{ steps[3].description }}</p>
+
+      <div class="checklist-detail-card" *ngFor="let item of checklist; let i = index" [class.active]="i === 3">
+        <div class="detail-icon">{{ item.icon }}</div>
+        <div class="detail-content">
+          <h4>{{ item.label }}</h4>
+          <p>{{ item.description }}</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" (click)="goLogin()" *ngIf="i === 3">Go to Login</button>
+        <span class="status-badge" [class.completed]="item.done" *ngIf="i !== 3">{{ item.done ? 'Completed' : 'Pending' }}</span>
+      </div>
+    </div>
+
+    <!-- ===== Form Actions ===== -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="prevStep()">
+        {{ currentStep === 1 ? 'Back to Home' : 'Previous' }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="nextStep()">
+        {{ currentStep === totalSteps ? 'Go to Login' : 'Continue' }}
+      </button>
+    </div>
+  </main>
+</div>

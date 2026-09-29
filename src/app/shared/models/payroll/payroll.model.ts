@@ -41,3 +41,39 @@ export interface PayrollApiResponse<T> {
   message: string;
   data: T;
 }
+
+export interface PayrollRazorpayOrderRequest {
+  payrollId: number;
+  employeeId: number;
+  amount: number;
+}
+
+export interface PayrollRazorpayOrderResponse {
+  success: boolean;
+  orderId: string;
+  keyId: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  payrollId: number;
+  employeeId: number;
+  message?: string;
+}
+
+export interface PayrollRazorpayVerifyRequest {
+  razorpayPaymentId: string;
+  razorpayOrderId: string;
+  razorpaySignature: string;
+  payrollId: number;
+  employeeId: number;
+  amount: number;
+  currency: string;
+}
+
+export interface PayrollRazorpayVerifyResponse {
+  success: boolean;
+  message: string;
+  paymentId: number;
+  paymentStatus: string;
+}

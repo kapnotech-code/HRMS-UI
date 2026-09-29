@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../../shared/models/api-response';
 import { DesignationRequest, DesignationResponse } from '../../shared/models/designation-response/designation-response';
 import { environment } from '../../../environments/environment';
@@ -13,13 +13,17 @@ export class DesignationService {
   constructor(private http: HttpClient) { }
 
   // GET api/Designation
-  getAll(): Observable<ApiResponse<DesignationResponse[]>> {
-    return this.http.get<ApiResponse<DesignationResponse[]>>(this.apiUrl);
+  getAll(): Observable<DesignationResponse[]> {
+    return this.http.get<ApiResponse<DesignationResponse[]>>(this.apiUrl).pipe(
+      map(res => res.data ?? [])
+    );
   }
 
   // GET api/Designation/{id}
-  getById(id: number): Observable<ApiResponse<DesignationResponse>> {
-    return this.http.get<ApiResponse<DesignationResponse>>(`${this.apiUrl}/${id}`);
+  getById(id: number): Observable<DesignationResponse> {
+    return this.http.get<ApiResponse<DesignationResponse>>(`${this.apiUrl}/${id}`).pipe(
+      map(res => res.data!)
+    );
   }
 
   // POST api/Designation

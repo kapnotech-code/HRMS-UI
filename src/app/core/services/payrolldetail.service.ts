@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 import {
   PayrollDetailsResponse,
@@ -12,7 +13,7 @@ import {
   providedIn: 'root'
 })
 export class PayrollDetailsService {
-  private apiUrl = 'https://localhost:7135/api/PayrollDetails';
+  private apiUrl = `${environment.apiUrl}/PayrollDetails`;
 
   constructor(private http: HttpClient) { }
 

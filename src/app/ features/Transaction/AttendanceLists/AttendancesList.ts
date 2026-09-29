@@ -2,14 +2,14 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { AttendanceService } from '../../../../app/core/services/Attendances.service';
-import { CompanyRequest } from '../../../../app/shared/models/companylist/CompanyRequest';
-import { CompanyResponse } from '../../../../app/shared/models/companylist/CompanyResponse';
-import { ApiResponse } from '../../../../app/shared/models/companylist/ ApiResponse';
-import { EmployeeService } from '../../../../app/core/services/employee.service';
-import { AttendanceResponse } from '../../../../app/shared/models/Attendance/AttendanceRequest/attendanceRequest';
+import { AttendanceService } from '../../../core/services/attendance.service';
+import { CompanyRequest } from '../../../shared/models/companylist/CompanyRequest';
+import { CompanyResponse } from '../../../shared/models/companylist/CompanyResponse';
+import { ApiResponse } from '../../../shared/models/api-response';
+import { EmployeeService } from '../../../core/services/employee.service';
+import { AttendanceResponse } from '../../../shared/models/Attendance/AttendanceRequest/attendanceRequest';
 import { EmployerService } from '../../../core/services/company.service';
-import { EmployeeResponse } from '../../../../app/shared/models/employee/ employee-response';
+import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 
 @Component({
   selector: 'app-attendance-list',
@@ -92,12 +92,12 @@ export class AttendancesLists implements OnInit {
     this.loading = true;
     this.attendanceService.getAll().subscribe({
       next: (res) => {
-        this.attendanceRecords = res.data || [];
+        this.attendanceRecords = res || [];
         this.applyFilter();
         this.loading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error(err);
         this.errorMessage = 'Failed to load attendance records. Please check the backend.';
         this.loading = false;
@@ -124,7 +124,7 @@ export class AttendancesLists implements OnInit {
     // Using the existing, working GetAll endpoint instead.
     this.employeeService.getAll().subscribe({
       next: (res) => {
-        this.employees = res.data || [];
+        this.employees = res || [];
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to load employees:', err)
@@ -195,7 +195,7 @@ export class AttendancesLists implements OnInit {
         alert('Attendance record deleted successfully.');
         this.loadData();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error(err);
         const msg = err?.error?.message || 'Delete failed. Please try again.';
         alert(msg);
@@ -259,7 +259,7 @@ export class AttendancesLists implements OnInit {
           this.closeForm();
           this.loadData();
         },
-        error: (err) => {
+        error: (err: any) => {
           this.saving = false;
           const msg = err?.error?.message || 'Attendance update failed. Please try again.';
           alert(msg);
@@ -269,14 +269,14 @@ export class AttendancesLists implements OnInit {
       });
 
     } else {
-      this.attendanceService.create(payload).subscribe({
+      this.attendanceService.add(payload).subscribe({
         next: () => {
           this.saving = false;
           alert('Attendance added successfully.');
           this.closeForm();
           this.loadData();
         },
-        error: (err) => {
+        error: (err: any) => {
           this.saving = false;
           const msg = err?.error?.message || 'Attendance save failed. Please try again.';
           alert(msg);

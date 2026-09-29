@@ -10,5 +10,7 @@ export interface UserResponse {
   failedLoginCount: number;
   isLocked: boolean;
   deviceId?: string;
+  departmentIds?: number[];
+  departmentNames?: string[];
 }
 

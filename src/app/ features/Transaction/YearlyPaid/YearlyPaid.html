@@ -1,0 +1,204 @@
+<div class="page">
+
+  <!-- Header: title + Add button -->
+  <div class="page-header">
+    <h1>Yearly Paid</h1>
+    <button type="button" class="btn btn-primary" (click)="openAddModal()" *ngIf="canAdd">+ Add Record</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-section">
+    <div class="table-toolbar">
+      <input type="text" class="form-control search-input"
+             [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()"
+             placeholder="Search employee, schedule, department, status, year...">
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table" *ngIf="!loading && filteredRecords.length > 0">
+        <thead>
+          <tr>
+            <th>Record ID</th>
+            <th>Schedule</th>
+            <th>Employee</th>
+            <th>Department</th>
+            <th>Year</th>
+            <th>Eligible Days</th>
+            <th>Paid Days</th>
+            <th>Amount</th>
+            <th>Paid Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of paginatedRecords">
+            <td>{{ record.YP_Id }}</td>
+            <td>{{ record.scheduleName }}</td>
+            <td>{{ record.employeeName }}</td>
+            <td>{{ record.department }}</td>
+            <td>{{ record.YP_Year }}</td>
+            <td>{{ record.YP_EligibleDays }}</td>
+            <td>{{ record.YP_PaidDays }}</td>
+            <td>{{ formatAmount(record.YP_Amount) }}</td>
+            <td>{{ formatDate(record.YP_PaidDate) }}</td>
+            <td>
+              <span class="badge" [ngClass]="getStatusBadgeClass(record.YP_Status)">{{ record.YP_Status }}</span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-sm btn-view" (click)="viewRecord(record)" title="View">👁️</button>
+                <button type="button" class="btn btn-sm btn-approve" (click)="approveRecord(record)" title="Approve"
+                        *ngIf="showApproveButton(record)" [disabled]="processing">
+                  ✅
+                </button>
+                <button type="button" class="btn btn-sm btn-paid" (click)="markPaidRecord(record)" title="Mark Paid"
+                        *ngIf="showMarkPaidButton(record)" [disabled]="processing">
+                  💰
+                </button>
+                <button type="button" class="btn btn-sm btn-delete" (click)="deleteRecord(record)" title="Delete"
+                        *ngIf="canDelete" [disabled]="processing">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="state-box" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading records...</p>
+      </div>
+
+      <div class="state-box" *ngIf="!loading && errorMessage">
+        <p class="error-text">{{ errorMessage }}</p>
+        <button type="button" class="btn btn-primary" (click)="loadYearlyPaid()">Retry</button>
+      </div>
+
+      <div class="state-box" *ngIf="!loading && !errorMessage && filteredRecords.length === 0">
+        <p>No yearly paid records yet.</p>
+        <span *ngIf="canAdd">Click "Add Record" to create the first one.</span>
+      </div>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1 && !loading">
+      <button type="button" class="btn btn-sm btn-secondary" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} items)</span>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Add Record popup ============ -->
+<div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Yearly Paid Record</h2>
+      <button type="button" class="modal-close" (click)="closeAddModal()" aria-label="Close">&times;</button>
+    </div>
+
+    <form (ngSubmit)="saveYearlyPaid()" #ypForm="ngForm">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Schedule Transaction <span class="required">*</span></label>
+          <select [(ngModel)]="yearlyPaidForm.YP_ST_Id" name="YP_ST_Id" class="form-control" required>
+            <option [ngValue]="0">-- Select Transaction --</option>
+            <option *ngFor="let st of scheduleTransactions" [ngValue]="st.sT_Id">
+              Transaction #{{ st.sT_Id }} - {{ st.sT_TransactionType }} - {{ formatDate(st.sT_TransactionDate) }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Employee <span class="required">*</span></label>
+            <select [(ngModel)]="yearlyPaidForm.YP_EmployeeId" name="YP_EmployeeId" class="form-control" required>
+              <option [ngValue]="0">-- Select Employee --</option>
+              <option *ngFor="let emp of employees" [ngValue]="emp.employeeID">
+                {{ emp.employeeName || emp.firstName + ' ' + emp.lastName || 'Employee #' + emp.employeeID }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="yearlyPaidForm.YP_Year" name="YP_Year" class="form-control" required min="2000" max="2100">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Eligible Days <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="yearlyPaidForm.YP_EligibleDays" name="YP_EligibleDays" class="form-control" required min="0">
+          </div>
+          <div class="form-group">
+            <label>Paid Days <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="yearlyPaidForm.YP_PaidDays" name="YP_PaidDays" class="form-control" required min="0">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="yearlyPaidForm.YP_Amount" name="YP_Amount" class="form-control" required min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select [(ngModel)]="yearlyPaidForm.YP_Status" name="YP_Status" class="form-control">
+              <option *ngFor="let status of statusOptions" [ngValue]="status">{{ status }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Remarks</label>
+          <textarea [(ngModel)]="yearlyPaidForm.YP_Remarks" name="YP_Remarks" class="form-control" rows="3" placeholder="Optional"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="processing">{{ processing ? 'Saving...' : 'Save' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ View Record popup ============ -->
+<div class="modal-overlay" *ngIf="showViewModal && selectedRecord" (click)="closeViewModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Record #{{ selectedRecord.YP_Id }}</h2>
+      <button type="button" class="modal-close" (click)="closeViewModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item"><label>Schedule</label><span>{{ selectedRecord.scheduleName }}</span></div>
+        <div class="detail-item"><label>Employee</label><span>{{ selectedRecord.employeeName }}</span></div>
+        <div class="detail-item"><label>Department</label><span>{{ selectedRecord.department }}</span></div>
+        <div class="detail-item"><label>Year</label><span>{{ selectedRecord.YP_Year }}</span></div>
+        <div class="detail-item"><label>Eligible Days</label><span>{{ selectedRecord.YP_EligibleDays }}</span></div>
+        <div class="detail-item"><label>Paid Days</label><span>{{ selectedRecord.YP_PaidDays }}</span></div>
+        <div class="detail-item"><label>Amount</label><span>{{ formatAmount(selectedRecord.YP_Amount) }}</span></div>
+        <div class="detail-item"><label>Paid Date</label><span>{{ formatDate(selectedRecord.YP_PaidDate) }}</span></div>
+        <div class="detail-item">
+          <label>Status</label>
+          <span><span class="badge" [ngClass]="getStatusBadgeClass(selectedRecord.YP_Status)">{{ selectedRecord.YP_Status }}</span></span>
+        </div>
+        <div class="detail-item" *ngIf="selectedRecord.YP_PayrollId"><label>Payroll ID</label><span>{{ selectedRecord.YP_PayrollId }}</span></div>
+        <div class="detail-item full-width" *ngIf="selectedRecord.YP_Remarks"><label>Remarks</label><span>{{ selectedRecord.YP_Remarks }}</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+      <button type="button" class="btn btn-success" (click)="approveRecord(selectedRecord)"
+              *ngIf="showApproveButton(selectedRecord)" [disabled]="processing">
+        Approve
+      </button>
+      <button type="button" class="btn btn-primary" (click)="markPaidRecord(selectedRecord)"
+              *ngIf="showMarkPaidButton(selectedRecord)" [disabled]="processing">
+        Mark Paid
+      </button>
+    </div>
+  </div>
+</div>
