@@ -83,6 +83,7 @@ export class SidebarComponent implements OnInit {
       open: false,
       items: [
         { label: 'Employee', icon: '👨‍💼', route: '/Recruiter/employee-master' },
+        { label: 'Import Employees', icon: '⬆', route: '/Recruiter/employee-import' },
         { label: 'Report', icon: '📑', route: '/Recruiter/Report' },
        
        ]

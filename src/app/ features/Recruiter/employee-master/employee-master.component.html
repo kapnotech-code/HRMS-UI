@@ -15,6 +15,9 @@
       <p class="subtitle">Add, view, update or delete employee records</p>
     </div>
     <div class="header-actions">
+      <button class="btn btn-secondary" (click)="goToImport()" [disabled]="!canAdd">
+        ⬆ Import Employees
+      </button>
       <button class="btn btn-primary" (click)="newEmployee()" [disabled]="!canAdd">
         + New Employee
       </button>
@@ -126,280 +129,448 @@
     </div>
 
     <form #employeeForm="ngForm" (ngSubmit)="saveForm()" novalidate>
+      <!-- ---------- Validation summary ---------- -->
+      <div class="validation-summary" *ngIf="showValidation && validationSummary">
+        <span class="validation-summary__icon">⚠️</span>
+        <div>
+          <strong>{{ validationSummary }}</strong>
+          <ul class="validation-summary__list">
+            <li *ngFor="let key of fieldErrorKeys">{{ formErrors[key] }}</li>
+          </ul>
+        </div>
+      </div>
+
       <!-- ---------- Basic Information ---------- -->
       <h4 class="form-section-title">Basic Information</h4>
       <div class="form-grid">
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('employeeCode')">
           <label>Employee Code <span class="req">*</span></label>
           <input
             type="text"
             name="employeeCode"
             [(ngModel)]="formModel.employeeCode"
             [disabled]="isEditMode"
+            [class.is-invalid]="isFieldInvalid('employeeCode')"
             required
             maxlength="20"
             placeholder="e.g. EMP-1042"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('employeeCode')">{{ fieldError('employeeCode') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('firstName')">
           <label>First Name <span class="req">*</span></label>
           <input
             type="text"
             name="firstName"
             [(ngModel)]="formModel.firstName"
+            [class.is-invalid]="isFieldInvalid('firstName')"
             required
             maxlength="50"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('firstName')">{{ fieldError('firstName') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('lastName')">
           <label>Last Name <span class="req">*</span></label>
           <input
             type="text"
             name="lastName"
             [(ngModel)]="formModel.lastName"
+            [class.is-invalid]="isFieldInvalid('lastName')"
             required
             maxlength="50"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('lastName')">{{ fieldError('lastName') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('email')">
           <label>Email <span class="req">*</span></label>
-          <input type="email" name="email" [(ngModel)]="formModel.email" required maxlength="100" />
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="formModel.email"
+            [class.is-invalid]="isFieldInvalid('email')"
+            required
+            maxlength="100"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('email')">{{ fieldError('email') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('phone')">
           <label>Mobile Number <span class="req">*</span></label>
-          <input type="tel" name="phone" [(ngModel)]="formModel.phone" required maxlength="15" />
+          <input
+            type="tel"
+            name="phone"
+            [(ngModel)]="formModel.phone"
+            [class.is-invalid]="isFieldInvalid('phone')"
+            required
+            maxlength="15"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('phone')">{{ fieldError('phone') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('alternatePhone')">
           <label>Alternate Phone</label>
           <input
             type="tel"
             name="alternatePhone"
             [(ngModel)]="formModel.alternatePhone"
+            [class.is-invalid]="isFieldInvalid('alternatePhone')"
             maxlength="15"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('alternatePhone')">{{ fieldError('alternatePhone') }}</span>
         </div>
 
-        <div class="field">
-          <label>Gender</label>
-          <select name="gender" [(ngModel)]="formModel.gender">
+        <div class="field" [class.field-invalid]="isFieldInvalid('gender')">
+          <label>Gender <span class="req">*</span></label>
+          <select
+            name="gender"
+            [(ngModel)]="formModel.gender"
+            [class.is-invalid]="isFieldInvalid('gender')"
+            required
+          >
             <option [ngValue]="''">-- Select Gender --</option>
             <option *ngFor="let g of genderOptions" [ngValue]="g.value">{{ g.label }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('gender')">{{ fieldError('gender') }}</span>
         </div>
 
-        <div class="field">
-          <label>Date of Birth</label>
-          <input type="date" name="dateOfBirth" [(ngModel)]="formModel.dateOfBirth" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('dateOfBirth')">
+          <label>Date of Birth <span class="req">*</span></label>
+          <input
+            type="date"
+            name="dateOfBirth"
+            [(ngModel)]="formModel.dateOfBirth"
+            [class.is-invalid]="isFieldInvalid('dateOfBirth')"
+            required
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('dateOfBirth')">{{ fieldError('dateOfBirth') }}</span>
         </div>
 
-        <div class="field">
-          <label>Marital Status</label>
-          <select name="maritalStatus" [(ngModel)]="formModel.maritalStatus">
+        <div class="field" [class.field-invalid]="isFieldInvalid('maritalStatus')">
+          <label>Marital Status <span class="req">*</span></label>
+          <select
+            name="maritalStatus"
+            [(ngModel)]="formModel.maritalStatus"
+            [class.is-invalid]="isFieldInvalid('maritalStatus')"
+            required
+          >
             <option [ngValue]="''">-- Select Status --</option>
             <option *ngFor="let m of maritalStatusOptions" [ngValue]="m">{{ m }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('maritalStatus')">{{ fieldError('maritalStatus') }}</span>
         </div>
 
-        <div class="field">
-          <label>Blood Group</label>
-          <select name="bloodGroup" [(ngModel)]="formModel.bloodGroup">
+        <div class="field" [class.field-invalid]="isFieldInvalid('bloodGroup')">
+          <label>Blood Group <span class="req">*</span></label>
+          <select
+            name="bloodGroup"
+            [(ngModel)]="formModel.bloodGroup"
+            [class.is-invalid]="isFieldInvalid('bloodGroup')"
+            required
+          >
             <option [ngValue]="''">-- Select Blood Group --</option>
             <option *ngFor="let b of bloodGroupOptions" [ngValue]="b">{{ b }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('bloodGroup')">{{ fieldError('bloodGroup') }}</span>
         </div>
 
-        <div class="field">
-          <label>Nationality</label>
+        <div class="field" [class.field-invalid]="isFieldInvalid('nationality')">
+          <label>Nationality <span class="req">*</span></label>
           <input
             type="text"
             name="nationality"
             [(ngModel)]="formModel.nationality"
+            [class.is-invalid]="isFieldInvalid('nationality')"
+            required
             maxlength="50"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('nationality')">{{ fieldError('nationality') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('fatherName')">
           <label>Father's Name</label>
-          <input type="text" name="fatherName" [(ngModel)]="formModel.fatherName" maxlength="100" />
+          <input
+            type="text"
+            name="fatherName"
+            [(ngModel)]="formModel.fatherName"
+            [class.is-invalid]="isFieldInvalid('fatherName')"
+            maxlength="100"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('fatherName')">{{ fieldError('fatherName') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('motherName')">
           <label>Mother's Name</label>
-          <input type="text" name="motherName" [(ngModel)]="formModel.motherName" maxlength="100" />
+          <input
+            type="text"
+            name="motherName"
+            [(ngModel)]="formModel.motherName"
+            [class.is-invalid]="isFieldInvalid('motherName')"
+            maxlength="100"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('motherName')">{{ fieldError('motherName') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('highestQualification')">
           <label>Highest Qualification</label>
           <input
             type="text"
             name="highestQualification"
             [(ngModel)]="formModel.highestQualification"
+            [class.is-invalid]="isFieldInvalid('highestQualification')"
             maxlength="100"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('highestQualification')">{{ fieldError('highestQualification') }}</span>
         </div>
       </div>
 
       <!-- ---------- Identity Documents ---------- -->
       <h4 class="form-section-title">Identity Documents</h4>
       <div class="form-grid">
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('aadharNumber')">
           <label>Aadhar Number</label>
           <input
             type="text"
             name="aadharNumber"
             [(ngModel)]="formModel.aadharNumber"
+            [class.is-invalid]="isFieldInvalid('aadharNumber')"
             maxlength="20"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('aadharNumber')">{{ fieldError('aadharNumber') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('panNumber')">
           <label>PAN Number</label>
-          <input type="text" name="panNumber" [(ngModel)]="formModel.panNumber" maxlength="20" />
+          <input
+            type="text"
+            name="panNumber"
+            [(ngModel)]="formModel.panNumber"
+            [class.is-invalid]="isFieldInvalid('panNumber')"
+            maxlength="20"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('panNumber')">{{ fieldError('panNumber') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('passportNumber')">
           <label>Passport Number</label>
           <input
             type="text"
             name="passportNumber"
             [(ngModel)]="formModel.passportNumber"
+            [class.is-invalid]="isFieldInvalid('passportNumber')"
             maxlength="20"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('passportNumber')">{{ fieldError('passportNumber') }}</span>
         </div>
       </div>
 
       <!-- ---------- Address ---------- -->
       <h4 class="form-section-title">Address</h4>
       <div class="form-grid">
-        <div class="field field-wide">
-          <label>Current Address</label>
+        <div class="field field-wide" [class.field-invalid]="isFieldInvalid('currentAddress')">
+          <label>Current Address <span class="req">*</span></label>
           <textarea
             name="currentAddress"
             [(ngModel)]="formModel.currentAddress"
+            [class.is-invalid]="isFieldInvalid('currentAddress')"
             rows="2"
           ></textarea>
+          <span class="field-error" *ngIf="isFieldInvalid('currentAddress')">{{ fieldError('currentAddress') }}</span>
         </div>
 
-        <div class="field field-wide">
-          <label>Permanent Address</label>
+        <div class="field field-wide" [class.field-invalid]="isFieldInvalid('permanentAddress')">
+          <label>Permanent Address <span class="req">*</span></label>
           <textarea
             name="permanentAddress"
             [(ngModel)]="formModel.permanentAddress"
+            [class.is-invalid]="isFieldInvalid('permanentAddress')"
             rows="2"
           ></textarea>
+          <span class="field-error" *ngIf="isFieldInvalid('permanentAddress')">{{ fieldError('permanentAddress') }}</span>
         </div>
 
-        <div class="field">
-          <label>City</label>
-          <input type="text" name="city" [(ngModel)]="formModel.city" maxlength="50" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('city')">
+          <label>City <span class="req">*</span></label>
+          <input
+            type="text"
+            name="city"
+            [(ngModel)]="formModel.city"
+            [class.is-invalid]="isFieldInvalid('city')"
+            required
+            maxlength="50"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('city')">{{ fieldError('city') }}</span>
         </div>
 
-        <div class="field">
-          <label>State</label>
-          <input type="text" name="state" [(ngModel)]="formModel.state" maxlength="50" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('state')">
+          <label>State <span class="req">*</span></label>
+          <input
+            type="text"
+            name="state"
+            [(ngModel)]="formModel.state"
+            [class.is-invalid]="isFieldInvalid('state')"
+            required
+            maxlength="50"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('state')">{{ fieldError('state') }}</span>
         </div>
 
-        <div class="field">
-          <label>Country</label>
-          <input type="text" name="country" [(ngModel)]="formModel.country" maxlength="50" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('country')">
+          <label>Country <span class="req">*</span></label>
+          <input
+            type="text"
+            name="country"
+            [(ngModel)]="formModel.country"
+            [class.is-invalid]="isFieldInvalid('country')"
+            required
+            maxlength="50"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('country')">{{ fieldError('country') }}</span>
         </div>
 
-        <div class="field">
-          <label>Pin Code</label>
-          <input type="text" name="pinCode" [(ngModel)]="formModel.pinCode" maxlength="10" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('pinCode')">
+          <label>Pin Code <span class="req">*</span></label>
+          <input
+            type="text"
+            name="pinCode"
+            [(ngModel)]="formModel.pinCode"
+            [class.is-invalid]="isFieldInvalid('pinCode')"
+            required
+            maxlength="10"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('pinCode')">{{ fieldError('pinCode') }}</span>
         </div>
       </div>
 
       <!-- ---------- Emergency Contact ---------- -->
-      <h4 class="form-section-title">Emergency Contact</h4>
+      <h4 class="form-section-title">Emergency Contact <span class="req">*</span></h4>
       <div class="form-grid">
-        <div class="field">
-          <label>Contact Name</label>
+        <div class="field" [class.field-invalid]="isFieldInvalid('emergencyContactName')">
+          <label>Contact Name <span class="req">*</span></label>
           <input
             type="text"
             name="emergencyContactName"
             [(ngModel)]="formModel.emergencyContactName"
+            [class.is-invalid]="isFieldInvalid('emergencyContactName')"
+            required
             maxlength="100"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('emergencyContactName')">{{ fieldError('emergencyContactName') }}</span>
         </div>
 
-        <div class="field">
-          <label>Contact Phone</label>
+        <div class="field" [class.field-invalid]="isFieldInvalid('emergencyContactPhone')">
+          <label>Contact Phone <span class="req">*</span></label>
           <input
             type="tel"
             name="emergencyContactPhone"
             [(ngModel)]="formModel.emergencyContactPhone"
+            [class.is-invalid]="isFieldInvalid('emergencyContactPhone')"
+            required
             maxlength="15"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('emergencyContactPhone')">{{ fieldError('emergencyContactPhone') }}</span>
         </div>
 
-        <div class="field">
-          <label>Relation</label>
+        <div class="field" [class.field-invalid]="isFieldInvalid('emergencyContactRelation')">
+          <label>Relation <span class="req">*</span></label>
           <input
             type="text"
             name="emergencyContactRelation"
             [(ngModel)]="formModel.emergencyContactRelation"
+            [class.is-invalid]="isFieldInvalid('emergencyContactRelation')"
+            required
             maxlength="50"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('emergencyContactRelation')">{{ fieldError('emergencyContactRelation') }}</span>
         </div>
       </div>
 
       <!-- ---------- Employment Details ---------- -->
       <h4 class="form-section-title">Employment Details</h4>
       <div class="form-grid">
-        <div class="field">
-          <label>Company</label>
-          <select name="companyID" [(ngModel)]="formModel.companyID">
+        <div class="field" [class.field-invalid]="isFieldInvalid('companyID')">
+          <label>Company <span class="req">*</span></label>
+          <select
+            name="companyID"
+            [(ngModel)]="formModel.companyID"
+            [class.is-invalid]="isFieldInvalid('companyID')"
+            required
+          >
             <option [ngValue]="undefined">-- Select Company --</option>
             <option *ngFor="let c of companies" [ngValue]="c.id">{{ c.name }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('companyID')">{{ fieldError('company') }}</span>
         </div>
 
-        <div class="field">
-          <label>Department</label>
-          <select name="department" [(ngModel)]="formModel.department">
+        <div class="field" [class.field-invalid]="isFieldInvalid('department')">
+          <label>Department <span class="req">*</span></label>
+          <select
+            name="department"
+            [(ngModel)]="formModel.department"
+            [class.is-invalid]="isFieldInvalid('department')"
+            required
+          >
             <option [ngValue]="''">-- Select Department --</option>
             <option *ngFor="let d of departments" [ngValue]="d.name">{{ d.name }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('department')">{{ fieldError('department') }}</span>
         </div>
 
-        <div class="field">
-          <label>Designation</label>
-          <select name="designation" [(ngModel)]="formModel.designation">
+        <div class="field" [class.field-invalid]="isFieldInvalid('designation')">
+          <label>Designation <span class="req">*</span></label>
+          <select
+            name="designation"
+            [(ngModel)]="formModel.designation"
+            [class.is-invalid]="isFieldInvalid('designation')"
+            required
+          >
             <option [ngValue]="''">-- Select Designation --</option>
             <option *ngFor="let d of designations" [ngValue]="d.name">{{ d.name }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('designation')">{{ fieldError('designation') }}</span>
         </div>
 
-        <div class="field">
-          <label>Shift</label>
-          <select name="shiftType" [(ngModel)]="formModel.shiftType">
+        <div class="field" [class.field-invalid]="isFieldInvalid('shiftType')">
+          <label>Shift <span class="req">*</span></label>
+          <select
+            name="shiftType"
+            [(ngModel)]="formModel.shiftType"
+            [class.is-invalid]="isFieldInvalid('shiftType')"
+            required
+          >
             <option [ngValue]="''">-- Select Shift --</option>
             <option *ngFor="let s of shifts" [ngValue]="s.name">{{ s.name }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('shiftType')">{{ fieldError('shiftType') }}</span>
         </div>
 
-        <div class="field">
-          <label>Employment Type</label>
-          <select name="employmentType" [(ngModel)]="formModel.employmentType">
+        <div class="field" [class.field-invalid]="isFieldInvalid('employmentType')">
+          <label>Employment Type <span class="req">*</span></label>
+          <select
+            name="employmentType"
+            [(ngModel)]="formModel.employmentType"
+            [class.is-invalid]="isFieldInvalid('employmentType')"
+            required
+          >
             <option [ngValue]="''">-- Select Type --</option>
             <option *ngFor="let t of employmentTypeOptions" [ngValue]="t">{{ t }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('employmentType')">{{ fieldError('employmentType') }}</span>
         </div>
 
-        <div class="field">
-          <label>Work Location</label>
+        <div class="field" [class.field-invalid]="isFieldInvalid('workLocation')">
+          <label>Work Location <span class="req">*</span></label>
           <input
             type="text"
             name="workLocation"
             [(ngModel)]="formModel.workLocation"
+            [class.is-invalid]="isFieldInvalid('workLocation')"
+            required
             maxlength="100"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('workLocation')">{{ fieldError('workLocation') }}</span>
         </div>
 
         <div class="field">
@@ -428,65 +599,131 @@
           />
         </div>
 
-        <div class="field">
-          <label>Salary</label>
-          <input type="number" name="salary" [(ngModel)]="formModel.salary" min="0" step="0.01" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('salary')">
+          <label>Salary <span class="req">*</span></label>
+          <input
+            type="number"
+            name="salary"
+            [(ngModel)]="formModel.salary"
+            [class.is-invalid]="isFieldInvalid('salary')"
+            required
+            min="0"
+            step="0.01"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('salary')">{{ fieldError('salary') }}</span>
         </div>
 
-        <div class="field">
-          <label>Joining Date</label>
-          <input type="date" name="dateOfJoining" [(ngModel)]="formModel.dateOfJoining" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('dateOfJoining')">
+          <label>Joining Date <span class="req">*</span></label>
+          <input
+            type="date"
+            name="dateOfJoining"
+            [(ngModel)]="formModel.dateOfJoining"
+            [class.is-invalid]="isFieldInvalid('dateOfJoining')"
+            required
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('dateOfJoining')">{{ fieldError('dateOfJoining') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('probationEndDate')">
           <label>Probation End Date</label>
-          <input type="date" name="probationEndDate" [(ngModel)]="formModel.probationEndDate" />
+          <input
+            type="date"
+            name="probationEndDate"
+            [(ngModel)]="formModel.probationEndDate"
+            [class.is-invalid]="isFieldInvalid('probationEndDate')"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('probationEndDate')">{{ fieldError('probationEndDate') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('confirmationDate')">
           <label>Confirmation Date</label>
-          <input type="date" name="confirmationDate" [(ngModel)]="formModel.confirmationDate" />
+          <input
+            type="date"
+            name="confirmationDate"
+            [(ngModel)]="formModel.confirmationDate"
+            [class.is-invalid]="isFieldInvalid('confirmationDate')"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('confirmationDate')">{{ fieldError('confirmationDate') }}</span>
         </div>
 
-        <div class="field">
+        <div class="field" [class.field-invalid]="isFieldInvalid('exitDate')">
           <label>Exit Date</label>
-          <input type="date" name="exitDate" [(ngModel)]="formModel.exitDate" />
+          <input
+            type="date"
+            name="exitDate"
+            [(ngModel)]="formModel.exitDate"
+            [class.is-invalid]="isFieldInvalid('exitDate')"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('exitDate')">{{ fieldError('exitDate') }}</span>
         </div>
 
-        <div class="field field-wide">
+        <div class="field field-wide" [class.field-invalid]="isFieldInvalid('exitReason')">
           <label>Exit Reason</label>
-          <input type="text" name="exitReason" [(ngModel)]="formModel.exitReason" maxlength="200" />
+          <input
+            type="text"
+            name="exitReason"
+            [(ngModel)]="formModel.exitReason"
+            [class.is-invalid]="isFieldInvalid('exitReason')"
+            maxlength="200"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('exitReason')">{{ fieldError('exitReason') }}</span>
         </div>
 
-        <div class="field">
-          <label>Status</label>
-          <select name="employeeStatus" [(ngModel)]="formModel.employeeStatus">
+        <div class="field" [class.field-invalid]="isFieldInvalid('employeeStatus')">
+          <label>Status <span class="req">*</span></label>
+          <select
+            name="employeeStatus"
+            [(ngModel)]="formModel.employeeStatus"
+            [class.is-invalid]="isFieldInvalid('employeeStatus')"
+            required
+          >
             <option *ngFor="let s of statusOptions" [ngValue]="s">{{ s }}</option>
           </select>
+          <span class="field-error" *ngIf="isFieldInvalid('employeeStatus')">{{ fieldError('employeeStatus') }}</span>
         </div>
       </div>
 
       <!-- ---------- Bank & Statutory Details ---------- -->
-      <h4 class="form-section-title">Bank &amp; Statutory Details</h4>
+      <h4 class="form-section-title">Bank &amp; Statutory Details <span class="req">*</span></h4>
       <div class="form-grid">
-        <div class="field">
-          <label>Bank Name</label>
-          <input type="text" name="bankName" [(ngModel)]="formModel.bankName" maxlength="100" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('bankName')">
+          <label>Bank Name <span class="req">*</span></label>
+          <input
+            type="text"
+            name="bankName"
+            [(ngModel)]="formModel.bankName"
+            [class.is-invalid]="isFieldInvalid('bankName')"
+            required
+            maxlength="100"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('bankName')">{{ fieldError('bankName') }}</span>
         </div>
 
-        <div class="field">
-          <label>Bank Account Number</label>
+        <div class="field" [class.field-invalid]="isFieldInvalid('bankAccountNumber')">
+          <label>Bank Account Number <span class="req">*</span></label>
           <input
             type="text"
             name="bankAccountNumber"
             [(ngModel)]="formModel.bankAccountNumber"
+            [class.is-invalid]="isFieldInvalid('bankAccountNumber')"
+            required
             maxlength="30"
           />
+          <span class="field-error" *ngIf="isFieldInvalid('bankAccountNumber')">{{ fieldError('bankAccountNumber') }}</span>
         </div>
 
-        <div class="field">
-          <label>IFSC Code</label>
-          <input type="text" name="ifscCode" [(ngModel)]="formModel.ifscCode" maxlength="15" />
+        <div class="field" [class.field-invalid]="isFieldInvalid('ifscCode')">
+          <label>IFSC Code <span class="req">*</span></label>
+          <input
+            type="text"
+            name="ifscCode"
+            [(ngModel)]="formModel.ifscCode"
+            [class.is-invalid]="isFieldInvalid('ifscCode')"
+            required
+            maxlength="15"
+          />
+          <span class="field-error" *ngIf="isFieldInvalid('ifscCode')">{{ fieldError('ifscCode') }}</span>
         </div>
 
         <div class="field">
