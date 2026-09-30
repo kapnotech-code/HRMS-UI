@@ -1,0 +1,156 @@
+<div class="mysub-page">
+
+  <!-- Page Header -->
+  <div class="mysub-header">
+    <div class="mysub-header-inner">
+      <div class="mysub-header-left">
+        <span class="mysub-badge">📊 My Subscription</span>
+        <h1>Subscription Management</h1>
+        <p>View and manage your current HRMS subscription plan.</p>
+      </div>
+      <a routerLink="/subscriptions/plans" class="btn-upgrade">
+        ⚡ Upgrade Plan →
+      </a>
+    </div>
+  </div>
+
+  <div class="mysub-body">
+
+    <!-- Loading -->
+    <div class="mysub-loading" *ngIf="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading your subscription...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="mysub-alert mysub-alert-error" *ngIf="errorMsg && !loading">
+      <span>⚠️ {{ errorMsg }}</span>
+      <button (click)="loadSubscription()">Retry</button>
+    </div>
+
+    <!-- No Subscription -->
+    <div class="mysub-empty" *ngIf="!loading && !errorMsg && !subscription">
+      <div class="empty-icon">📋</div>
+      <h2>No Active Subscription</h2>
+      <p>You don't have an active subscription yet. Choose a plan to unlock all HRMS features.</p>
+      <a routerLink="/subscriptions/plans" class="btn-browse-plans">Browse Plans →</a>
+    </div>
+
+    <!-- Active Subscription -->
+    <div class="mysub-content" *ngIf="!loading && subscription">
+
+      <!-- Status Banner -->
+      <div class="sub-status-banner" [class.banner-active]="subscription.status === 'Active' && !subscription.isExpired" [class.banner-expired]="subscription.isExpired" [class.banner-pending]="subscription.status === 'Pending'">
+        <div class="banner-left">
+          <div class="banner-icon">{{ subscription.isExpired ? '⚠️' : subscription.status === 'Active' ? '✅' : '⏳' }}</div>
+          <div>
+            <div class="banner-title">{{ subscription.isExpired ? 'Subscription Expired' : subscription.status === 'Active' ? 'Subscription Active' : 'Subscription Pending' }}</div>
+            <div class="banner-sub" *ngIf="subscription.isExpired">Your plan has expired. Renew now to restore access.</div>
+            <div class="banner-sub" *ngIf="!subscription.isExpired && subscription.daysRemaining !== undefined">
+              {{ subscription.daysRemaining }} days remaining
+            </div>
+          </div>
+        </div>
+        <a routerLink="/subscriptions/plans" class="banner-action-btn" *ngIf="subscription.isExpired">Renew Now →</a>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="mysub-grid">
+
+        <!-- Plan Card -->
+        <div class="sub-plan-card">
+          <div class="sub-plan-card-header">
+            <div class="sub-plan-icon">💳</div>
+            <div>
+              <h2 class="sub-plan-name">{{ subscription.planName }}</h2>
+              <span class="sub-plan-code">{{ subscription.planCode }}</span>
+            </div>
+            <span class="sub-status-pill" [class]="statusClass">{{ subscription.status }}</span>
+          </div>
+
+          <p class="sub-plan-desc">{{ subscription.description }}</p>
+
+          <div class="sub-plan-meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">Plan Type</span>
+              <span class="meta-value">{{ subscription.subscriptionFor }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Price</span>
+              <span class="meta-value price-val">${{ subscription.price }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Auto Renew</span>
+              <span class="meta-value" [class.text-success]="subscription.autoRenew" [class.text-muted]="!subscription.autoRenew">
+                {{ subscription.autoRenew ? '✅ Enabled' : '❌ Disabled' }}
+              </span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Days Remaining</span>
+              <span class="meta-value" [class.text-danger]="subscription.daysRemaining < 7">
+                {{ subscription.daysRemaining ?? '—' }} days
+              </span>
+            </div>
+          </div>
+
+          <!-- Days Progress Bar -->
+          <div class="days-progress-wrap" *ngIf="subscription.daysRemaining !== undefined">
+            <div class="days-progress-label">
+              <span>Plan Duration</span>
+              <span>{{ subscription.daysRemaining }} / {{ subscription.durationDays || '—' }} days left</span>
+            </div>
+            <div class="days-progress-bar">
+              <div class="days-progress-fill" [style.width.%]="daysRemainingPercent" [class.fill-danger]="daysRemainingPercent < 20"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates Card -->
+        <div class="sub-dates-card">
+          <h3 class="card-section-title">📅 Subscription Period</h3>
+          <div class="dates-timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot dot-start"></div>
+              <div class="timeline-content">
+                <span class="timeline-label">Start Date</span>
+                <strong class="timeline-value">{{ subscription.startDate | date: 'dd MMM yyyy' }}</strong>
+              </div>
+            </div>
+            <div class="timeline-line"></div>
+            <div class="timeline-item">
+              <div class="timeline-dot" [class.dot-end]="!subscription.isExpired" [class.dot-expired]="subscription.isExpired"></div>
+              <div class="timeline-content">
+                <span class="timeline-label">End Date</span>
+                <strong class="timeline-value" [class.text-danger]="subscription.isExpired">{{ subscription.endDate | date: 'dd MMM yyyy' }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="sub-actions-row">
+            <a routerLink="/subscriptions/plans" class="btn-action btn-action-primary">
+              {{ subscription.isExpired ? '🔄 Renew Plan' : '⚡ Upgrade Plan' }}
+            </a>
+            <a routerLink="/subscriptions/plans" class="btn-action btn-action-outline">
+              📋 View All Plans
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Card -->
+      <div class="sub-features-card" *ngIf="subscription.features?.length">
+        <h3 class="card-section-title">🎯 Included Features</h3>
+        <div class="features-grid">
+          <div class="feature-item" *ngFor="let f of subscription.features">
+            <span class="feature-check">✓</span>
+            <div class="feature-info">
+              <span class="feature-name">{{ f.featureName }}</span>
+              <span class="feature-limit" *ngIf="f.limitValue">{{ f.limitValue }} {{ f.limitType }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

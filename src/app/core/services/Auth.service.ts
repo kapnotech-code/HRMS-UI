@@ -23,6 +23,9 @@ export class AuthService {
   }
 
   register(request: RegisterRequest): Observable<any> {
+    // POST api/Auth/register
+    // Response: { Message, Data: { UserId, CompanyId } }
+    // On failure: 400 with { Message }
     return this.http.post<any>(`${this.apiUrl}/register`, request);
   }
 

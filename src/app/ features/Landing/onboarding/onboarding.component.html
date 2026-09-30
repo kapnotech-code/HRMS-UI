@@ -1,272 +1,285 @@
 <div class="onboarding-page">
-  <!-- ===== Top Header ===== -->
-  <header class="onboard-header">
-    <div class="container onboard-header-row">
-      <button type="button" class="logo" (click)="goHome()">
-        <div class="logo-icon">HR</div>
-        <span>HRMS</span>
-      </button>
-      <div class="onboard-progress-container">
-        <div class="progress-bar">
-          <div class="progress-fill" [style.width.%]="progress"></div>
-        </div>
-        <span class="progress-text">{{ currentStep }} / {{ totalSteps }} steps</span>
+
+  <!-- Header -->
+  <header class="ob-header">
+    <a class="ob-logo" routerLink="/">
+      <div class="logo-mark">HR</div>
+      <span>HRMS</span>
+    </a>
+    <div class="ob-progress-wrap">
+      <div class="ob-progress-bar">
+        <div class="ob-progress-fill" [style.width.%]="progress"></div>
       </div>
-      <a routerLink="/login" class="onboard-skip">Skip for now</a>
+      <span class="ob-progress-text">Step {{ currentStep }} of {{ totalSteps }}</span>
     </div>
+    <a routerLink="/login" class="ob-skip">Skip setup</a>
   </header>
 
-  <!-- ===== Steps ===== -->
-  <div class="container">
-    <nav class="step-nav">
-      <button type="button" class="step-item" [class.active]="currentStep === 1" (click)="currentStep = 1">
-        <span class="step-num">1</span>
-        <span class="step-label">{{ steps[0].label }}</span>
-      </button>
-      <button type="button" class="step-item" [class.active]="currentStep === 2" (click)="currentStep = 2">
-        <span class="step-num">2</span>
-        <span class="step-label">{{ steps[1].label }}</span>
-      </button>
-      <button type="button" class="step-item" [class.active]="currentStep === 3" (click)="currentStep = 3">
-        <span class="step-num">3</span>
-        <span class="step-label">{{ steps[2].label }}</span>
-      </button>
-      <button type="button" class="step-item" [class.active]="currentStep === 4" (click)="currentStep = 4">
-        <span class="step-num">4</span>
-        <span class="step-label">{{ steps[3].label }}</span>
-      </button>
-    </nav>
-  </div>
-
-  <!-- ===== Onboarding Checklist ===== -->
-  <div class="container checklist-container">
-    <div class="checklist-card">
-      <div class="checklist-header">
-        <h3>Onboarding Checklist</h3>
-        <span class="checklist-progress">{{ checklistProgress }}%</span>
+  <!-- Completed State -->
+  <div class="ob-complete" *ngIf="completed">
+    <div class="complete-card">
+      <div class="complete-icon">🚀</div>
+      <h2>You're all set!</h2>
+      <p>Your HRMS workspace for <strong>{{ form.companyName }}</strong> is ready.</p>
+      <div class="complete-plan-tag">{{ selectedPlanObj.name }} Plan</div>
+      <p class="complete-sub">Login with <strong>{{ form.adminEmail }}</strong> to get started.</p>
+      <div class="complete-actions">
+        <button class="btn btn-primary btn-lg" (click)="goToLogin()">Go to Login →</button>
+        <button class="btn btn-outline" (click)="goToPlans()">Manage Subscription</button>
       </div>
-      <div class="checklist-bar">
-        <div class="checklist-fill" [style.width.%]="checklistProgress"></div>
-      </div>
-      <ul class="checklist-items">
-        <li *ngFor="let item of checklist" class="checklist-item" [class.done]="item.done">
-          <button type="button" class="check-box" (click)="toggleChecklistItem(item.id)">
-            <span *ngIf="item.done" class="check-mark">✓</span>
-          </button>
-          <span class="check-label" (click)="toggleChecklistItem(item.id)">{{ item.label }}</span>
-        </li>
-      </ul>
     </div>
   </div>
 
-  <!-- ===== Step Form ===== -->
-  <main class="onboard-main container">
-    <form class="onboard-form" (ngSubmit)="nextStep()" autocomplete="on">
+  <!-- Main Flow -->
+  <div class="ob-body" *ngIf="!completed">
+
+    <!-- Step Tabs -->
+    <div class="ob-steps-nav">
+      <div class="ob-step-tab" *ngFor="let s of steps" [class.active]="currentStep === s.number" [class.done]="currentStep > s.number">
+        <div class="ob-step-circle">
+          <span *ngIf="currentStep <= s.number">{{ s.number }}</span>
+          <span *ngIf="currentStep > s.number">✓</span>
+        </div>
+        <span class="ob-step-label">{{ s.label }}</span>
+      </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="ob-card">
+
+      <div class="ob-alert-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
 
       <!-- Step 1: Company Info -->
-      <div class="step-panel" *ngIf="currentStep === 1">
-        <h2 class="step-title">{{ steps[0].label }}</h2>
-        <p class="step-desc">{{ steps[0].description }}</p>
-
-        <div class="form-group">
-          <label for="companyName">Company Name *</label>
-          <input id="companyName" type="text" placeholder="e.g. TechCorp Inc."
-                 [(ngModel)]="formData.companyName" name="companyName" required />
+      <div *ngIf="currentStep === 1">
+        <div class="ob-step-head">
+          <span class="ob-step-emoji">🏢</span>
+          <div>
+            <h2>Company Information</h2>
+            <p>Tell us about your organization to set up your workspace.</p>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="companyEmail">Company Email *</label>
-          <input id="companyEmail" type="email" placeholder="e.g. hello@company.com"
-                 [(ngModel)]="formData.companyEmail" name="companyEmail" required />
+          <label>Company Name *</label>
+          <input type="text" [(ngModel)]="form.companyName" placeholder="e.g. TechCorp Solutions Pvt. Ltd." />
         </div>
-
-        <div class="form-row-2">
+        <div class="form-group">
+          <label>Company Email *</label>
+          <input type="email" [(ngModel)]="form.companyEmail" placeholder="hr@yourcompany.com" />
+        </div>
+        <div class="form-2col">
           <div class="form-group">
-            <label for="industry">Industry *</label>
-            <select id="industry" [(ngModel)]="formData.industry" name="industry" required>
+            <label>Industry *</label>
+            <select [(ngModel)]="form.industry">
               <option value="" disabled selected>Select industry</option>
               <option *ngFor="let i of industries" [value]="i">{{ i }}</option>
             </select>
           </div>
-
           <div class="form-group">
-            <label for="companySize">Company Size *</label>
-            <select id="companySize" [(ngModel)]="formData.companySize" name="companySize" required>
+            <label>Company Size *</label>
+            <select [(ngModel)]="form.companySize">
               <option value="" disabled selected>Select size</option>
-              <option value="1-10">1-10 employees</option>
-              <option value="11-50">11-50 employees</option>
-              <option value="51-200">51-200 employees</option>
-              <option value="201-500">201-500 employees</option>
-              <option value="501-1000">501-1,000 employees</option>
-              <option value="1001-5000">1,001-5,000 employees</option>
-              <option value="5001+">5,000+ employees</option>
+              <option value="1-10">1–10 employees</option>
+              <option value="11-50">11–50 employees</option>
+              <option value="51-200">51–200 employees</option>
+              <option value="201-500">201–500 employees</option>
+              <option value="501+">500+ employees</option>
             </select>
           </div>
         </div>
-
-        <div class="form-group">
-          <label for="country">Country *</label>
-          <select id="country" [(ngModel)]="formData.country" name="country" required>
-            <option value="" disabled selected>Select country</option>
-            <option *ngFor="let c of countries" [value]="c">{{ c }}</option>
-          </select>
-        </div>
-
-        <div class="form-error" *ngIf="getStepError(1)">{{ getStepError(1) }}</div>
-      </div>
-
-      <!-- Step 2: Admin User -->
-      <div class="step-panel" *ngIf="currentStep === 2">
-        <h2 class="step-title">{{ steps[1].label }}</h2>
-        <p class="step-desc">{{ steps[1].description }}</p>
-
-        <div class="form-row-2">
+        <div class="form-2col">
           <div class="form-group">
-            <label for="adminFirstName">First Name *</label>
-            <input id="adminFirstName" type="text" placeholder="e.g. Priya"
-                   [(ngModel)]="formData.adminFirstName" name="adminFirstName" required />
+            <label>Country *</label>
+            <select [(ngModel)]="form.country">
+              <option value="" disabled selected>Select country</option>
+              <option *ngFor="let c of countries" [value]="c">{{ c }}</option>
+            </select>
           </div>
-
           <div class="form-group">
-            <label for="adminLastName">Last Name *</label>
-            <input id="adminLastName" type="text" placeholder="e.g. Sharma"
-                   [(ngModel)]="formData.adminLastName" name="adminLastName" required />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="adminEmail">Email Address *</label>
-          <input id="adminEmail" type="email" placeholder="e.g. priya@company.com"
-                 [(ngModel)]="formData.adminEmail" name="adminEmail" required />
-          <small class="form-help">This will be your login email.</small>
-        </div>
-
-        <div class="form-group">
-          <label for="adminPhone">Phone Number</label>
-          <input id="adminPhone" type="tel" placeholder="e.g. +1 555 000 0000"
-                 [(ngModel)]="formData.adminPhone" name="adminPhone" />
-        </div>
-
-        <div class="form-group">
-          <label for="adminPassword">Password *</label>
-          <div class="password-wrap">
-            <input id="adminPassword" type="password" placeholder="Minimum 6 characters"
-                   [(ngModel)]="formData.adminPassword" name="adminPassword" required />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password *</label>
-          <input id="confirmPassword" type="password" placeholder="Re-enter password"
-                 [(ngModel)]="formData.confirmPassword" name="confirmPassword" required />
-        </div>
-
-        <div class="form-error" *ngIf="getStepError(2)">{{ getStepError(2) }}</div>
-      </div>
-
-      <!-- Step 3: Employee Setup -->
-      <div class="step-panel" *ngIf="currentStep === 3">
-        <h2 class="step-title">{{ steps[2].label }}</h2>
-        <p class="step-desc">{{ steps[2].description }}</p>
-
-        <div class="form-group">
-          <label for="employeeCount">How many employees will use HRMS? *</label>
-          <select id="employeeCount" [(ngModel)]="formData.employeeCount" name="employeeCount" required>
-            <option value="" disabled selected>Select employee count</option>
-            <option value="1-5">1 - 5 employees</option>
-            <option value="6-10">6 - 10 employees</option>
-            <option value="11-25">11 - 25 employees</option>
-            <option value="26-50">26 - 50 employees</option>
-            <option value="51-100">51 - 100 employees</option>
-            <option value="101-500">101 - 500 employees</option>
-            <option value="500+">500+ employees</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="payrollFrequency">Payroll Frequency *</label>
-          <select id="payrollFrequency" [(ngModel)]="formData.payrollFrequency" name="payrollFrequency" required>
-            <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
-            <option value="biweekly">Bi-weekly</option>
-            <option value="semimonthly">Semi-monthly</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="currency">Currency *</label>
-          <select id="currency" [(ngModel)]="formData.currency" name="currency" required>
-            <option value="USD">USD - US Dollar</option>
-            <option value="EUR">EUR - Euro</option>
-            <option value="GBP">GBP - British Pound</option>
-            <option value="INR">INR - Indian Rupee</option>
-            <option value="CAD">CAD - Canadian Dollar</option>
-            <option value="AUD">AUD - Australian Dollar</option>
-          </select>
-        </div>
-
-        <div class="form-error" *ngIf="getStepError(3)">{{ getStepError(3) }}</div>
-      </div>
-
-      <!-- Step 4: Review -->
-      <div class="step-panel" *ngIf="currentStep === 4">
-        <h2 class="step-title">{{ steps[3].label }}</h2>
-        <p class="step-desc">{{ steps[3].description }}</p>
-
-        <div class="review-card">
-          <div class="review-row">
-            <span class="review-label">Company Name</span>
-            <span class="review-value">{{ formData.companyName }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Company Email</span>
-            <span class="review-value">{{ formData.companyEmail }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Industry</span>
-            <span class="review-value">{{ formData.industry }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Company Size</span>
-            <span class="review-value">{{ formData.companySize }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Country</span>
-            <span class="review-value">{{ formData.country }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Admin Name</span>
-            <span class="review-value">{{ formData.adminFirstName }} {{ formData.adminLastName }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Admin Email</span>
-            <span class="review-value">{{ formData.adminEmail }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Employee Count</span>
-            <span class="review-value">{{ formData.employeeCount }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Payroll Frequency</span>
-            <span class="review-value">{{ formData.payrollFrequency }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">Currency</span>
-            <span class="review-value">{{ formData.currency }}</span>
+            <label>Phone</label>
+            <input type="tel" [(ngModel)]="form.phone" placeholder="+91 98765 43210" />
           </div>
         </div>
       </div>
 
-      <!-- ===== Form Actions ===== -->
-      <div class="form-actions">
-        <button type="button" class="btn btn-outline" (click)="prevStep()">
-          {{ currentStep === 1 ? 'Back to Home' : 'Previous' }}
+      <!-- Step 2: Admin Account -->
+      <div *ngIf="currentStep === 2">
+        <div class="ob-step-head">
+          <span class="ob-step-emoji">👤</span>
+          <div>
+            <h2>Admin Account Setup</h2>
+            <p>Create the primary administrator account for your workspace.</p>
+          </div>
+        </div>
+
+        <div class="form-2col">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" [(ngModel)]="form.adminFirstName" placeholder="Priya" />
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" [(ngModel)]="form.adminLastName" placeholder="Sharma" />
+          </div>
+        </div>
+        <div class="form-2col">
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" [(ngModel)]="form.adminEmail" placeholder="priya@company.com" />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" [(ngModel)]="form.adminPhone" placeholder="+91 98765 43210" />
+          </div>
+        </div>
+        <div class="form-2col">
+          <div class="form-group">
+            <label>Password *</label>
+            <input type="password" [(ngModel)]="form.adminPassword" placeholder="Min. 6 characters" />
+          </div>
+          <div class="form-group">
+            <label>Confirm Password *</label>
+            <input type="password" [(ngModel)]="form.confirmPassword" placeholder="Re-enter password" />
+          </div>
+        </div>
+        <div class="ob-security-note">
+          🔒 Your credentials are encrypted with enterprise-grade security.
+        </div>
+      </div>
+
+      <!-- Step 3: HR Setup -->
+      <div *ngIf="currentStep === 3">
+        <div class="ob-step-head">
+          <span class="ob-step-emoji">⚙️</span>
+          <div>
+            <h2>HR & Payroll Configuration</h2>
+            <p>Configure your payroll and HR preferences.</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Number of Employees *</label>
+          <select [(ngModel)]="form.employeeCount">
+            <option value="" disabled selected>Select count</option>
+            <option value="1-5">1–5</option>
+            <option value="6-10">6–10</option>
+            <option value="11-25">11–25</option>
+            <option value="26-50">26–50</option>
+            <option value="51-100">51–100</option>
+            <option value="101-500">101–500</option>
+            <option value="500+">500+</option>
+          </select>
+        </div>
+        <div class="form-2col">
+          <div class="form-group">
+            <label>Payroll Frequency</label>
+            <select [(ngModel)]="form.payrollFrequency">
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Bi-weekly</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <select [(ngModel)]="form.currency">
+              <option value="INR">INR – Indian Rupee</option>
+              <option value="USD">USD – US Dollar</option>
+              <option value="EUR">EUR – Euro</option>
+              <option value="GBP">GBP – British Pound</option>
+              <option value="AUD">AUD – Australian Dollar</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Fiscal Year Start</label>
+          <select [(ngModel)]="form.fiscalYearStart">
+            <option value="January">January</option>
+            <option value="April">April (India)</option>
+            <option value="July">July</option>
+            <option value="October">October</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Step 4: Choose Plan -->
+      <div *ngIf="currentStep === 4">
+        <div class="ob-step-head">
+          <span class="ob-step-emoji">💳</span>
+          <div>
+            <h2>Choose Your Subscription Plan</h2>
+            <p>Select the plan that fits your team. Upgrade anytime from the dashboard.</p>
+          </div>
+        </div>
+
+        <div class="ob-plan-grid">
+          <div class="ob-plan-card" *ngFor="let p of plans" [class.selected]="form.selectedPlan === p.id" (click)="form.selectedPlan = p.id">
+            <div class="ob-plan-popular" *ngIf="p.popular">Most Popular</div>
+            <div class="ob-plan-radio" [class.active]="form.selectedPlan === p.id"></div>
+            <div class="ob-plan-name">{{ p.name }}</div>
+            <div class="ob-plan-price">{{ p.price }}</div>
+            <div class="ob-plan-desc">{{ p.desc }}</div>
+            <ul class="ob-plan-features">
+              <li *ngFor="let f of p.features">✓ {{ f }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ob-plan-selected-note">
+          ✅ Selected: <strong>{{ selectedPlanObj.name }}</strong> — {{ selectedPlanObj.desc }}
+        </div>
+      </div>
+
+      <!-- Step 5: Review -->
+      <div *ngIf="currentStep === 5">
+        <div class="ob-step-head">
+          <span class="ob-step-emoji">✅</span>
+          <div>
+            <h2>Review & Complete Setup</h2>
+            <p>Confirm your details before launching your HRMS workspace.</p>
+          </div>
+        </div>
+
+        <div class="ob-review-grid">
+          <div class="ob-review-section">
+            <div class="ob-review-section-title">🏢 Company</div>
+            <div class="ob-review-row"><span>Name</span><strong>{{ form.companyName }}</strong></div>
+            <div class="ob-review-row"><span>Email</span><strong>{{ form.companyEmail }}</strong></div>
+            <div class="ob-review-row"><span>Industry</span><strong>{{ form.industry }}</strong></div>
+            <div class="ob-review-row"><span>Size</span><strong>{{ form.companySize }}</strong></div>
+            <div class="ob-review-row"><span>Country</span><strong>{{ form.country }}</strong></div>
+          </div>
+          <div class="ob-review-section">
+            <div class="ob-review-section-title">👤 Admin</div>
+            <div class="ob-review-row"><span>Name</span><strong>{{ form.adminFirstName }} {{ form.adminLastName }}</strong></div>
+            <div class="ob-review-row"><span>Email</span><strong>{{ form.adminEmail }}</strong></div>
+          </div>
+          <div class="ob-review-section">
+            <div class="ob-review-section-title">⚙️ HR Config</div>
+            <div class="ob-review-row"><span>Employees</span><strong>{{ form.employeeCount }}</strong></div>
+            <div class="ob-review-row"><span>Payroll</span><strong>{{ form.payrollFrequency | titlecase }}</strong></div>
+            <div class="ob-review-row"><span>Currency</span><strong>{{ form.currency }}</strong></div>
+          </div>
+          <div class="ob-review-section">
+            <div class="ob-review-section-title">💳 Plan</div>
+            <div class="ob-review-row"><span>Selected</span><strong>{{ selectedPlanObj.name }}</strong></div>
+            <div class="ob-review-row"><span>Price</span><strong>{{ selectedPlanObj.price }}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="ob-actions">
+        <button class="btn btn-outline" (click)="prev()">
+          {{ currentStep === 1 ? '← Home' : '← Back' }}
         </button>
-        <button type="submit" class="btn btn-primary">
-          {{ currentStep === totalSteps ? 'Complete Setup' : 'Continue' }}
+        <button class="btn btn-primary" (click)="next()" *ngIf="currentStep < totalSteps">
+          Continue →
+        </button>
+        <button class="btn btn-primary btn-complete" (click)="complete()" *ngIf="currentStep === totalSteps" [disabled]="loading">
+          <span class="spinner" *ngIf="loading"></span>
+          {{ loading ? 'Setting up...' : '🚀 Launch My Workspace' }}
         </button>
       </div>
-
-    </form>
-  </main>
+    </div>
+  </div>
 </div>

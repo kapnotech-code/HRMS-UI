@@ -1,94 +1,225 @@
-<div class="login-page">
-  <div class="login-card">
-    <div class="login-header">
-      <div class="login-logo" aria-hidden="true">HR</div>
-      <h1>Create account</h1>
-      <p>Register to get started with HRMS</p>
+<div class="register-page">
+
+  <!-- Header -->
+  <header class="reg-header">
+    <a class="reg-logo" routerLink="/">
+      <div class="logo-icon">HR</div>
+      <span>HRMS</span>
+    </a>
+    <span class="reg-header-sub">Company Registration</span>
+    <a routerLink="/login" class="reg-signin-link">Already have an account? <strong>Sign in</strong></a>
+  </header>
+
+  <!-- Success / Complete Step -->
+  <div class="reg-success-page" *ngIf="currentStep === 4">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <h2>Welcome to HRMS!</h2>
+      <p>Your company <strong>{{ form.companyName }}</strong> has been registered successfully.</p>
+      <div class="success-plan-badge">
+        <span>{{ selectedPlanObj.name }} Plan Activated</span>
+      </div>
+      <p class="success-sub">Check your email <strong>{{ form.email }}</strong> for login credentials.</p>
+      <div class="success-actions">
+        <button class="btn btn-primary btn-lg" (click)="goToDashboard()">Go to Login →</button>
+        <button class="btn btn-outline" (click)="goToPlans()">Explore Plans</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Registration Flow -->
+  <div class="reg-body" *ngIf="currentStep < 4">
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+      <div class="step-track">
+        <div class="step-progress-bar" [style.width.%]="progress"></div>
+      </div>
+      <div class="steps-row">
+        <div class="step-dot-item" *ngFor="let s of steps.slice(0, 3)" [class.active]="currentStep === s.number" [class.done]="currentStep > s.number">
+          <div class="step-dot">
+            <span *ngIf="currentStep <= s.number">{{ s.number }}</span>
+            <span *ngIf="currentStep > s.number">✓</span>
+          </div>
+          <span class="step-dot-label">{{ s.label }}</span>
+        </div>
+      </div>
     </div>
 
-    <p *ngIf="errorMessage" class="error-text" role="alert">{{ errorMessage }}</p>
-    <p *ngIf="successMessage" class="success-text" role="status">{{ successMessage }}</p>
+    <!-- Form Card -->
+    <div class="reg-card">
 
-    <form (ngSubmit)="submit()" autocomplete="on" *ngIf="!successMessage">
-      <div class="form-group">
-        <label for="fullName">Full Name</label>
-        <input id="fullName"
-               name="fullName"
-               type="text"
-               [(ngModel)]="fullName"
-               placeholder="e.g. Priya Sharma"
-               autocomplete="name"
-               required />
+      <!-- Error -->
+      <div class="alert-error" *ngIf="errorMessage" role="alert">
+        <span>⚠️</span> {{ errorMessage }}
       </div>
 
-      <div class="form-group">
-        <label for="loginName">Login Id</label>
-        <input id="loginName"
-               name="loginName"
-               type="text"
-               [(ngModel)]="loginName"
-               placeholder="e.g. priya.sharma"
-               autocomplete="username"
-               required />
-      </div>
+      <!-- ===== STEP 1: Company Info ===== -->
+      <div *ngIf="currentStep === 1">
+        <div class="step-header">
+          <div class="step-icon-badge">🏢</div>
+          <div>
+            <h2>Tell us about your company</h2>
+            <p>This information helps us set up your HRMS workspace.</p>
+          </div>
+        </div>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email"
-               name="email"
-               type="email"
-               [(ngModel)]="email"
-               placeholder="e.g. priya@company.com"
-               autocomplete="email"
-               required />
-      </div>
+        <div class="form-group">
+          <label>Company Name *</label>
+          <input type="text" [(ngModel)]="form.companyName" placeholder="e.g. TechCorp Solutions Pvt. Ltd." />
+        </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="password-wrap">
-          <input id="password"
-                 name="password"
-                 [type]="showPassword ? 'text' : 'password'"
-                 [(ngModel)]="password"
-                 placeholder="Create a password"
-                 autocomplete="new-password"
-                 required />
-          <button type="button"
-                  class="toggle-visibility"
-                  (click)="showPassword = !showPassword"
-                  [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
-            {{ showPassword ? '🙈' : '👁️' }}
-          </button>
+        <div class="form-group">
+          <label>Company Email *</label>
+          <input type="email" [(ngModel)]="form.companyEmail" placeholder="e.g. hr@techcorp.com" />
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Industry *</label>
+            <select [(ngModel)]="form.industry">
+              <option value="" disabled selected>Select industry</option>
+              <option *ngFor="let i of industries" [value]="i">{{ i }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Company Size *</label>
+            <select [(ngModel)]="form.companySize">
+              <option value="" disabled selected>Select size</option>
+              <option *ngFor="let s of companySizes" [value]="s">{{ s }} employees</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Country *</label>
+            <select [(ngModel)]="form.country">
+              <option value="" disabled selected>Select country</option>
+              <option *ngFor="let c of countries" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" [(ngModel)]="form.phone" placeholder="+91 98765 43210" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Website</label>
+          <input type="url" [(ngModel)]="form.website" placeholder="https://yourcompany.com" />
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <div class="password-wrap">
-          <input id="confirmPassword"
-                 name="confirmPassword"
-                 [type]="showConfirmPassword ? 'text' : 'password'"
-                 [(ngModel)]="confirmPassword"
-                 placeholder="Re-enter your password"
-                 autocomplete="new-password"
-                 required />
-          <button type="button"
-                  class="toggle-visibility"
-                  (click)="showConfirmPassword = !showConfirmPassword"
-                  [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
-            {{ showConfirmPassword ? '🙈' : '👁️' }}
-          </button>
+      <!-- ===== STEP 2: Admin Account ===== -->
+      <div *ngIf="currentStep === 2">
+        <div class="step-header">
+          <div class="step-icon-badge">👤</div>
+          <div>
+            <h2>Create your admin account</h2>
+            <p>This will be the primary administrator for your HRMS workspace.</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" [(ngModel)]="form.fullName" placeholder="e.g. Priya Sharma" />
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Login ID *</label>
+            <input type="text" [(ngModel)]="form.loginName" placeholder="e.g. priya.sharma" />
+            <small>Used to sign in to HRMS</small>
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" [(ngModel)]="form.email" placeholder="priya@techcorp.com" />
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Password *</label>
+            <div class="pw-wrap">
+              <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="form.password" placeholder="Min. 6 characters" />
+              <button type="button" class="pw-toggle" (click)="showPassword = !showPassword">{{ showPassword ? '🙈' : '👁️' }}</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password *</label>
+            <div class="pw-wrap">
+              <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="form.confirmPassword" placeholder="Re-enter password" />
+              <button type="button" class="pw-toggle" (click)="showConfirmPassword = !showConfirmPassword">{{ showConfirmPassword ? '🙈' : '👁️' }}</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-info-note">
+          <span>🔒</span>
+          <span>Your password is encrypted and stored securely. We never share your credentials.</span>
         </div>
       </div>
 
-      <button type="submit" class="btn-login" [disabled]="loading">
-        <span class="btn-spinner" *ngIf="loading" aria-hidden="true"></span>
-        {{ loading ? 'Creating account...' : 'Create Account' }}
-      </button>
-    </form>
+      <!-- ===== STEP 3: Choose Plan ===== -->
+      <div *ngIf="currentStep === 3">
+        <div class="step-header">
+          <div class="step-icon-badge">💳</div>
+          <div>
+            <h2>Choose your subscription plan</h2>
+            <p>You can upgrade or change your plan anytime from the dashboard.</p>
+          </div>
+        </div>
 
-    <p class="login-footnote">
-      Already have an account? <a routerLink="/login" class="link-accent">Sign in</a>
-    </p>
+        <div class="plan-selector-grid">
+          <div class="plan-option" *ngFor="let p of plans" [class.selected]="form.selectedPlan === p.id" (click)="form.selectedPlan = p.id">
+            <div class="plan-option-badge" *ngIf="p.badge">{{ p.badge }}</div>
+            <div class="plan-option-header">
+              <div class="plan-radio">
+                <div class="radio-dot" [class.active]="form.selectedPlan === p.id"></div>
+              </div>
+              <div class="plan-option-info">
+                <div class="plan-option-name">{{ p.name }}</div>
+                <div class="plan-option-price">
+                  <span class="price-big">{{ p.priceLabel }}</span>
+                  <span class="price-cycle" *ngIf="p.price > 0">/employee/mo</span>
+                  <span class="price-cycle" *ngIf="p.price === 0">forever</span>
+                  <span class="price-cycle" *ngIf="p.price === -1">pricing</span>
+                </div>
+              </div>
+            </div>
+            <p class="plan-option-desc">{{ p.desc }}</p>
+            <div class="plan-option-employees">👥 {{ p.employees }}</div>
+            <ul class="plan-option-features">
+              <li *ngFor="let f of p.features"><span class="feat-check">✓</span> {{ f }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="selected-plan-summary">
+          <span>Selected: <strong>{{ selectedPlanObj.name }}</strong></span>
+          <span class="plan-note">{{ selectedPlanObj.price === 0 ? 'No credit card required' : selectedPlanObj.price === -1 ? 'Our team will contact you' : '14-day free trial included' }}</span>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button class="btn btn-outline" (click)="prev()" *ngIf="currentStep > 1">← Back</button>
+        <button class="btn btn-ghost" routerLink="/" *ngIf="currentStep === 1">Cancel</button>
+
+        <button class="btn btn-primary" (click)="next()" *ngIf="currentStep < 3">
+          Continue →
+        </button>
+        <button class="btn btn-primary btn-submit" (click)="submit()" *ngIf="currentStep === 3" [disabled]="loading">
+          <span class="spinner" *ngIf="loading"></span>
+          {{ loading ? 'Creating workspace...' : 'Create My Workspace →' }}
+        </button>
+      </div>
+
+      <p class="reg-terms" *ngIf="currentStep === 3">
+        By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+
   </div>
 </div>

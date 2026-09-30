@@ -31,6 +31,7 @@ export class SubscriptionPlansComponent implements OnInit {
   showCheckout = false;
   razorpayReady = false;
   isLoggedIn = false;
+  billingCycle: 'monthly' | 'yearly' = 'monthly';
 
   constructor(
     private subService: SubscriptionPlanService,
@@ -227,5 +228,17 @@ export class SubscriptionPlansComponent implements OnInit {
 
   retry(): void {
     this.loadPlans();
+  }
+
+  getPlanIcon(planCode: string): string {
+    const code = (planCode || '').toUpperCase();
+    if (code.includes('STARTER') || code.includes('FREE') || code.includes('BASIC')) return '🌱';
+    if (code.includes('GROWTH') || code.includes('PRO') || code.includes('BUSINESS')) return '🚀';
+    if (code.includes('ENTERPRISE') || code.includes('PREMIUM')) return '🏢';
+    return '💳';
+  }
+
+  getYearlyPrice(price: number): number {
+    return Math.round(price * 0.8 * 100) / 100;
   }
 }

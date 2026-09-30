@@ -1,167 +1,94 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-
-interface Step {
-  number: number;
-  label: string;
-  description: string;
-}
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/Auth.service';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './onboarding.component.html',
   styleUrls: ['./onboarding.component.css']
 })
 export class OnboardingComponent {
   currentStep = 1;
-  totalSteps = 4;
+  totalSteps = 5;
+  loading = false;
+  errorMsg = '';
+  completed = false;
 
-  steps: Step[] = [
-    { number: 1, label: 'Company Info', description: 'Tell us about your organization' },
-    { number: 2, label: 'Admin User', description: 'Set up your admin account' },
-    { number: 3, label: 'Employee Setup', description: 'Configure employee and payroll settings' },
-    { number: 4, label: 'Review', description: 'Confirm and complete setup' }
+  steps = [
+    { number: 1, label: 'Company', icon: '🏢' },
+    { number: 2, label: 'Admin', icon: '👤' },
+    { number: 3, label: 'HR Setup', icon: '⚙️' },
+    { number: 4, label: 'Plan', icon: '💳' },
+    { number: 5, label: 'Review', icon: '✅' }
   ];
 
-  formData = {
-    companyName: '',
-    companyEmail: '',
-    industry: '',
-    companySize: '',
-    country: '',
-    adminFirstName: '',
-    adminLastName: '',
-    adminEmail: '',
-    adminPhone: '',
-    adminPassword: '',
-    confirmPassword: '',
-    employeeCount: '',
-    payrollFrequency: 'monthly',
-    currency: 'USD'
+  form = {
+    companyName: '', companyEmail: '', industry: '', companySize: '', country: '', phone: '',
+    adminFirstName: '', adminLastName: '', adminEmail: '', adminPhone: '', adminPassword: '', confirmPassword: '',
+    employeeCount: '', payrollFrequency: 'monthly', currency: 'INR', fiscalYearStart: 'April',
+    selectedPlan: 'starter'
   };
 
-  checklist = [
-    { id: 'company', label: 'Complete company information', done: false },
-    { id: 'admin', label: 'Set up admin user account', done: false },
-    { id: 'employees', label: 'Configure employee setup', done: false },
-    { id: 'review', label: 'Review and complete setup', done: false }
+  plans = [
+    { id: 'starter', name: 'Starter', price: 'Free', desc: 'Up to 10 employees', color: '#64748b', features: ['Employee database', 'Attendance', 'Leave management'] },
+    { id: 'growth', name: 'Growth', price: '$14/emp/mo', desc: 'Up to 150 employees', color: '#0f766e', features: ['Full payroll', 'Shift scheduling', '360° Reviews'], popular: true },
+    { id: 'enterprise', name: 'Enterprise', price: 'Custom', desc: 'Unlimited employees', color: '#1e3a5f', features: ['Custom permissions', 'Multi-branch', 'Dedicated CSM'] }
   ];
 
-  get checklistProgress(): number {
-    const done = this.checklist.filter(c => c.done).length;
-    return Math.round((done / this.checklist.length) * 100);
-  }
+  industries = ['Technology', 'Healthcare', 'Finance', 'Manufacturing', 'Retail', 'Education', 'Construction', 'Hospitality', 'Professional Services', 'Non-Profit', 'Other'];
+  countries = ['India', 'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Singapore', 'Japan', 'Other'];
 
-  toggleChecklistItem(id: string): void {
-    const item = this.checklist.find(c => c.id === id);
-    if (item) {
-      item.done = !item.done;
+  constructor(private router: Router, private authService: AuthService) {}
+
+  get progress(): number { return ((this.currentStep - 1) / (this.totalSteps - 1)) * 100; }
+
+  get selectedPlanObj() { return this.plans.find(p => p.id === this.form.selectedPlan) || this.plans[0]; }
+
+  validate(): boolean {
+    this.errorMsg = '';
+    if (this.currentStep === 1) {
+      if (!this.form.companyName.trim()) { this.errorMsg = 'Company name is required.'; return false; }
+      if (!this.form.companyEmail.trim()) { this.errorMsg = 'Company email is required.'; return false; }
+      if (!this.form.industry) { this.errorMsg = 'Please select an industry.'; return false; }
+      if (!this.form.companySize) { this.errorMsg = 'Please select company size.'; return false; }
+      if (!this.form.country) { this.errorMsg = 'Please select a country.'; return false; }
     }
-  }
-
-  industries = [
-    'Technology', 'Healthcare', 'Finance', 'Manufacturing',
-    'Retail', 'Education', 'Construction', 'Hospitality',
-    'Professional Services', 'Non-Profit', 'Other'
-  ];
-
-  countries = [
-    'United States', 'United Kingdom', 'Canada', 'Australia',
-    'Germany', 'France', 'India', 'Singapore', 'Japan', 'Other'
-  ];
-
-  constructor(private router: Router) {}
-
-  get progress(): number {
-    return (this.currentStep / this.totalSteps) * 100;
-  }
-
-  nextStep(): void {
-    if (this.validateStep(this.currentStep)) {
-      this.markChecklistItemDone(this.currentStep);
-      if (this.currentStep < this.totalSteps) {
-        this.currentStep++;
-      } else {
-        this.completeSetup();
-      }
+    if (this.currentStep === 2) {
+      if (!this.form.adminFirstName.trim()) { this.errorMsg = 'First name is required.'; return false; }
+      if (!this.form.adminLastName.trim()) { this.errorMsg = 'Last name is required.'; return false; }
+      if (!this.form.adminEmail.trim()) { this.errorMsg = 'Email is required.'; return false; }
+      if (this.form.adminPassword.length < 6) { this.errorMsg = 'Password must be at least 6 characters.'; return false; }
+      if (this.form.adminPassword !== this.form.confirmPassword) { this.errorMsg = 'Passwords do not match.'; return false; }
     }
-  }
-
-  private markChecklistItemDone(step: number): void {
-    const stepToChecklistId: Record<number, string> = {
-      1: 'company',
-      2: 'admin',
-      3: 'employees',
-      4: 'review'
-    };
-    const id = stepToChecklistId[step];
-    if (id) {
-      const item = this.checklist.find(c => c.id === id);
-      if (item) {
-        item.done = true;
-      }
-    }
-  }
-
-  prevStep(): void {
-    if (this.currentStep > 1) {
-      this.currentStep--;
-    } else {
-      this.router.navigate(['/home']);
-    }
-  }
-
-  validateStep(step: number): boolean {
-    if (step === 1) {
-      return !!(this.formData.companyName && this.formData.companyEmail && this.formData.industry && this.formData.companySize && this.formData.country);
-    }
-    if (step === 2) {
-      const valid = !!(this.formData.adminFirstName && this.formData.adminLastName && this.formData.adminEmail);
-      const passValid = this.formData.adminPassword.length >= 6 &&
-        this.formData.adminPassword === this.formData.confirmPassword;
-      return valid && passValid;
-    }
-    if (step === 3) {
-      return !!this.formData.employeeCount;
+    if (this.currentStep === 3) {
+      if (!this.form.employeeCount) { this.errorMsg = 'Please select employee count.'; return false; }
     }
     return true;
   }
 
-  getStepError(step: number): string {
-    if (step === 1) {
-      if (!this.formData.companyName) return 'Company name is required.';
-      if (!this.formData.companyEmail) return 'Company email is required.';
-      if (!this.formData.industry) return 'Please select an industry.';
-      if (!this.formData.companySize) return 'Please select a company size.';
-      if (!this.formData.country) return 'Please select a country.';
-    }
-    if (step === 2) {
-      if (!this.formData.adminFirstName) return 'First name is required.';
-      if (!this.formData.adminLastName) return 'Last name is required.';
-      if (!this.formData.adminEmail) return 'Email is required.';
-      if (this.formData.adminPassword.length < 6 && this.formData.adminPassword) return 'Password must be at least 6 characters.';
-      if (this.formData.adminPassword && this.formData.adminPassword !== this.formData.confirmPassword) return 'Passwords do not match.';
-    }
-    if (step === 3) {
-      if (!this.formData.employeeCount) return 'Please select the number of employees.';
-    }
-    return '';
+  next(): void {
+    if (!this.validate()) return;
+    if (this.currentStep < this.totalSteps) this.currentStep++;
   }
 
-  isStepValid(step: number): boolean {
-    return this.validateStep(step);
+  prev(): void {
+    if (this.currentStep > 1) this.currentStep--;
+    else this.router.navigate(['/']);
   }
 
-  completeSetup(): void {
-    alert(`Congratulations! ${this.formData.companyName} has been set up successfully.\nYou can now log in with ${this.formData.adminEmail}.`);
-    this.router.navigate(['/login']);
+  complete(): void {
+    this.loading = true;
+    this.errorMsg = '';
+    setTimeout(() => {
+      this.loading = false;
+      this.completed = true;
+    }, 1200);
   }
 
-  goHome(): void {
-    this.router.navigate(['/home']);
-  }
+  goToLogin(): void { this.router.navigate(['/login']); }
+  goToPlans(): void { this.router.navigate(['/subscriptions/plans']); }
 }

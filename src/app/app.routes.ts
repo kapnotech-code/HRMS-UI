@@ -90,6 +90,10 @@ export const routes: Routes = [
     component: Register,
   },
   {
+    path: 'company-register',
+    component: Register,
+  },
+  {
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [authGuard, permissionGuard],

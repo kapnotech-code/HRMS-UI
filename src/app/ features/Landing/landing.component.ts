@@ -475,12 +475,13 @@ export class LandingComponent implements OnInit {
     const directRoutes: { [key: string]: string } = {
       'login': '/login',
       'register': '/register',
+      'company-register': '/register',
       'dashboard': '/dashboard',
       'onboarding': '/onboarding',
       'onboarding-checklist': '/onboarding-checklist',
       'employee-profiles': '/employee-profiles',
-      'plans': '/plans',
-      'subscription-plans': '/plans'
+      'plans': '/subscriptions/plans',
+      'subscription-plans': '/subscriptions/plans'
     };
 
     if (directRoutes[target]) {

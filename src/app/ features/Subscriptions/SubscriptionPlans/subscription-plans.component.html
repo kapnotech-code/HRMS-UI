@@ -1,135 +1,154 @@
-<div class="subscription-container">
-  <div class="page-header">
-    <h1 class="page-title">Subscription Plans</h1>
-    <p class="page-subtitle">Choose the perfect plan for your needs</p>
-  </div>
+<div class="sub-page">
 
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-    <p>Loading subscription plans...</p>
-  </div>
+  <!-- Page Header -->
+  <div class="sub-page-header">
+    <div class="sub-header-inner">
+      <span class="sub-header-badge">💳 Subscription Plans</span>
+      <h1>Simple, Transparent Pricing</h1>
+      <p>No hidden fees. No surprises. Upgrade or cancel anytime.</p>
 
-  <div *ngIf="errorMsg" class="alert alert-error">
-    {{ errorMsg }}
-    <button class="btn btn-outline-primary btn-sm ms-2" (click)="retry()">Retry</button>
-  </div>
-
-  <div *ngIf="successMsg" class="alert alert-success">
-    {{ successMsg }}
-  </div>
-
-  <div *ngIf="!loading && !errorMsg" class="plans-grid">
-    <div class="plan-card" *ngFor="let plan of filteredPlans">
-      <div class="plan-header">
-        <h3 class="plan-name">{{ plan.planName }}</h3>
-        <div class="plan-price">
-          <span class="price-amount">\${{ plan.price }}</span>
-          <span class="price-period">/{{ plan.durationDays }} days</span>
-        </div>
-        <span class="badge" [ngClass]="plan.subscriptionFor === 'Company' ? 'badge-company' : 'badge-employee'">
-          {{ plan.subscriptionFor }}
-        </span>
-      </div>
-
-      <div class="plan-description">
-        <p>{{ plan.description }}</p>
-      </div>
-
-      <div class="plan-features" *ngIf="plan.features?.length">
-        <h4 class="features-title">Includes:</h4>
-        <ul class="features-list">
-          <li class="feature-item" *ngFor="let f of plan.features">
-            <i class="icon-check"></i>
-            <span>{{ f.featureName }}</span>
-            <span class="feature-limit" *ngIf="f.limitValue">({{ f.limitValue }})</span>
-          </li>
-        </ul>
-      </div>
-
-      <div class="plan-footer">
-        <button class="btn btn-primary btn-subscribe w-100"
-                [disabled]="loading || !plan.isActive"
-                (click)="selectPlan(plan)">
-          {{ !isLoggedIn ? 'Login to Buy' : (plan.isActive ? 'Buy Plan' : 'Inactive') }}
+      <!-- Billing Toggle -->
+      <div class="billing-toggle">
+        <button class="toggle-btn" [class.active]="billingCycle === 'monthly'" (click)="billingCycle = 'monthly'">Monthly</button>
+        <button class="toggle-btn" [class.active]="billingCycle === 'yearly'" (click)="billingCycle = 'yearly'">
+          Annual <span class="save-chip">Save 20%</span>
         </button>
       </div>
     </div>
-
-    <div *ngIf="!loading && filteredPlans.length === 0" class="no-plans">
-      <i class="icon-info"></i>
-      <p>No subscription plans available at the moment.</p>
-    </div>
   </div>
 
-  <div class="my-subscription-link">
-    <a *ngIf="isLoggedIn" routerLink="/subscriptions/my-subscription" class="link-view-my">
-      <i class="icon-subscription"></i> View My Subscription
-    </a>
-    <a *ngIf="!isLoggedIn" routerLink="/login" class="link-view-my">
-      <i class="icon-subscription"></i> Login to view your subscription
-    </a>
+  <div class="sub-body">
+
+    <!-- Loading -->
+    <div class="sub-loading" *ngIf="loading && !showCheckout">
+      <div class="loading-spinner"></div>
+      <p>Loading plans...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="sub-alert sub-alert-error" *ngIf="errorMsg && !showCheckout">
+      <span>⚠️ {{ errorMsg }}</span>
+      <button class="btn-retry" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Success -->
+    <div class="sub-alert sub-alert-success" *ngIf="successMsg">
+      ✅ {{ successMsg }}
+    </div>
+
+    <!-- Plans Grid -->
+    <div class="plans-grid" *ngIf="!loading && !errorMsg">
+      <div class="plan-card" *ngFor="let plan of filteredPlans" [class.plan-featured]="plan.planCode === 'GROWTH' || plan.planCode === 'PRO'">
+
+        <div class="plan-popular-ribbon" *ngIf="plan.planCode === 'GROWTH' || plan.planCode === 'PRO'">Most Popular</div>
+
+        <div class="plan-card-header">
+          <div class="plan-icon">{{ getPlanIcon(plan.planCode) }}</div>
+          <div>
+            <h3 class="plan-name">{{ plan.planName }}</h3>
+            <span class="plan-type-badge" [class.badge-company]="plan.subscriptionFor === 'Company'" [class.badge-employee]="plan.subscriptionFor !== 'Company'">
+              {{ plan.subscriptionFor }}
+            </span>
+          </div>
+        </div>
+
+        <div class="plan-price-box">
+          <span class="plan-price-amount">${{ billingCycle === 'yearly' ? getYearlyPrice(plan.price) : plan.price }}</span>
+          <div class="plan-price-meta">
+            <span class="plan-price-period">/ {{ plan.durationDays }} days</span>
+            <span class="plan-price-save" *ngIf="billingCycle === 'yearly' && plan.price > 0">Save 20%</span>
+          </div>
+        </div>
+
+        <p class="plan-description">{{ plan.description }}</p>
+
+        <div class="plan-features-list" *ngIf="plan.features?.length">
+          <div class="plan-features-title">What's included:</div>
+          <ul>
+            <li *ngFor="let f of plan.features">
+              <span class="feat-check">✓</span>
+              <span>{{ f.featureName }}</span>
+              <span class="feat-limit" *ngIf="f.limitValue">({{ f.limitValue }})</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="plan-card-footer">
+          <button class="btn-subscribe" [class.btn-subscribe-featured]="plan.planCode === 'GROWTH' || plan.planCode === 'PRO'" [disabled]="!plan.isActive" (click)="selectPlan(plan)">
+            {{ !isLoggedIn ? '🔐 Login to Subscribe' : plan.isActive ? 'Get Started →' : 'Unavailable' }}
+          </button>
+          <div class="plan-active-badge" *ngIf="activePlanId === plan.planId">✅ Current Plan</div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="sub-empty" *ngIf="filteredPlans.length === 0">
+        <div class="empty-icon">📋</div>
+        <h3>No plans available</h3>
+        <p>Check back soon or contact our sales team.</p>
+      </div>
+    </div>
+
+    <!-- My Subscription Link -->
+    <div class="sub-my-link">
+      <a *ngIf="isLoggedIn" routerLink="/subscriptions/my-subscription" class="my-sub-btn">
+        📊 View My Current Subscription →
+      </a>
+      <a *ngIf="!isLoggedIn" routerLink="/login" class="my-sub-btn">
+        🔐 Login to manage your subscription →
+      </a>
+    </div>
+
+    <!-- Trust Strip -->
+    <div class="sub-trust-strip">
+      <div class="trust-item"><span>🔒</span> 256-bit SSL Encryption</div>
+      <div class="trust-item"><span>🔄</span> Cancel Anytime</div>
+      <div class="trust-item"><span>💳</span> Secure Razorpay Payments</div>
+      <div class="trust-item"><span>🛡️</span> GDPR Compliant</div>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showCheckout && selectedPlan" (click)="closeCheckout()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<!-- Checkout Modal -->
+<div class="modal-backdrop" *ngIf="showCheckout && selectedPlan" (click)="closeCheckout()">
+  <div class="modal-box" (click)="$event.stopPropagation()" role="dialog">
+    <button class="modal-close" (click)="closeCheckout()">✕</button>
+
     <div class="modal-header">
-      <h3>Confirm Your Subscription</h3>
-      <button class="modal-close" (click)="closeCheckout()">&times;</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="checkout-summary">
-        <div class="checkout-plan">
-          <h4>{{ selectedPlan.planName }}</h4>
-          <p class="text-muted mb-0">{{ selectedPlan.description }}</p>
-        </div>
-
-        <div class="checkout-details">
-          <div class="detail-row">
-            <span>Plan Duration</span>
-            <span>{{ selectedPlan.durationDays }} days</span>
-          </div>
-          <div class="detail-row">
-            <span>Plan Type</span>
-            <span>{{ selectedPlan.subscriptionFor }}</span>
-          </div>
-          <div class="detail-row detail-row-total">
-            <span>Total Amount</span>
-            <span class="total-amount">\${{ selectedPlan.price }}</span>
-          </div>
-        </div>
-
-        <p class="razorpay-note">
-          You will be redirected to Razorpay to complete your payment securely.
-        </p>
-      </div>
-
-      <div *ngIf="errorMsg" class="alert alert-error">
-        {{ errorMsg }}
-      </div>
-
-      <div *ngIf="successMsg" class="alert alert-success">
-        {{ successMsg }}
+      <div class="modal-plan-icon">{{ getPlanIcon(selectedPlan.planCode) }}</div>
+      <div>
+        <h3>{{ selectedPlan.planName }}</h3>
+        <p>{{ selectedPlan.description }}</p>
       </div>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-outline-secondary" (click)="closeCheckout()">
-        Cancel
-      </button>
-      <button class="btn btn-primary btn-pay"
-              [disabled]="loading"
-              (click)="payWithRazorpay()">
-        <span *ngIf="loading">
-          <span class="spinner-border spinner-border-sm me-2"></span>
-          Processing...
-        </span>
-        <span *ngIf="!loading">
-          <i class="icon-razorpay"></i> Pay Now with Razorpay
-        </span>
+    <div class="modal-summary">
+      <div class="summary-row">
+        <span>Plan Type</span>
+        <strong>{{ selectedPlan.subscriptionFor }}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Duration</span>
+        <strong>{{ selectedPlan.durationDays }} days</strong>
+      </div>
+      <div class="summary-row summary-total">
+        <span>Total Amount</span>
+        <strong class="total-price">${{ selectedPlan.price }}</strong>
+      </div>
+    </div>
+
+    <div class="modal-alert modal-alert-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+    <div class="modal-alert modal-alert-success" *ngIf="successMsg">✅ {{ successMsg }}</div>
+
+    <div class="modal-razorpay-note">
+      <span>🔒</span> You'll be redirected to Razorpay's secure checkout to complete payment.
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" (click)="closeCheckout()">Cancel</button>
+      <button class="btn-modal-pay" [disabled]="loading" (click)="payWithRazorpay()">
+        <span class="pay-spinner" *ngIf="loading"></span>
+        {{ loading ? 'Processing...' : '💳 Pay Now with Razorpay' }}
       </button>
     </div>
   </div>
