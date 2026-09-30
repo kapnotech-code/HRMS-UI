@@ -1,0 +1,377 @@
+<div class="imp-page">
+  <!-- Toast popup -->
+  <div class="toast-popup" *ngIf="uploadSuccess" [ngClass]="'toast-success'">
+    <span class="toast-icon">✓</span>
+    <span class="toast-text">{{ uploadSuccess }}</span>
+    <button class="toast-close" type="button" (click)="uploadSuccess = ''">&times;</button>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h2>Import Employees</h2>
+      <p class="subtitle">Bulk upload and onboard employee records from CSV or Excel spreadsheets</p>
+    </div>
+    <div class="header-nav-actions">
+      <button class="btn btn-secondary" (click)="goToEmployeeTable()">
+        📋 Go to Employee Table
+      </button>
+      <button class="btn btn-link" (click)="goToEmployeeMaster()">
+        ← Back to Employee Master
+      </button>
+    </div>
+  </div>
+
+  <!-- Global Alerts -->
+  <div class="alert alert-error" *ngIf="uploadError">
+    <span class="alert-icon">⚠️</span>
+    <span>{{ uploadError }}</span>
+  </div>
+
+  <!-- Step Wizard Bar -->
+  <div class="step-bar">
+    <div class="step-item" [class.active]="currentStep === 1" [class.complete]="currentStep > 1">
+      <div class="step-circle">1</div>
+      <div class="step-text">
+        <strong>Upload File</strong>
+        <span>Select CSV/Excel</span>
+      </div>
+    </div>
+    <div class="step-connector" [class.active]="currentStep > 1"></div>
+    <div class="step-item" [class.active]="currentStep === 2" [class.complete]="currentStep > 2">
+      <div class="step-circle">2</div>
+      <div class="step-text">
+        <strong>Preview &amp; Validate</strong>
+        <span>Review rows &amp; errors</span>
+      </div>
+    </div>
+    <div class="step-connector" [class.active]="currentStep > 2"></div>
+    <div class="step-item" [class.active]="currentStep === 3">
+      <div class="step-circle">3</div>
+      <div class="step-text">
+        <strong>Import Results</strong>
+        <span>Save to database</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── STEP 1: UPLOAD & TEMPLATE ────────── -->
+  <div *ngIf="currentStep === 1" class="step-content">
+    <div class="upload-grid">
+      <!-- Left: Download Template & Instructions -->
+      <div class="upload-card template-card">
+        <div class="card-icon">📄</div>
+        <h3>1. Download Template</h3>
+        <p class="card-desc">
+          Download our pre-formatted template with all supported columns and sample data. Fill in your employee
+          details, then upload it on the right.
+        </p>
+
+        <div class="template-actions">
+          <button type="button" class="btn btn-secondary" (click)="downloadTemplate('xlsx')">
+            📊 Download Excel (.xlsx)
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="downloadTemplate('csv')">
+            📄 Download CSV (.csv)
+          </button>
+        </div>
+
+        <div class="template-guide">
+          <h4>Sheet columns (same as the report page, same order):</h4>
+          <div class="column-chips">
+            <span class="column-chip chip-sno">{{ snoLabel }}</span>
+            <span
+              class="column-chip"
+              *ngFor="let col of importColumns"
+              [class.chip-required]="col.required"
+              [title]="col.required ? 'Required' : 'Optional'"
+            >{{ col.label }}{{ col.required ? ' *' : '' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: File Upload Dropzone -->
+      <div class="upload-card file-card">
+        <div class="card-icon">⬆️</div>
+        <h3>2. Upload Employee File</h3>
+        <p class="card-desc">
+          Upload your completed file. Supported formats: <code>.csv</code>, <code>.xls</code>, <code>.xlsx</code> (max 10MB).
+        </p>
+
+        <!-- Optional Default Company Override -->
+        <div class="form-group company-override" *ngIf="companies.length > 0">
+          <label>Default Company for rows missing company column:</label>
+          <select [(ngModel)]="selectedDefaultCompanyId" class="form-control">
+            <option *ngFor="let c of companies" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+
+        <!-- File drop zone -->
+        <div
+          class="drop-zone"
+          [class.drag-over]="dragOver"
+          (drop)="onDropFile($event)"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+        >
+          <input
+            type="file"
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            (change)="onFileSelected($event)"
+            #fileInput
+            hidden
+          />
+
+          <div class="drop-zone-icon">📁</div>
+          <button
+            type="button"
+            class="btn btn-primary btn-browse"
+            (click)="fileInput.click()"
+            [disabled]="!canImport"
+          >
+            Choose File
+          </button>
+          <p class="drop-hint">or drag and drop your file here</p>
+          <p class="file-types">Supports: .CSV, .XLS, .XLSX</p>
+        </div>
+
+        <!-- Selected file indicator -->
+        <div class="file-info" *ngIf="selectedFile">
+          <span class="file-icon">📎</span>
+          <div class="file-details">
+            <span class="file-name">{{ selectedFile.name }}</span>
+            <span class="file-size">{{ formatFileSize(selectedFile.size) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── STEP 2: PREVIEW & VALIDATE ────────── -->
+  <div *ngIf="currentStep === 2" class="step-content">
+    <div class="preview-card">
+      <!-- Preview Header & Summary Chips -->
+      <div class="preview-header">
+        <div>
+          <h3>Preview &amp; Validate Data</h3>
+          <p class="subtitle">Review parsed employee records and validation status before importing</p>
+        </div>
+
+        <div class="row-summary">
+          <button
+            type="button"
+            class="summary-pill total-pill"
+            [class.active-pill]="previewFilter === 'all'"
+            (click)="previewFilter = 'all'"
+          >
+            All Rows: <strong>{{ rows.length }}</strong>
+          </button>
+          <button
+            type="button"
+            class="summary-pill valid-pill"
+            [class.active-pill]="previewFilter === 'valid'"
+            (click)="previewFilter = 'valid'"
+          >
+            ✓ Valid: <strong>{{ validRows.length }}</strong>
+          </button>
+          <button
+            type="button"
+            class="summary-pill invalid-pill"
+            [class.active-pill]="previewFilter === 'invalid'"
+            (click)="previewFilter = 'invalid'"
+          >
+            ✕ Invalid: <strong>{{ invalidRows.length }}</strong>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter & Search Toolbar -->
+      <div class="preview-toolbar">
+        <div class="search-input-wrap">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by code, name, email, department..."
+            [(ngModel)]="previewSearch"
+          />
+          <button
+            type="button"
+            class="btn-clear-search"
+            *ngIf="previewSearch"
+            (click)="previewSearch = ''"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="mapped-summary" *ngIf="mappedHeaders.length > 0">
+          <span class="mapped-badge">{{ mappedHeaders.length }} / {{ importColumns.length }} columns mapped</span>
+          <span class="mapped-badge mapped-badge--warn" *ngIf="unmappedHeaders.length > 0">
+            {{ unmappedHeaders.length }} ignored: {{ unmappedHeaders.join(', ') }}
+          </span>
+        </div>
+      </div>
+
+      <div class="alert alert-error" *ngIf="missingRequiredHeaders.length > 0">
+        <span class="alert-icon">⚠️</span>
+        <span>
+          Required column(s) not found:
+          <strong>{{ missingRequiredHeaderLabels }}</strong>.
+          The rows using them will be marked invalid. Download the template to get the correct layout.
+        </span>
+      </div>
+
+      <!-- Preview Table — every report column, in report order, after SNO -->
+      <div class="table-wrapper">
+        <table class="data-table preview-table">
+          <thead>
+            <tr>
+              <th class="rownum-col">{{ snoLabel }}</th>
+              <th class="status-col">Validation</th>
+              <th
+                *ngFor="let col of importColumns"
+                [class.col-required]="col.required"
+                [title]="col.required ? 'Required' : 'Optional'"
+              >
+                {{ col.label }}<span *ngIf="col.required" class="req-star">*</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let row of filteredDisplayRows"
+              [class.row-invalid]="!row.valid"
+            >
+              <td class="rownum-col">{{ row.sno }}</td>
+              <td class="status-col">
+                <span
+                  class="status-badge"
+                  [class.badge-valid]="row.valid"
+                  [class.badge-invalid]="!row.valid"
+                  [title]="row.errors.join('; ')"
+                >
+                  {{ row.valid ? '✓ Valid' : '✕ Invalid' }}
+                </span>
+              </td>
+              <td
+                *ngFor="let col of importColumns"
+                [class.cell-error]="hasCellError(row, col.key)"
+                [title]="cellErrorFor(row, col.key)"
+              >
+                {{ displayCellValue(row, col.key) }}
+              </td>
+            </tr>
+            <tr *ngIf="filteredDisplayRows.length === 0">
+              <td [attr.colspan]="importColumns.length + 2" class="empty-table-cell">
+                No rows match the selected filter.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detailed Validation Errors Callout -->
+      <div class="errors-section" *ngIf="invalidRows.length > 0">
+        <div class="errors-header">
+          <span class="error-icon">⚠️</span>
+          <h4>{{ invalidRows.length }} Row(s) Contain Validation Issues:</h4>
+        </div>
+        <div class="error-list">
+          <div class="error-item" *ngFor="let row of invalidRows">
+            <span class="error-row-tag">Row {{ row.rowNum }} (SNO {{ row.sno }})</span>
+            <span class="error-emp-ref" *ngIf="row.mapped.employeeCode">
+              ({{ row.mapped.employeeCode }})
+            </span>
+            <ul class="error-details">
+              <li *ngFor="let err of row.errors">{{ err }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="preview-actions">
+        <button type="button" class="btn btn-secondary" (click)="backToUpload()">
+          ← Back to Upload
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-import"
+          (click)="importEmployees()"
+          [disabled]="importing || !canImport || validRows.length === 0"
+        >
+          💾 Import Employees ({{ validRows.length }} Valid)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── STEP 3: IMPORT PROGRESS & RESULTS ────────── -->
+  <div *ngIf="currentStep === 3" class="step-content">
+    <div class="results-card">
+      <!-- Live Progress Bar -->
+      <div *ngIf="importing" class="progress-section">
+        <div class="progress-spinner">⏳</div>
+        <h3>Importing Employees into Database</h3>
+        <p class="progress-sub">Storing employee records in existing Employee tables...</p>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" [style.width.%]="progressPercent()"></div>
+        </div>
+        <p class="progress-text">
+          <strong>{{ importProgress }}</strong> of <strong>{{ importTotal }}</strong> employees processed ({{ progressPercent() }}%)
+        </p>
+      </div>
+
+      <!-- Completed Results -->
+      <div *ngIf="!importing" class="completion-section">
+        <div class="completion-icon-wrap" [class.has-errors]="importResults.failed > 0">
+          {{ importResults.failed === 0 ? '🎉' : '⚠️' }}
+        </div>
+        <h3>{{ importResults.failed === 0 ? 'Import Complete!' : 'Import Completed with Some Warnings' }}</h3>
+        <p class="completion-sub">
+          {{ importResults.success }} employee record(s) have been successfully added to the database.
+        </p>
+
+        <!-- Countdown banner if all succeeded -->
+        <div class="countdown-banner" *ngIf="redirectCountdown !== null && importResults.failed === 0">
+          <span>Redirecting to Employee Table in <strong>{{ redirectCountdown }}s</strong>...</span>
+          <button type="button" class="btn-link" (click)="goToEmployeeTable()">Go Now</button>
+        </div>
+
+        <div class="results-summary">
+          <div class="result-card result-success">
+            <div class="result-count">{{ importResults.success }}</div>
+            <div class="result-label">Successfully Saved</div>
+          </div>
+          <div class="result-card result-failed" *ngIf="importResults.failed > 0">
+            <div class="result-count">{{ importResults.failed }}</div>
+            <div class="result-label">Failed / Skipped</div>
+          </div>
+        </div>
+
+        <!-- Failure Details -->
+        <div class="errors-section" *ngIf="importResults.errors.length > 0">
+          <h4>Failed Records Details</h4>
+          <div class="error-list">
+            <div class="error-item" *ngFor="let err of importResults.errors">
+              {{ err }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Completion Actions -->
+        <div class="results-actions">
+          <button type="button" class="btn btn-primary" (click)="goToEmployeeTable()">
+            📋 View in Employee Table
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="goToEmployeeMaster()">
+            ➕ Open Employee Master
+          </button>
+          <button type="button" class="btn btn-link" (click)="resetAndImportMore()">
+            🔄 Import Another File
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
