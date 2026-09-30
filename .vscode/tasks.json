@@ -37,6 +37,17 @@
           }
         }
       }
+    },
+    {
+      "label": "start:backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["watch", "run", "--project", "d:/hrms-project/HRMS.csproj"],
+      "options": {
+        "cwd": "d:/hrms-project"
+      },
+      "isBackground": true,
+      "problemMatcher": "$msCompile"
     }
   ]
 }

@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "ng serve",
+      "name": "ng serve (Frontend)",
       "type": "chrome",
       "request": "launch",
       "preLaunchTask": "npm: start",
@@ -15,6 +15,23 @@
       "request": "launch",
       "preLaunchTask": "npm: test",
       "url": "http://localhost:9876/debug.html"
+    },
+    {
+      "name": ".NET Core API (hrms-project)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "d:/hrms-project/bin/Debug/net8.0/HRMS.dll",
+      "args": [],
+      "cwd": "d:/hrms-project",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openUrl",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   ]
 }
