@@ -12,6 +12,12 @@ import { DesignationService } from '../../../core/services/designation.service';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { LeaveRequestService } from '../../../core/services/leave.service';
 import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
+import {
+  EMPLOYEE_REPORT_COLUMNS,
+  EMPLOYEE_SHEET_HEADERS,
+  EmployeeColumn,
+} from '../../../shared/constants/employee-report-columns';
+import { Router } from '@angular/router';
 
 interface Option {
   id: number;
@@ -146,6 +152,8 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
   leaveRecords: any[] = [];
   leaveLoading = false;
 
+  private employeeListChangedHandler = () => this.loadEmployees();
+
   constructor(
     private employeeService: EmployeeService,
     private companyService: EmployerService,
@@ -154,8 +162,13 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     private attendanceService: AttendanceService,
     private leaveRequestService: LeaveRequestService,
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) { }
+
+  goToImport(): void {
+    this.router.navigate(['/Recruiter/employee-import']);
+  }
 
   ngOnInit(): void {
     this.loadEmployees();
@@ -163,10 +176,12 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     // capture:true lets us hear scroll events from nested scroll containers
     // (like the table's horizontal scroller), which don't otherwise bubble.
     window.addEventListener('scroll', this.scrollCloseHandler, true);
+    window.addEventListener('employeeListChanged', this.employeeListChangedHandler);
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('scroll', this.scrollCloseHandler, true);
+    window.removeEventListener('employeeListChanged', this.employeeListChangedHandler);
     this.profileImageState.forEach(state => {
       if (state.url) URL.revokeObjectURL(state.url);
     });
@@ -847,39 +862,36 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
   // EXPORT TO CSV (list page)
   // ===================================================
 
+  /**
+   * Exports the currently filtered employees using the exact same column
+   * layout as the report table: SNO first, then every report column in
+   * order. The file can be edited and uploaded straight back through
+   * "Import Employees" without any column shuffling.
+   */
   exportToCsv(): void {
     if (!this.filteredEmployees.length) {
       alert('No data for export.');
       return;
     }
 
-    const headers = [
-      'Employee Code', 'Name', 'Department', 'Designation', 'Company',
-      'Email', 'Phone', 'Joining Date', 'Status'
-    ];
+    const headers = EMPLOYEE_SHEET_HEADERS;
 
-    const rows = this.filteredEmployees.map(e => [
-      e.employeeCode ?? '',
-      this.fullName(e),
-      e.department ?? '',
-      e.designation ?? '',
-      this.getCompanyName(e.companyID),
-      e.email ?? '',
-      e.phone ?? '',
-      e.dateOfJoining ? e.dateOfJoining.substring(0, 10) : '',
-      e.employeeStatus ?? ''
+    const rows = this.filteredEmployees.map((e, index) => [
+      index + 1,
+      ...EMPLOYEE_REPORT_COLUMNS.map((col) => this.exportCellValue(e, col)),
     ]);
 
-    const escapeCsv = (value: string): string => {
-      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-        return `"${value.replace(/"/g, '""')}"`;
+    const escapeCsv = (value: any): string => {
+      const str = value === null || value === undefined ? '' : String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
       }
-      return value;
+      return str;
     };
 
     const csvContent = [headers, ...rows]
-      .map(row => row.map(escapeCsv).join(','))
-      .join('\n');
+      .map((row) => row.map(escapeCsv).join(','))
+      .join('\r\n');
 
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
@@ -890,6 +902,25 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  }
+
+  /** Resolves one report column to the same text the table cell shows. */
+  private exportCellValue(emp: EmployeeResponse, col: EmployeeColumn): string {
+    switch (col.resolve) {
+      case 'company':
+        return this.getCompanyName(emp.companyID);
+      case 'manager':
+        return this.getManagerName(emp.managerID);
+      case 'reportingManager':
+        return this.getManagerName(emp.reportingManagerID);
+      default: {
+        const raw = (emp as any)[col.key];
+        if (raw === null || raw === undefined || raw === '') return '';
+        if (typeof raw === 'boolean') return raw ? 'Yes' : 'No';
+        if (col.type === 'date') return String(raw).substring(0, 10);
+        return String(raw);
+      }
+    }
   }
 }
 

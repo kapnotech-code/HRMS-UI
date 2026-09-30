@@ -48,6 +48,7 @@ import { ReviewDetailsComponent } from './ features/Reviews/ReviewDetails/review
 import { OnboardingChecklistComponent } from './ features/Landing/onboarding-checklist/onboarding-checklist.component';
 import { EmployeeProfileComponent } from './features/Recruiter/employee-profile/employee-profile.component';
 import { EmployeeMasterComponent } from './ features/Recruiter/employee-master/ employee-master.component';
+import { EmployeeImportComponent } from './ features/Recruiter/employee-import/employee-import.component';
 import { LandingComponent } from './ features/Landing/landing.component';
 import { OnboardingComponent } from './ features/Landing/onboarding/onboarding.component';
 
@@ -216,6 +217,11 @@ export const routes: Routes = [
   {
     path: 'Recruiter/employee-master',
     component: EmployeeMasterComponent,
+    canActivate: [authGuard, permissionGuard],
+  },
+  {
+    path: 'Recruiter/employee-import',
+    component: EmployeeImportComponent,
     canActivate: [authGuard, permissionGuard],
   },
   {

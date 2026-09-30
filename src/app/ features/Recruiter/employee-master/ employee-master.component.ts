@@ -13,6 +13,12 @@ import { ShiftService } from '../../../core/services/shift.service';
 import { EmployeeRequest } from '../../../shared/models/employee/employee-request';
 import { EmployeeResponse } from '../../../shared/models/employee/employee-response';
 import { EmployerService } from '../../../core/services/company.service';
+import {
+  EMPLOYEE_REQUIRED_FIELDS,
+  canonicalGender,
+  canonicalStatus,
+  validateEmployee,
+} from '../../../shared/validators/employee-validators';
 
 interface Option {
   id: number;
@@ -43,12 +49,24 @@ export class EmployeeMasterComponent implements OnInit {
   shifts: Option[] = [];
   managers: Option[] = [];
 
+  /** Lower-cased employee codes / emails already in the database, for
+   *  duplicate detection inside the shared validator. */
+  private existingCodes = new Set<string>();
+  private existingEmails = new Set<string>();
+
+  // ---------- Validation state (shared rules, same as the bulk import) ----------
+  formErrors: Record<string, string> = {};
+  showValidation = false;
+  validationSummary = '';
+
   // ---------- Static dropdown option lists ----------
   statusOptions = ['Active', 'Inactive', 'On Leave', 'Resigned'];
+  // Stored as the full word so the report table, the import sheet and this
+  // form all use the same value (the validator also still accepts 'M'/'F'/'O').
   genderOptions: Option2[] = [
-    { value: 'M', label: 'Male' },
-    { value: 'F', label: 'Female' },
-    { value: 'O', label: 'Other' },
+    { value: 'Male', label: 'Male' },
+    { value: 'Female', label: 'Female' },
+    { value: 'Other', label: 'Other' },
   ];
   maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
   bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -104,7 +122,7 @@ export class EmployeeMasterComponent implements OnInit {
 
   formModel: EmployeeRequest = this.emptyForm();
 
-  // Navigate to the Reports page after a successful save
+// Navigate to the Reports page after a successful save
   navigateAfterSave = true;
 
   constructor(
@@ -114,10 +132,15 @@ export class EmployeeMasterComponent implements OnInit {
     private shiftService: ShiftService,
     private companyService: EmployerService,
     private frontendPerm: FrontendPermissionService,
-    private route: ActivatedRoute,
+    private route:ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
   ) {}
+
+  // Navigate to the bulk-import page
+  goToImport(): void {
+    this.router.navigate(['/Recruiter/employee-import']);
+  }
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -181,6 +204,12 @@ export class EmployeeMasterComponent implements OnInit {
         this.filteredByCode = this.employees;
         this.filteredByName = this.employees;
         this.managers = this.employees.map((e) => ({ id: e.employeeID, name: this.fullName(e) }));
+        this.existingCodes = new Set(
+          this.employees.map((e) => (e.employeeCode || '').trim().toLowerCase()).filter((c) => !!c),
+        );
+        this.existingEmails = new Set(
+          this.employees.map((e) => (e.email || '').trim().toLowerCase()).filter((c) => !!c),
+        );
         this.loading = false;
 
         // If we arrived here via /Recruiter/employee-master/:id, load that
@@ -610,12 +639,36 @@ export class EmployeeMasterComponent implements OnInit {
     this.reportingManagerSearchText = this.managerNameById(emp.reportingManagerID);
   }
 
-  newEmployee(): void {
-    this.isEditMode = false;
+  /**
+   * True when the shared validator flagged this field. The template uses it to
+   * add the error styling and the inline message under the control.
+   */
+  isFieldInvalid(key: string): boolean {
+    return this.showValidation && !!this.formErrors[key];
+  }
+
+  fieldError(key: string): string {
+    return this.formErrors[key] ?? '';
+  }
+
+  /** Keys of the fields the shared validator rejected, in form order. */
+  get fieldErrorKeys(): string[] {
+    return Object.keys(this.formErrors).filter((k) => k !== '_row');
+  }
+
+  /** Fields the form marks with a red asterisk. */
+  isRequiredField(key: string): boolean {
+    return EMPLOYEE_REQUIRED_FIELDS.includes(key);
+  }
+
+  newEmployee(): void {    this.isEditMode = false;
     this.showForm = true;
     this.formModel = this.emptyForm();
     this.clearSelection();
     this.clearMessages();
+    this.formErrors = {};
+    this.showValidation = false;
+    this.validationSummary = '';
 
     // Manager text fields bhi reset karo
     this.managerSearchText = '';
@@ -632,8 +685,54 @@ export class EmployeeMasterComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  /**
+   * Runs the SHARED employee validations (the exact same rules the bulk
+   * import uses). The form refuses to submit while anything is missing or
+   * invalid, and every offending field is highlighted inline.
+   */
   saveForm(): void {
     this.clearMessages();
+
+    const result = validateEmployee(
+      {
+        ...this.formModel,
+        companyID: this.formModel.companyID,
+        managerID: this.formModel.managerID,
+        reportingManagerID: this.formModel.reportingManagerID,
+        department: this.formModel.department,
+      },
+      {
+        // The form already resolves company/manager to ids, so the
+        // name-resolution rules are not re-run here.
+        resolveLookups: false,
+        existingCodes: this.existingCodes,
+        existingEmails: this.existingEmails,
+        selfEmployeeId: this.formModel.employeeID ?? null,
+        selfCode: this.formModel.employeeCode ?? null,
+        selfEmail: this.formModel.email ?? null,
+      },
+    );
+
+    this.showValidation = true;
+    this.formErrors = result.fieldErrors;
+
+    if (!result.isValid) {
+      this.employeeForm?.form?.markAllAsTouched();
+      this.validationSummary = `${Object.keys(result.fieldErrors).length} field(s) need attention before saving.`;
+      this.errorMessage = result.messages[0] ?? 'Please fix the highlighted fields.';
+      this.showToastMessage('error', this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.validationSummary = '';
+    this.formErrors = {};
+
+    // Store gender in the canonical full-word form the report and the import
+    // sheet use, so all three stay in sync.
+    this.formModel.gender = canonicalGender(this.formModel.gender) ?? this.formModel.gender;
+    this.formModel.employeeStatus =
+      canonicalStatus(this.formModel.employeeStatus) ?? this.formModel.employeeStatus;
 
     // Backend conversion handling
     if (!this.formModel.gender) {
