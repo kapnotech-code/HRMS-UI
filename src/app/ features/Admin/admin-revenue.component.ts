@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BillingService, RevenueSummary } from '../../core/services/billing.service';
 import { UiAlertComponent, UiCardComponent, UiPageHeaderComponent } from '../../shared/ui';
@@ -49,14 +49,23 @@ export class AdminRevenueComponent implements OnInit {
   loading = true;
   error = '';
 
-  constructor(private billing: BillingService) {}
+  constructor(private billing: BillingService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.billing.revenue().subscribe({
-      next: (d: RevenueSummary) => { this.data = d; this.loading = false; },
+      next: (d: RevenueSummary) => {
+        this.data = {
+          ...d,
+          byPlan: d?.byPlan ?? []
+        };
+        this.loading = false;
+        this.error = '';
+        this.cdr.detectChanges();
+      },
       error: (err: { error?: { message?: string } }) => {
         this.error = err?.error?.message || 'Could not load revenue.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

@@ -80,8 +80,37 @@ export class BillingService {
   }
 
   revenue(): Observable<RevenueSummary> {
-    return this.http.get<{ success: boolean; data: RevenueSummary }>(`${this.admin}/revenue`).pipe(
-      map(res => res.data)
+    const empty: RevenueSummary = {
+      paidTotal: 0,
+      paidCount: 0,
+      pendingTotal: 0,
+      pendingCount: 0,
+      paidLast30Days: 0,
+      estimatedMrr: 0,
+      byPlan: []
+    };
+    return this.http.get<any>(`${this.admin}/revenue`).pipe(
+      map(res => {
+        const d = res?.data ?? res?.Data;
+        if (!d) {
+          return empty;
+        }
+        const byPlan = (d.byPlan ?? d.ByPlan ?? []).map((row: Record<string, unknown>) => ({
+          planName: String(row['planName'] ?? row['PlanName'] ?? '(unknown)'),
+          planCode: (row['planCode'] ?? row['PlanCode']) as string | undefined,
+          paidAmount: Number(row['paidAmount'] ?? row['PaidAmount'] ?? 0),
+          paidCount: Number(row['paidCount'] ?? row['PaidCount'] ?? 0)
+        }));
+        return {
+          paidTotal: Number(d.paidTotal ?? d.PaidTotal ?? 0),
+          paidCount: Number(d.paidCount ?? d.PaidCount ?? 0),
+          pendingTotal: Number(d.pendingTotal ?? d.PendingTotal ?? 0),
+          pendingCount: Number(d.pendingCount ?? d.PendingCount ?? 0),
+          paidLast30Days: Number(d.paidLast30Days ?? d.PaidLast30Days ?? 0),
+          estimatedMrr: Number(d.estimatedMrr ?? d.EstimatedMrr ?? 0),
+          byPlan
+        };
+      })
     );
   }
 }

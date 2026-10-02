@@ -5,7 +5,6 @@ import { SidebarService } from '../../core/services/Sidebar.service';
 import { FrontendPermissionService } from '../../core/services/frontend-permission.service';
 import { SubscriptionEntitlementService } from '../../core/services/subscription-entitlement.service';
 import { featureForRoute } from '../rbac/permission-matrix';
-import { environment } from '../../../environments/environment';
 
 interface SidebarItem {
   label: string;
@@ -166,12 +165,8 @@ export class SidebarComponent implements OnInit {
   }
 
   private applyPermissionFilter(): void {
-    const extra: SidebarItem[] = environment.production
-      ? []
-      : [{ label: 'UI kit', icon: '🧩', route: '/ui-kit' }];
-
-    this.visibleTopLevel = [...this.topLevelItems, ...extra].filter(item =>
-      item.route === '/dashboard' || item.route === '/ui-kit' || this.frontendPerm.canAccessRoute(item.route)
+    this.visibleTopLevel = this.topLevelItems.filter(item =>
+      item.route === '/dashboard' || this.frontendPerm.canAccessRoute(item.route)
     );
 
     this.visibleMenuGroups = this.menuGroups
