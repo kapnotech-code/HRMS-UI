@@ -1,14 +1,24 @@
 <div class="login-page">
   <div class="login-card">
     <div class="login-header">
-      <div class="login-logo" aria-hidden="true">HR</div>
-      <h1>Welcome back</h1>
-      <p>Sign in to continue to your dashboard</p>
+      <img *ngIf="tenantLogo" class="login-logo-img" [src]="tenantLogo" [alt]="tenantName || 'Company logo'" />
+      <div *ngIf="!tenantLogo" class="login-logo" aria-hidden="true">{{ tenantName ? tenantName.slice(0, 2).toUpperCase() : 'HR' }}</div>
+      <h1>{{ tenantName ? tenantName : 'Welcome back' }}</h1>
+      <p *ngIf="tenantName">Sign in to your {{ tenantName }} workspace</p>
+      <p *ngIf="!tenantName">Sign in to continue to your dashboard</p>
     </div>
-    <p *ngIf="errorMessage" class="error-text" role="alert">{{ errorMessage }}</p>
-    <form (ngSubmit)="submit()" autocomplete="on">
+    <ui-alert *ngIf="errorMessage" tone="danger">{{ errorMessage }}</ui-alert>
+
+    <div *ngIf="companies.length" class="company-picker" role="list">
+      <button type="button" class="company-choice" *ngFor="let c of companies" (click)="pickCompany(c)">
+        <img *ngIf="c.logoUrl" [src]="assetUrl(c.logoUrl)" alt="" />
+        <span>{{ c.companyName }}</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="submit()" autocomplete="on" *ngIf="!tenantMissing">
       <div class="form-group">
-        <label for="loginName">Login Id</label>
+        <label for="loginName">Login Id or email</label>
         <input id="loginName"
                name="loginName"
                type="text"
@@ -35,10 +45,12 @@
           </button>
         </div>
       </div>
-      <button type="submit" class="btn-login" [disabled]="loading">
-        <span class="btn-spinner" *ngIf="loading" aria-hidden="true"></span>
+      <p class="login-footnote" style="text-align:right;margin-top:0;">
+        <a routerLink="/forgot-password" class="link-accent">Forgot password?</a>
+      </p>
+      <ui-button class="block" type="submit" [disabled]="loading">
         {{ loading ? 'Signing in...' : 'Sign In' }}
-      </button>
+      </ui-button>
     </form>
     <p class="login-footnote">Contact your administrator if you're locked out or need access.</p>
     <p class="login-footnote">

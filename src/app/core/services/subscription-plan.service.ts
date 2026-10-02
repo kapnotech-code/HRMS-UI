@@ -61,35 +61,14 @@ export class SubscriptionPlanService {
   }
 
   getMySubscription(): Observable<MySubscription | null> {
-    // The backend SubscriptionPlan controller has GET routes at the base URL
-    // (GetAll) and at /{id} (GetById int). A single-segment path like
-    // "GetMySubscription" falls through to {id}, fails int model binding,
-    // and returns 400. Try multiple URL formats that the backend may support.
-    const candidateUrls = [
-      `${this.apiUrl}/GetMySubscriptions`,
-      `${environment.apiUrl}/Subscription/GetMySubscription`,
-      `${this.apiUrl}/GetMySubscription`,
-    ];
-    return this.tryGetMySubscription(candidateUrls, 0);
-  }
-
-  private tryGetMySubscription(urls: string[], index: number): Observable<MySubscription | null> {
-    if (index >= urls.length) {
-      return of(null);
-    }
     return this.http
-      .get<ApiResponse<MySubscriptionResponse>>(urls[index])
+      .get<ApiResponse<MySubscriptionResponse>>(`${this.apiUrl}/GetMySubscription`)
       .pipe(
         map(response => {
           if (!response?.data) return null;
           return this.normalizeMySubscription(response.data);
         }),
-        catchError(error => {
-          if ((error?.status === 400 || error?.status === 404) && index < urls.length - 1) {
-            return this.tryGetMySubscription(urls, index + 1);
-          }
-          return of(null);
-        })
+        catchError(() => of(null))
       );
   }
 
@@ -138,9 +117,13 @@ export class SubscriptionPlanService {
       planCode: this.pick(plan, 'sP_PlanCode', 'sp_PlanCode', 'planCode', 'PlanCode') ?? '',
       subscriptionFor: this.normalizeSubscriptionFor(this.pick(plan, 'sP_SubscriptionFor', 'sp_SubscriptionFor', 'subscriptionFor', 'SubscriptionFor')),
       price: Number(this.pick(plan, 'sP_Price', 'sp_Price', 'price', 'Price') ?? 0),
+      monthlyPrice: Number(this.pick(plan, 'sP_MonthlyPrice', 'sp_MonthlyPrice', 'monthlyPrice', 'MonthlyPrice') ?? 0) || undefined,
+      yearlyPrice: Number(this.pick(plan, 'sP_YearlyPrice', 'sp_YearlyPrice', 'yearlyPrice', 'YearlyPrice') ?? 0) || undefined,
       durationDays: Number(this.pick(plan, 'sP_DurationDays', 'sp_DurationDays', 'durationDays', 'DurationDays') ?? 0),
       description: this.pick(plan, 'sP_Description', 'sp_Description', 'description', 'Description') ?? '',
       isActive: this.toBoolean(this.pick(plan, 'sP_IsActive', 'sp_IsActive', 'isActive', 'IsActive')),
+      isTrial: this.toBoolean(this.pick(plan, 'sP_IsTrial', 'sp_IsTrial', 'isTrial', 'IsTrial')),
+      maxEmployees: this.pick(plan, 'sP_MaxEmployees', 'sp_MaxEmployees', 'maxEmployees', 'MaxEmployees'),
       features: includedFeatures
     };
   }
@@ -202,7 +185,8 @@ export class SubscriptionPlanService {
           ? Number(this.pick(f, 'mSF_LimitValue', 'msf_LimitValue', 'limitValue', 'LimitValue'))
           : undefined,
         limitType: this.pick(f, 'mSF_LimitType', 'msf_LimitType', 'limitType', 'LimitType'),
-        isIncluded: true
+        isIncluded: true,
+        featureCode: this.pick(f, 'mSF_FeatureCode', 'msf_FeatureCode', 'featureCode', 'FeatureCode')
       }));
   }
 
@@ -240,6 +224,7 @@ export class SubscriptionPlanService {
     const str = String(value).toLowerCase();
     switch (str) {
       case 'active': return 'Active';
+      case 'trial': return 'Trial';
       case 'pending': return 'Pending';
       case 'expired': return 'Expired';
       case 'cancelled': return 'Cancelled';

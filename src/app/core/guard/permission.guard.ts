@@ -1,24 +1,13 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { catchError, switchMap, take, timeout } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/Auth.service';
 import { FrontendPermissionService } from '../../core/services/frontend-permission.service';
-
-// Routes that should always be accessible (bypass permission check)
-const BYPASS_ROUTES = new Set<string>([
-  '/transactions/schedule-transaction',
-  '/transactions/schedule-transaction/',
-  '/transactions/schedule-employee',
-  '/transactions/schedule-employee/',
-  '/masters/schedule-employee',
-  '/masters/schedule-employee/',
-  '/masters/schedule-master',
-  '/masters/schedule-master/'
-]);
+import { SubscriptionEntitlementService } from '../../core/services/subscription-entitlement.service';
+import { featureForRoute } from '../../shared/rbac/permission-matrix';
 
 function normalizeUrl(url: string): string {
-  const trimmed = url.trim();
+  const trimmed = url.trim().split('?')[0];
   const withSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   return withSlash.toLowerCase();
 }
@@ -27,43 +16,33 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const frontendPerm = inject(FrontendPermissionService);
+  const entitlement = inject(SubscriptionEntitlementService);
 
   if (!authService.isLoggedIn()) {
     return router.navigate(['/login'], { queryParams: { returnUrl: state.url } }) as Promise<boolean | UrlTree>;
   }
 
-  // Bypass permission check for known routes
-  const normalizedUrl = normalizeUrl(state.url);
-  for (const bypassRoute of BYPASS_ROUTES) {
-    if (normalizedUrl === bypassRoute || normalizedUrl.startsWith(bypassRoute)) {
-      return true;
-    }
-  }
-
-  const roleId = frontendPerm.getCurrentRoleId();
-
-  if (!roleId || roleId === 1) {
-    return true;
-  }
-
-  const currentUrl = state.url;
+  const currentUrl = normalizeUrl(state.url);
 
   try {
-    await frontendPerm.initialize().toPromise();
-    await frontendPerm.loadPermissionsForRole(roleId).toPromise();
+    await firstValueFrom(frontendPerm.loadMatrix());
+    await firstValueFrom(entitlement.load());
   } catch {
-    // If permissions fail to load, allow access
+    return router.navigate(['/dashboard']) as Promise<boolean | UrlTree>;
+  }
+
+  if (currentUrl === '/dashboard' || currentUrl.startsWith('/dashboard/')) {
     return true;
   }
 
-  if (frontendPerm.canAccessRoute(currentUrl)) {
-    return true;
+  if (!frontendPerm.canAccessRoute(currentUrl)) {
+    return router.navigate(['/dashboard']) as Promise<boolean | UrlTree>;
   }
 
-  // Prevent infinite redirect loop when the denied page is the redirect target
-  if (currentUrl === '/dashboard') {
-    return true;
+  const feature = featureForRoute(currentUrl);
+  if (feature && !entitlement.hasFeature(feature)) {
+    return router.navigate(['/subscriptions/plans']) as Promise<boolean | UrlTree>;
   }
 
-  return router.navigate(['/dashboard']) as Promise<boolean | UrlTree>;
+  return true;
 };

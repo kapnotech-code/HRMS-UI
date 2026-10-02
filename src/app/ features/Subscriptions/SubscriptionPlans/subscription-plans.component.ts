@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { SubscriptionPlanService } from '../../../core/services/subscription-plan.service';
+import { BillingService, PriceQuote } from '../../../core/services/billing.service';
 import { AuthService } from '../../../core/services/Auth.service';
 import { SubscriptionPlan, RazorpayOrderRequest, RazorpayOrderResponse } from '../../../shared/models/subscription/subscription-plan.model';
+import { UiAlertComponent, UiButtonComponent } from '../../../shared/ui';
 
 declare global {
   interface Window {
@@ -15,7 +17,7 @@ declare global {
 @Component({
   selector: 'app-subscription-plans',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, UiAlertComponent, UiButtonComponent],
   templateUrl: './subscription-plans.component.html',
   styleUrls: ['./subscription-plans.component.css']
 })
@@ -32,9 +34,12 @@ export class SubscriptionPlansComponent implements OnInit {
   razorpayReady = false;
   isLoggedIn = false;
   billingCycle: 'monthly' | 'yearly' = 'monthly';
+  couponCode = '';
+  quote: PriceQuote | null = null;
 
   constructor(
     private subService: SubscriptionPlanService,
+    private billing: BillingService,
     private auth: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -71,7 +76,7 @@ export class SubscriptionPlansComponent implements OnInit {
   selectPlan(plan: SubscriptionPlan): void {
     if (!this.isLoggedIn) {
       this.router.navigate(['/login'], {
-        queryParams: { returnUrl: '/plans' }
+        queryParams: { returnUrl: '/subscriptions/plans' }
       });
       return;
     }
@@ -80,6 +85,9 @@ export class SubscriptionPlansComponent implements OnInit {
     this.showCheckout = true;
     this.errorMsg = null;
     this.successMsg = null;
+    this.couponCode = '';
+    this.quote = null;
+    this.refreshQuote();
   }
 
   closeCheckout(): void {
@@ -108,7 +116,9 @@ export class SubscriptionPlansComponent implements OnInit {
     const orderRequest: RazorpayOrderRequest = {
       planId: this.selectedPlan.planId,
       companyId: companyId != null ? companyId : undefined,
-      employeeId: employeeId != null ? employeeId : undefined
+      employeeId: employeeId != null ? employeeId : undefined,
+      billingInterval: this.billingCycle === 'yearly' ? 'YEARLY' : 'MONTHLY',
+      couponCode: this.couponCode?.trim() || undefined
     };
 
     this.subService.createRazorpayOrder(orderRequest).subscribe({
@@ -186,7 +196,7 @@ export class SubscriptionPlansComponent implements OnInit {
           this.activePlanId = orderData.planId || this.selectedPlan!.planId;
           this.closeCheckout();
           setTimeout(() => {
-            window.location.href = '/subscriptions/my-subscription';
+            this.router.navigate(['/subscriptions/my-subscription']);
           }, 2000);
         } else {
           this.errorMsg = res?.message || res?.data?.message || 'Payment verification failed. Please contact support.';
@@ -226,19 +236,48 @@ export class SubscriptionPlansComponent implements OnInit {
     });
   }
 
+  refreshQuote(): void {
+    if (!this.selectedPlan) {
+      return;
+    }
+    this.billing.quote(
+      this.selectedPlan.planId,
+      this.billingCycle === 'yearly' ? 'YEARLY' : 'MONTHLY',
+      this.couponCode
+    ).subscribe(q => {
+      this.quote = q;
+      if (!q.success) {
+        this.errorMsg = q.message || 'Coupon could not be applied.';
+      } else {
+        this.errorMsg = null;
+      }
+    });
+  }
+
   retry(): void {
     this.loadPlans();
   }
 
+  getPlanDisplayPrice(plan: SubscriptionPlan): number {
+    if (this.billingCycle === 'yearly') {
+      return this.getYearlyPrice(plan);
+    }
+    return (plan.monthlyPrice && plan.monthlyPrice > 0) ? plan.monthlyPrice : plan.price;
+  }
+
   getPlanIcon(planCode: string): string {
     const code = (planCode || '').toUpperCase();
-    if (code.includes('STARTER') || code.includes('FREE') || code.includes('BASIC')) return '🌱';
+    if (code.includes('STARTER') || code.includes('FREE') || code.includes('BASIC') || code.includes('TRIAL')) return '🌱';
     if (code.includes('GROWTH') || code.includes('PRO') || code.includes('BUSINESS')) return '🚀';
     if (code.includes('ENTERPRISE') || code.includes('PREMIUM')) return '🏢';
     return '💳';
   }
 
-  getYearlyPrice(price: number): number {
-    return Math.round(price * 0.8 * 100) / 100;
+  getYearlyPrice(plan: SubscriptionPlan): number {
+    if (plan.yearlyPrice && plan.yearlyPrice > 0) {
+      return plan.yearlyPrice;
+    }
+    const monthly = (plan.monthlyPrice && plan.monthlyPrice > 0) ? plan.monthlyPrice : plan.price;
+    return Math.round(monthly * 12 * 0.8 * 100) / 100;
   }
 }

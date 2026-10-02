@@ -7,10 +7,10 @@
   --green-light: #eaf6ef;
   --green-soft: #f2f9f5;
   --green-accent: #10b981;
-  --ink: #1e293b;
+  --ink: var(--color-text);
   --ink-900: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
+  --muted: var(--color-muted);
+  --border: var(--color-border);
   --border-light: #edf2f0;
   --bg-page: #ffffff;
   --bg-subtle: #f8faf9;
@@ -360,38 +360,44 @@ a {
 }
 
 .nav-item-dropdown {
-  position: relative;
+  position: static;
 }
 
-/* Mega Menu Dropdown */
+/* Full-width panel below the sticky bar. Fixed avoids header backdrop-filter clipping. */
 .mega-menu {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
+  top: 80px;
+  left: 16px;
+  right: 16px;
+  width: auto;
+  max-width: 1240px;
+  margin: 0 auto;
+  transform: none;
   background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   padding: 24px;
-  z-index: 200;
-  width: max-content;
-  max-width: 900px;
+  z-index: 300;
+  box-sizing: border-box;
+  overflow: auto;
+  max-height: calc(100vh - 96px);
   animation: slideDown 0.2s ease-out;
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translate(-50%, -8px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .mega-columns {
-  display: flex;
-  gap: 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px 24px;
 }
 
 .mega-col {
-  min-width: 220px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }

@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :host {
-  --teal: #0f766e;
-  --teal-light: #14b8a6;
-  --teal-bg: #f0fdfa;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --surface: #ffffff;
-  --bg: #f8fafc;
+  --teal: var(--color-primary-dark);
+  --teal-light: var(--color-primary);
+  --teal-bg: color-mix(in srgb, var(--color-primary) 10%, white);
+  --ink: var(--color-text);
+  --muted: var(--color-muted);
+  --border: var(--color-border);
+  --surface: var(--color-surface);
+  --bg: var(--color-bg);
   --danger: #dc2626;
   --danger-bg: #fef2f2;
   --success: #059669;
@@ -222,6 +222,7 @@
   min-height: 44px;
   transition: border-color 0.15s, box-shadow 0.15s;
   appearance: none;
+  -webkit-appearance: none;
 }
 
 .form-group input:focus,
@@ -231,10 +232,74 @@
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
+.form-group input:focus-visible,
+.form-group select:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
 .form-group small {
   font-size: 11.5px;
   color: var(--muted);
 }
+
+.match-hint { color: var(--success) !important; font-weight: 600; }
+.mismatch-hint { color: var(--danger) !important; font-weight: 600; }
+
+/* Select wrapper with custom arrow */
+.select-wrap {
+  position: relative;
+}
+
+.select-wrap select {
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--muted);
+}
+
+/* Password strength */
+.pw-strength {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.pw-strength-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pw-strength-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.pw-strength-label {
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 44px;
+  text-align: right;
+}
+
+/* Confirm password match border */
+.pw-wrap.match input { border-color: var(--success); }
+.pw-wrap.mismatch input { border-color: var(--danger); }
+
+/* Required asterisk */
+.req { color: var(--danger); margin-left: 2px; }
 
 .form-row-2 {
   display: grid;
@@ -246,15 +311,22 @@
 .pw-wrap input { padding-right: 44px; }
 .pw-toggle {
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
   padding: 4px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s;
 }
+.pw-toggle:hover { color: var(--ink); }
+.pw-toggle:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 
 .admin-info-note {
   display: flex;
@@ -395,10 +467,19 @@
   color: var(--muted);
   display: flex;
   align-items: flex-start;
-  gap: 5px;
+  gap: 6px;
 }
 
-.feat-check { color: var(--success); font-weight: 700; flex-shrink: 0; }
+.plan-option-features li svg {
+  color: var(--success);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.plan-option:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
 
 .selected-plan-summary {
   display: flex;
@@ -445,7 +526,7 @@
   margin-left: auto;
 }
 
-.btn-primary:hover:not(:disabled) { background: #0d5c56; }
+.btn-primary:hover:not(:disabled) { background: var(--color-accent); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .btn-submit { padding: 12px 32px; font-size: 15px; }
@@ -465,6 +546,11 @@
 }
 
 .btn-ghost:hover { color: var(--ink); }
+
+.btn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
 
 .btn-lg { padding: 14px 32px; font-size: 15px; }
 

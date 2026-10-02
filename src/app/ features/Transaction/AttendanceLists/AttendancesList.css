@@ -8,18 +8,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :host {
-  --teal: #14b8a6;
-  --teal-dark: #0f766e;
-  --teal-darker: #0d5c56;
-  --teal-light: #f0fdfb;
-  --teal-soft: rgba(20, 184, 166, 0.12);
-  --ink: #1e293b;
-  --muted: #64748b;
+  --teal: var(--color-primary);
+  --teal-dark: var(--color-primary-dark);
+  --teal-darker: var(--color-accent);
+  --teal-light: color-mix(in srgb, var(--color-primary) 10%, white);
+  --teal-soft: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --ink: var(--color-text);
+  --muted: var(--color-muted);
   --muted-light: #94a3b8;
-  --border: #e2e8f0;
+  --border: var(--color-border);
   --border-strong: #cbd5e1;
-  --bg: #f8fafc;
-  --surface: #ffffff;
+  --bg: var(--color-bg);
+  --surface: var(--color-surface);
   --danger: #dc2626;
   --danger-dark: #b91c1c;
   --danger-light: #fee2e2;
@@ -30,7 +30,7 @@
   --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.10);
   --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.18);
-  --focus-ring: 0 0 0 3px rgba(20, 184, 166, 0.18);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
   --transition: 0.15s ease;
   display: block;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;

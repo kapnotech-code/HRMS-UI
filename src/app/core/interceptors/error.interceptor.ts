@@ -8,13 +8,20 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err) => {
-      // Only auto-logout for auth endpoint failures
       const isAuthEndpoint = req.url.includes('/api/Auth');
 
-      if (err.status === 401 && isAuthEndpoint) {
+      if (err.status === 401 && isAuthEndpoint && req.url.includes('/Auth/refresh')) {
         localStorage.removeItem('token');
         router.navigate(['/login']);
       }
+
+      if (err.status === 402) {
+        const code = err?.error?.code;
+        if (code === 'SUBSCRIPTION_READ_ONLY') {
+          router.navigate(['/subscriptions/plans']);
+        }
+      }
+
       return throwError(() => err);
     })
   );

@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :host {
-  --teal: #0f766e;
-  --teal-light: #14b8a6;
-  --teal-bg: #f0fdfa;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --surface: #ffffff;
-  --bg: #f8fafc;
+  --teal: var(--color-primary-dark);
+  --teal-light: var(--color-primary);
+  --teal-bg: color-mix(in srgb, var(--color-primary) 10%, white);
+  --ink: var(--color-text);
+  --muted: var(--color-muted);
+  --border: var(--color-border);
+  --surface: var(--color-surface);
+  --bg: var(--color-bg);
   --danger: #dc2626;
   --danger-bg: #fef2f2;
   --success: #059669;
@@ -30,7 +30,7 @@
 
 /* Header */
 .mysub-header {
-  background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
+  background: linear-gradient(135deg, #0f172a 0%, var(--color-primary-dark) 100%);
   padding: 48px 20px 64px;
   color: #fff;
 }
@@ -154,7 +154,7 @@
   transition: all 0.2s;
 }
 
-.btn-browse-plans:hover { background: #0d5c56; }
+.btn-browse-plans:hover { background: var(--color-accent); }
 
 /* Status Banner */
 .sub-status-banner {
@@ -349,7 +349,7 @@
 }
 
 .btn-action-primary { background: var(--teal); color: #fff; }
-.btn-action-primary:hover { background: #0d5c56; }
+.btn-action-primary:hover { background: var(--color-accent); }
 .btn-action-outline { background: transparent; border: 1.5px solid var(--border); color: var(--ink); }
 .btn-action-outline:hover { border-color: var(--teal); color: var(--teal); }
 

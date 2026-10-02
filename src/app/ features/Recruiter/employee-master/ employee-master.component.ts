@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 // ⚠️ Verify these import paths match your actual project structure
 import { EmployeeService } from '../../../core/services/employee.service';
@@ -33,7 +33,7 @@ interface Option2 {
 @Component({
   selector: 'app-employee-master',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './employee-master.component.html',
   styleUrls: ['./employee-master.component.css'],
 })

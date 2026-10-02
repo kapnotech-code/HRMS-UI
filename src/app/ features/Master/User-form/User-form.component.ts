@@ -13,7 +13,7 @@ import { DepartmentResponse } from '../../../shared/models/DepartmentResponse/De
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './user-form.component.html',
-  styleUrls: ['./user-form.component.css']
+  styleUrls: ['./User-form.component.css']
 })
 export class UserFormComponent implements OnInit {
   form!: FormGroup;

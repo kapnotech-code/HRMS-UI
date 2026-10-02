@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { UiAlertComponent, UiCardComponent, UiPageHeaderComponent } from '../../shared/ui';
 
 interface StatCard {
   label: string;
@@ -13,7 +14,7 @@ interface StatCard {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, UiPageHeaderComponent, UiCardComponent, UiAlertComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })

@@ -10,7 +10,7 @@ import { BankResponse } from '../../../../app/shared/models/Bank/Bankresponse';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './BankList.html',
-  styleUrl: './BankList.css'
+  styleUrl: './Banklist.css'
 })
 export class BankList implements OnInit {
   banks: BankResponse[] = [];

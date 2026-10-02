@@ -20,7 +20,7 @@ type ModalMode = 'add' | 'edit' | null;
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './leave transaction.component.html',
-  styleUrls: ['./leave transaction.component.css']
+  styleUrls: ['./Leave transaction.component.css']
 })
 export class LeaveTransactionComponent implements OnInit {
   activeTab: TabKey = 'requests';

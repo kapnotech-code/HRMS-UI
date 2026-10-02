@@ -4,9 +4,13 @@ export interface SubscriptionPlan {
   planCode: string;
   subscriptionFor: 'Employee' | 'Company';
   price: number;
+  monthlyPrice?: number;
+  yearlyPrice?: number;
   durationDays: number;
   description: string;
   isActive: boolean;
+  isTrial?: boolean;
+  maxEmployees?: number | null;
   features: SubscriptionPlanFeature[];
 }
 
@@ -44,9 +48,10 @@ export interface MySubscriptionFeature {
   limitValue?: number;
   limitType?: string;
   isIncluded: boolean;
+  featureCode?: string;
 }
 
-export type SubscriptionStatus = 'Active' | 'Pending' | 'Expired' | 'Cancelled' | 'Suspended' | 'None';
+export type SubscriptionStatus = 'Active' | 'Trial' | 'Pending' | 'Expired' | 'Cancelled' | 'Suspended' | 'None';
 
 export interface SubscriptionCheckout {
   planId: number;
@@ -190,6 +195,8 @@ export interface RazorpayOrderRequest {
   planId: number;
   employeeId?: number;
   companyId?: number;
+  billingInterval?: 'MONTHLY' | 'YEARLY' | string;
+  couponCode?: string;
 }
 
 export interface RazorpayOrderResponse {

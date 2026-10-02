@@ -5,13 +5,14 @@ import { FormsModule } from '@angular/forms';
 import { CompanyRequest } from '../../../../app/shared/models/companylist/CompanyRequest';
 import { CompanyResponse } from '../../../../app/shared/models/companylist/CompanyResponse';
 import { EmployerService } from '../../../../app/core/services/company.service';
+import { UiAlertComponent, UiButtonComponent, UiPageHeaderComponent } from '../../../shared/ui';
 
 @Component({
   selector: 'app-company-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UiPageHeaderComponent, UiAlertComponent, UiButtonComponent],
   templateUrl: './CompanyList.html',
-  styleUrl: './CompanyList.css'
+  styleUrl: './Companylist.css'
 })
 export class CompanyList implements OnInit {
   // Base URL where uploaded files are served from (wwwroot root of the API)

@@ -11,7 +11,7 @@ import { PageService } from '../../../core/services/page.service';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './Menu-Form-component.html',
-  styleUrls: ['./Menu-Form-component.css']
+  styleUrls: ['./Menu-Form-Component.css']
 })
 export class MenuFormComponent implements OnInit, OnDestroy {
 

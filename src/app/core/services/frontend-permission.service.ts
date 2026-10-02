@@ -1,11 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, BehaviorSubject, firstValueFrom } from 'rxjs';
-import { catchError, map, shareReplay, tap } from 'rxjs/operators';
+import { catchError, map, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 import { PermissionResponse } from '../../shared/models/permission/permission-response';
 import { Page } from '../../shared/models/Pag/Page';
+import {
+  LOCAL_PERMISSION_MATRIX,
+  RoleCodes,
+  actionKeyForUrl,
+  permissionForRoute,
+  roleCodeFromRoleId
+} from '../../shared/rbac/permission-matrix';
 
 @Injectable({
   providedIn: 'root'
@@ -19,27 +26,10 @@ export class FrontendPermissionService {
   private pageUrlMap = new Map<string, number>();
   private allPages: Page[] = [];
   private currentRoleId: number | null = null;
+  private currentRoleCode: string | null = null;
+  private matrixKeys = new Set<string>();
   private initialized = false;
   private permissionsLoaded = false;
-
-  // Role 1 = Admin, matches the backend's IsLoggedInUserAdmin() check
-  private readonly ADMIN_ROLE_ID = 1;
-
-  // Known routes that should be accessible even if not yet in Page table
-  private readonly knownRoutes = new Set<string>([
-    '/transactions/schedule-transaction',
-    '/transactions/schedule-transaction/',
-    '/transactions/schedule-employee',
-    '/transactions/schedule-employee/',
-    '/masters/schedule-employee',
-    '/masters/schedule-employee/',
-    '/masters/schedule-master',
-    '/masters/schedule-master/',
-    '/transactions/schedule-email',
-    '/transactions/schedule-email/',
-    '/transactions/yearly-paid',
-    '/transactions/yearly-paid/'
-  ]);
 
   constructor(private http: HttpClient) { }
 
@@ -64,44 +54,86 @@ export class FrontendPermissionService {
     return null;
   }
 
-  // ===================================================
-  // isAdmin — used by components to branch UI/logic for
-  // the Admin role without re-decoding the token themselves.
-  // ===================================================
+  getCurrentRoleCode(): string {
+    if (this.currentRoleCode) {
+      return this.currentRoleCode;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const code = payload.RoleCode ?? payload.roleCode;
+        if (code) {
+          this.currentRoleCode = String(code);
+          return this.currentRoleCode;
+        }
+      }
+    } catch { }
+    const stored = localStorage.getItem('roleCode');
+    if (stored) {
+      this.currentRoleCode = stored;
+      return stored;
+    }
+    return roleCodeFromRoleId(this.getCurrentRoleId());
+  }
+
   get isAdmin(): boolean {
-    return this.getCurrentRoleId() === this.ADMIN_ROLE_ID;
+    const code = this.getCurrentRoleCode();
+    return code === RoleCodes.CompanyAdmin || code === RoleCodes.SuperAdmin;
+  }
+
+  has(key: string): boolean {
+    return this.matrixKeys.has(key);
   }
 
   initialize(): Observable<boolean> {
-    if (this.initialized) {
+    return this.loadMatrix();
+  }
+
+  loadMatrix(): Observable<boolean> {
+    if (this.permissionsLoaded && this.matrixKeys.size > 0) {
       return of(true);
     }
 
-    const roleId = this.getCurrentRoleId();
-    if (!roleId) {
-      return of(false);
-    }
-
-    return this.http.get<any>(`${this.apiUrl}/Page`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/Auth/permissions`).pipe(
       map((res: any) => {
-        const pages = (res?.data ?? res ?? []) as Page[];
-        this.allPages = pages.filter((p: Page) => p.isActive !== false);
-        this.pageUrlMap.clear();
-        this.allPages.forEach((p: Page) => {
-          if (p.pageUrl) {
-            const normalized = this.normalizeUrl(p.pageUrl);
-            this.pageUrlMap.set(normalized, p.pageId!);
-          }
-        });
+        const data = res?.data ?? res ?? {};
+        const keys = (data.permissions ?? data.Permissions ?? []) as string[];
+        const roleCode = data.roleCode ?? data.RoleCode;
+        const roleId = data.roleId ?? data.RoleId;
+        this.applyMatrix(keys, roleCode, roleId);
         this.initialized = true;
+        this.permissionsLoaded = true;
         return true;
       }),
       catchError(() => {
+        this.applyLocalFallback();
         this.initialized = true;
-        return of(false);
+        this.permissionsLoaded = true;
+        return of(true);
       }),
       shareReplay(1)
     );
+  }
+
+  private applyMatrix(keys: string[], roleCode?: string, roleId?: number): void {
+    this.matrixKeys = new Set((keys ?? []).map(k => String(k)));
+    if (roleCode) {
+      this.currentRoleCode = String(roleCode);
+      localStorage.setItem('roleCode', this.currentRoleCode);
+    }
+    if (roleId) {
+      this.currentRoleId = Number(roleId);
+    }
+    if (this.matrixKeys.size === 0) {
+      this.applyLocalFallback();
+    }
+  }
+
+  private applyLocalFallback(): void {
+    const code = this.getCurrentRoleCode() as keyof typeof LOCAL_PERMISSION_MATRIX;
+    const keys = LOCAL_PERMISSION_MATRIX[code] ?? LOCAL_PERMISSION_MATRIX.EMPLOYEE;
+    this.matrixKeys = new Set(keys);
   }
 
   private normalizeUrl(url: string): string {
@@ -111,75 +143,23 @@ export class FrontendPermissionService {
   }
 
   getPageIdByUrl(url: string): number | undefined {
-    if (this.pageUrlMap.size === 0) {
-      this.initialize().subscribe();
-    }
     return this.pageUrlMap.get(this.normalizeUrl(url));
   }
 
   loadPermissionsForRole(roleId: number): Observable<PermissionResponse[]> {
-    return this.http.get<any>(`${this.apiUrl}/RolePagePermission/role/${roleId}`).pipe(
-      map((res: any) => {
-        const rawList = (res?.data ?? res ?? []) as any[];
-        const list: PermissionResponse[] = rawList.map(p => ({
-          roleId: p.roleId ?? p.RoleId ?? roleId,
-          pageId: p.pageId ?? p.PageId,
-          pageName: p.pageName ?? p.PageName ?? '',
-          canView: !!(p.canView ?? p.CanView),
-          canAdd: !!(p.canAdd ?? p.CanAdd),
-          canEdit: !!(p.canEdit ?? p.CanEdit),
-          canDelete: !!(p.canDelete ?? p.CanDelete),
-          canApprove: !!(p.canApprove ?? p.CanApprove),
-          canPrint: !!(p.canPrint ?? p.CanPrint),
-          canExport: !!(p.canExport ?? p.CanExport),
-        }));
-        const map = new Map<number, PermissionResponse>();
-        list.forEach(p => map.set(p.pageId, p));
-        this.permissionsSubject.next(map);
-        this.currentRoleId = roleId;
-        this.initialized = true;
-        this.permissionsLoaded = true;
-        return list;
-      }),
-      catchError(() => {
-        this.permissionsSubject.next(new Map());
-        this.permissionsLoaded = true;
-        return of([]);
-      })
-    );
+    this.currentRoleId = roleId;
+    return this.loadMatrix().pipe(map(() => []));
   }
 
-  // ===================================================
-  // ensureLoaded — used by components on init:
-  //   this.permissionService.ensureLoaded().then(() => ...)
-  // Resolves once pages + role permissions are both loaded.
-  // Safe to call repeatedly; only loads once.
-  // ===================================================
   async ensureLoaded(): Promise<void> {
     if (this.permissionsLoaded) {
       return;
     }
-
-    if (!this.initialized) {
-      await firstValueFrom(this.initialize());
-    }
-
-    const roleId = this.getCurrentRoleId();
-    if (roleId && !this.permissionsLoaded) {
-      await firstValueFrom(this.loadPermissionsForRole(roleId));
-    } else {
-      this.permissionsLoaded = true;
-    }
+    await firstValueFrom(this.loadMatrix());
   }
 
-  // ===================================================
-  // isAlwaysAllowed — lets a component skip waiting on
-  // ensureLoaded() when permissions are already resolved,
-  // or when the current user is an Admin (Admin bypasses
-  // page-level permission checks the same way the backend does).
-  // ===================================================
   isAlwaysAllowed(_url: string): boolean {
-    return this.isAdmin || this.permissionsLoaded;
+    return this.permissionsLoaded;
   }
 
   isPermissionsLoadedForCurrentRole(): boolean {
@@ -187,134 +167,95 @@ export class FrontendPermissionService {
   }
 
   hasAnyPermissions(): boolean {
-    return this.isAdmin || this.permissionsSubject.value.size > 0;
-  }
-
-  // ===================================================
-  // Resolve a pageId from either a numeric id or a route URL.
-  // ===================================================
-  private resolvePageId(pageIdOrUrl: number | string): number | undefined {
-    if (typeof pageIdOrUrl === 'number') {
-      return pageIdOrUrl;
-    }
-    return this.getPageIdByUrl(pageIdOrUrl);
+    return this.matrixKeys.size > 0;
   }
 
   canAddByUrl(url: string): boolean {
-    const pageId = this.getPageIdByUrl(url);
-    if (!pageId) return true;
-    return this.canAdd(pageId);
+    return this.canAdd(url);
   }
 
   canEditByUrl(url: string): boolean {
-    const pageId = this.getPageIdByUrl(url);
-    if (!pageId) return true;
-    return this.canEdit(pageId);
+    return this.canEdit(url);
   }
 
   canDeleteByUrl(url: string): boolean {
-    const pageId = this.getPageIdByUrl(url);
-    if (!pageId) return true;
-    return this.canDelete(pageId);
+    return this.canDelete(url);
   }
 
   hasPermission(pageId: number, action: keyof PermissionResponse = 'canView'): boolean {
-    if (this.isAdmin) return true;
-
     const map = this.permissionsSubject.value;
     const perm = map.get(pageId);
-    if (!perm) return false;
-    return !!perm[action];
+    if (perm) {
+      return !!perm[action];
+    }
+    return this.isAdmin;
   }
 
-  // canView / canAdd / canEdit / canDelete / canApprove / canPrint / canExport
-  // all accept either a numeric pageId OR a route URL string, so existing
-  // callers using PAGE_ROUTE strings keep working without changes.
-
   canView(pageIdOrUrl: number | string): boolean {
-    const pageId = this.resolvePageId(pageIdOrUrl);
-    if (pageId === undefined) return !this.permissionsLoaded || this.isAdmin;
-    return this.hasPermission(pageId, 'canView');
+    if (typeof pageIdOrUrl === 'string') {
+      const key = actionKeyForUrl(pageIdOrUrl, 'view');
+      return key ? this.has(key) : false;
+    }
+    return this.hasPermission(pageIdOrUrl, 'canView');
   }
 
   canAdd(pageIdOrUrl: number | string): boolean {
-    const pageId = this.resolvePageId(pageIdOrUrl);
-    if (pageId === undefined) return this.isAdmin;
-    return this.hasPermission(pageId, 'canAdd');
+    if (typeof pageIdOrUrl === 'string') {
+      const key = actionKeyForUrl(pageIdOrUrl, 'add');
+      return key ? this.has(key) : false;
+    }
+    return this.hasPermission(pageIdOrUrl, 'canAdd');
   }
 
   canEdit(pageIdOrUrl: number | string): boolean {
-    const pageId = this.resolvePageId(pageIdOrUrl);
-    if (pageId === undefined) return this.isAdmin;
-    return this.hasPermission(pageId, 'canEdit');
+    if (typeof pageIdOrUrl === 'string') {
+      const key = actionKeyForUrl(pageIdOrUrl, 'edit');
+      return key ? this.has(key) : false;
+    }
+    return this.hasPermission(pageIdOrUrl, 'canEdit');
   }
 
   canDelete(pageIdOrUrl: number | string): boolean {
-    const pageId = this.resolvePageId(pageIdOrUrl);
-    if (pageId === undefined) return this.isAdmin;
-    return this.hasPermission(pageId, 'canDelete');
+    if (typeof pageIdOrUrl === 'string') {
+      const key = actionKeyForUrl(pageIdOrUrl, 'delete');
+      return key ? this.has(key) : false;
+    }
+    return this.hasPermission(pageIdOrUrl, 'canDelete');
   }
 
   canApprove(pageIdOrUrl: number | string): boolean {
-    const pageId = this.resolvePageId(pageIdOrUrl);
-    if (pageId === undefined) return this.isAdmin;
-    return this.hasPermission(pageId, 'canApprove');
+    if (typeof pageIdOrUrl === 'string') {
+      const key = actionKeyForUrl(pageIdOrUrl, 'approve');
+      return key ? this.has(key) : false;
+    }
+    return this.hasPermission(pageIdOrUrl, 'canApprove');
   }
 
   canPrint(pageIdOrUrl: number | string): boolean {
-    const pageId = this.resolvePageId(pageIdOrUrl);
-    if (pageId === undefined) return this.isAdmin;
-    return this.hasPermission(pageId, 'canPrint');
+    return this.canView(pageIdOrUrl);
   }
 
   canExport(pageIdOrUrl: number | string): boolean {
-    const pageId = this.resolvePageId(pageIdOrUrl);
-    if (pageId === undefined) return this.isAdmin;
-    return this.hasPermission(pageId, 'canExport');
+    return this.canView(pageIdOrUrl);
   }
 
   canAccessRoute(url: string): boolean {
-    if (this.isAdmin) return true;
-
-    const normalizedUrl = this.normalizeUrl(url);
-
-    // Allow known routes even if not in Page table yet (exact or prefix match)
-    for (const knownRoute of this.knownRoutes) {
-      if (normalizedUrl === knownRoute || normalizedUrl.startsWith(knownRoute + '/')) {
-        return true;
-      }
+    const normalizedUrl = this.normalizeUrl(url.split('?')[0]);
+    if (normalizedUrl === '/dashboard' || normalizedUrl.startsWith('/dashboard/')) {
+      return this.has('dashboard.read') || this.permissionsLoaded;
     }
-
-    let pageId = this.pageUrlMap.get(normalizedUrl);
-
-    if (pageId === undefined) {
-      const fallback = this.allPages.find(p => this.normalizeUrl(p.pageUrl) === normalizedUrl);
-      pageId = fallback?.pageId;
+    const key = permissionForRoute(normalizedUrl);
+    if (!key) {
+      return false;
     }
-
-    if (pageId === undefined) {
-      // Check if URL is a sub-route of a known page (e.g. /masters/users/new -> /masters/users)
-      for (const [pageUrl, id] of this.pageUrlMap) {
-        if (normalizedUrl === pageUrl || normalizedUrl.startsWith(pageUrl + '/')) {
-          pageId = id;
-          break;
-        }
-      }
-    }
-    if (pageId === undefined) {
-      return !this.permissionsLoaded;
-    }
-
-
-    const map = this.permissionsSubject.value;
-    const perm = map.get(pageId);
-    if (!perm) return false;
-    return !!perm.canView;
+    return this.has(key);
   }
 
   clearPermissions(): void {
     this.permissionsSubject.next(new Map());
     this.currentRoleId = null;
+    this.currentRoleCode = null;
+    this.matrixKeys = new Set();
     this.initialized = false;
     this.permissionsLoaded = false;
     this.pageUrlMap.clear();

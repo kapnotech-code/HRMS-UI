@@ -1,17 +1,11 @@
 <div class="company-page">
 
-  <div class="page-header">
-    <div>
-      <h2>Company Master</h2>
-      <p class="subtitle">Manage companies used across Employee records</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" (click)="openAddModal()">+ Add Company</button>
-    </div>
-  </div>
+  <ui-page-header title="Company Master" subtitle="Manage companies used across Employee records">
+    <ui-button (click)="openAddModal()">+ Add Company</ui-button>
+  </ui-page-header>
 
-  <p *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</p>
-  <p *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+  <ui-alert *ngIf="successMessage" tone="ok">{{ successMessage }}</ui-alert>
+  <ui-alert *ngIf="errorMessage" tone="danger">{{ errorMessage }}</ui-alert>
 
   <div class="filter-card">
     <input type="text"

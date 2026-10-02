@@ -28,7 +28,7 @@
 }
 
 .btn-primary {
-  background: #14b8a6;
+  background: var(--color-primary);
   color: #fff;
 }
 
@@ -68,8 +68,8 @@
 }
 
   .search-input:focus {
-    border-color: #14b8a6;
-    box-shadow: 0 0 0 3px rgba(20,184,166,.15);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 
 .table-wrap {
@@ -94,7 +94,7 @@
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.03em;
-    color: #0f766e;
+    color: var(--color-primary-dark);
     text-transform: uppercase;
   }
 
@@ -106,7 +106,7 @@
   }
 
 .idx {
-  color: #0f766e;
+  color: var(--color-primary-dark);
   font-weight: 600;
 }
 
@@ -258,8 +258,8 @@
 }
 
   .form-control:focus {
-    border-color: #14b8a6;
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, .15);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 
   .form-control.ng-invalid.ng-touched {

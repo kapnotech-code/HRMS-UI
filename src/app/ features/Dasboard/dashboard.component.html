@@ -1,16 +1,9 @@
 <div class="dashboard-page">
+  <ui-page-header title="Dashboard" [subtitle]="(today | date:'EEEE, MMMM d, y') || ''" />
 
-  <div class="page-header">
-    <div>
-      <h2>Dashboard</h2>
-      <p class="subtitle">{{ today | date:'EEEE, MMMM d, y' }}</p>
-    </div>
-  </div>
-
-  <!-- ===== Stat Cards ===== -->
   <div class="stat-grid">
     @for (card of statCards; track card.label) {
-    <div class="stat-card">
+    <ui-card class="stat-card">
       <div class="stat-icon">{{ card.icon }}</div>
       <div class="stat-body">
         <div class="stat-value">{{ card.value }}</div>
@@ -19,14 +12,12 @@
         <div class="stat-trend" [class.trend-down]="!card.trendUp">{{ card.trend }}</div>
         }
       </div>
-    </div>
+    </ui-card>
     }
   </div>
 
   <div class="dashboard-columns">
-
-    <!-- ===== Recent Activity ===== -->
-    <div class="dashboard-card">
+    <ui-card>
       <h3>Recent Activity</h3>
       <div class="activity-list">
         @for (activity of recentActivity; track activity.text) {
@@ -39,10 +30,9 @@
         </div>
         }
       </div>
-    </div>
+    </ui-card>
 
-    <!-- ===== Quick Links ===== -->
-    <div class="dashboard-card">
+    <ui-card>
       <h3>Quick Links</h3>
       <div class="quick-links-grid">
         @for (link of quickLinks; track link.route) {
@@ -52,12 +42,10 @@
         </a>
         }
       </div>
-    </div>
-
+    </ui-card>
   </div>
 
-  <p class="dashboard-note">
-    ⚠️ This is placeholder data for layout purposes. Wire this up to real APIs (Employee, Attendance, Leave services) once ready.
-  </p>
-
+  <ui-alert tone="warn">
+    This is placeholder data for layout purposes. Wire this up to real APIs (Employee, Attendance, Leave services) once ready.
+  </ui-alert>
 </div>

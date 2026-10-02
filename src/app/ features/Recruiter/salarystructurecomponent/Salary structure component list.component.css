@@ -29,7 +29,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  background: #14b8a6;
+  background: var(--color-primary);
   color: white;
 }
 
@@ -56,7 +56,7 @@ table {
 
 th {
   text-align: left;
-  background: #f0fdfb;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
   padding: 14px;
   font-size: 13px;
   color: #0f9c8c;
@@ -73,7 +73,7 @@ td {
   display: inline-block;
   padding: 5px 10px;
   border-radius: 20px;
-  background: #f0fdfb;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
   color: #0f9c8c;
   font-size: 12px;
   font-weight: 600;
@@ -92,7 +92,7 @@ td {
 }
 
 .btn-edit {
-  background: #f0fdfb;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
 }
 
 .btn-delete {
@@ -190,8 +190,8 @@ td {
 
   .form-input:focus {
     outline: none;
-    border-color: #14b8a6;
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 
 .form-footer {
@@ -220,4 +220,5 @@ td {
   .btn-cancel:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-  }
+  }
+

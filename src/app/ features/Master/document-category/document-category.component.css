@@ -65,8 +65,8 @@
 }
 
   .page-input:focus {
-    border-color: #14b8a6;
-    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
 textarea.page-input {
@@ -104,7 +104,7 @@ textarea.page-input {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #0f766e;
+  color: var(--color-primary-dark);
   font-size: 13px;
   background: #ecfdf5;
   border: 1px solid #a7dcd4;
@@ -121,7 +121,7 @@ textarea.page-input {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #14b8a6;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 11px 22px;
@@ -208,7 +208,7 @@ textarea.page-input {
 
 .count-badge {
   background: #ecfdf5;
-  color: #0f766e;
+  color: var(--color-primary-dark);
   font-size: 12px;
   font-weight: 700;
   padding: 5px 13px;
@@ -226,7 +226,7 @@ table {
 }
 
 thead {
-  background: #f0fdfa;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
 }
 
   thead th {
@@ -234,7 +234,7 @@ thead {
     padding: 13px 20px;
     font-size: 11.5px;
     font-weight: 700;
-    color: #0f766e;
+    color: var(--color-primary-dark);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     white-space: nowrap;
@@ -286,7 +286,7 @@ tbody tr {
 
 .status-active {
   background: #ecfdf5;
-  color: #0f766e;
+  color: var(--color-primary-dark);
 }
 
 .status-inactive {
@@ -332,7 +332,7 @@ tbody tr {
   }
 
 .switch input:checked + .slider {
-  background-color: #14b8a6;
+  background-color: var(--color-primary);
 }
 
   .switch input:checked + .slider::before {
@@ -340,7 +340,7 @@ tbody tr {
   }
 
 .switch input:focus-visible + .slider {
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 .btn-edit {

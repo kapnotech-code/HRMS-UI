@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :host {
-  --teal: #0f766e;
-  --teal-light: #14b8a6;
-  --teal-bg: #f0fdfa;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --surface: #ffffff;
-  --bg: #f8fafc;
+  --teal: var(--color-primary-dark);
+  --teal-light: var(--color-primary);
+  --teal-bg: color-mix(in srgb, var(--color-primary) 10%, white);
+  --ink: var(--color-text);
+  --muted: var(--color-muted);
+  --border: var(--color-border);
+  --surface: var(--color-surface);
+  --bg: var(--color-bg);
   --danger: #dc2626;
   --danger-bg: #fef2f2;
   --success: #059669;
@@ -402,7 +402,7 @@
 }
 
 .btn-primary { background: var(--teal); color: #fff; margin-left: auto; }
-.btn-primary:hover:not(:disabled) { background: #0d5c56; }
+.btn-primary:hover:not(:disabled) { background: var(--color-accent); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-complete { padding: 12px 28px; font-size: 15px; }
 

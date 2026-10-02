@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SidebarService } from '../../core/services/Sidebar.service';
 import { FrontendPermissionService } from '../../core/services/frontend-permission.service';
+import { SubscriptionEntitlementService } from '../../core/services/subscription-entitlement.service';
+import { featureForRoute } from '../rbac/permission-matrix';
+import { environment } from '../../../environments/environment';
 
 interface SidebarItem {
   label: string;
@@ -37,6 +40,7 @@ export class SidebarComponent implements OnInit {
       open: true,
       items: [
         { label: 'Company', icon: '🏬', route: '/masters/company' },
+        { label: 'Branding', icon: '🎨', route: '/settings/branding' },
         { label: 'Documents', icon: '📁', route: '/master/documents' },
         { label: 'Users', icon: '👤', route: '/masters/users' },
         { label: 'Document Category', icon: '📁', route: '/masters/document-category' },
@@ -113,6 +117,13 @@ export class SidebarComponent implements OnInit {
         { label: 'Subscription Plans', icon: '📋', route: '/subscriptions/plans' },
         { label: 'My Subscription', icon: '👤', route: '/subscriptions/my-subscription' },
       ]
+    },
+    {
+      label: 'Platform',
+      open: true,
+      items: [
+        { label: 'Revenue', icon: '📈', route: '/admin/revenue' },
+      ]
     }
   ];
 
@@ -122,6 +133,7 @@ export class SidebarComponent implements OnInit {
   constructor(
     public sidebarService: SidebarService,
     private frontendPerm: FrontendPermissionService,
+    private entitlement: SubscriptionEntitlementService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -132,62 +144,51 @@ export class SidebarComponent implements OnInit {
   }
 
   private filterMenuByPermissions(): void {
-    const roleId = this.frontendPerm.getCurrentRoleId();
-
-    if (roleId === 1) {
-      this.visibleTopLevel = this.topLevelItems;
-      this.visibleMenuGroups = this.menuGroups;
-      this.cdr.detectChanges();
-      return;
-    }
-
-    if (!roleId) {
-      this.visibleTopLevel = this.topLevelItems;
-      this.visibleMenuGroups = [];
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.frontendPerm.initialize().subscribe({
+    this.frontendPerm.loadMatrix().subscribe({
       next: () => {
-        this.frontendPerm.loadPermissionsForRole(roleId).subscribe({
+        this.entitlement.load().subscribe({
           next: () => {
-            this.applyPermissionFilter(roleId);
+            this.applyPermissionFilter();
             this.cdr.detectChanges();
           },
           error: () => {
-            this.visibleTopLevel = [];
-            this.visibleMenuGroups = [];
+            this.applyPermissionFilter();
             this.cdr.detectChanges();
           }
         });
       },
       error: () => {
-        this.visibleTopLevel = [];
+        this.visibleTopLevel = this.topLevelItems;
         this.visibleMenuGroups = [];
         this.cdr.detectChanges();
       }
     });
   }
 
-  private applyPermissionFilter(roleId: number): void {
-    if (roleId === 1) {
-      this.visibleTopLevel = this.topLevelItems;
-      this.visibleMenuGroups = this.menuGroups;
-      return;
-    }
+  private applyPermissionFilter(): void {
+    const extra: SidebarItem[] = environment.production
+      ? []
+      : [{ label: 'UI kit', icon: '🧩', route: '/ui-kit' }];
 
-    this.visibleTopLevel = this.topLevelItems.filter(item =>
-      item.route === '/dashboard' || this.frontendPerm.canAccessRoute(item.route)
+    this.visibleTopLevel = [...this.topLevelItems, ...extra].filter(item =>
+      item.route === '/dashboard' || item.route === '/ui-kit' || this.frontendPerm.canAccessRoute(item.route)
     );
 
     this.visibleMenuGroups = this.menuGroups
       .map(group => ({
         ...group,
         items: group.items.filter(item =>
-          this.frontendPerm.canAccessRoute(item.route)
+          this.frontendPerm.canAccessRoute(item.route) && this.canAccessFeature(item.route)
         )
       }))
       .filter(group => group.items.length > 0);
+  }
+
+  private canAccessFeature(route: string): boolean {
+    const feature = featureForRoute(route);
+    if (!feature) {
+      return true;
+    }
+    return this.entitlement.hasFeature(feature);
   }
 }

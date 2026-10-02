@@ -10,6 +10,7 @@ import { DepartmentService } from '@core/services/Department.Service';
 import { DesignationService } from '@core/services/designation.service';
 import { ShiftService } from '@core/services/shift.service';
 import { FrontendPermissionService } from '@core/services/frontend-permission.service';
+import { AuthService } from '@core/services/Auth.service';
 import { EmployeeRequest } from '@shared/models/employee/employee-request';
 import { EmployeeResponse } from '@shared/models/employee/employee-response';
 import {
@@ -112,6 +113,7 @@ export class EmployeeImportComponent implements OnInit, OnDestroy {
     private designationService: DesignationService,
     private shiftService: ShiftService,
     private frontendPerm: FrontendPermissionService,
+    private auth: AuthService,
     private cdr: ChangeDetectorRef,
     private router: Router,
   ) {}
@@ -144,7 +146,11 @@ export class EmployeeImportComponent implements OnInit, OnDestroy {
           id: c.companyID,
           name: c.companyName,
         }));
-        if (this.companies.length > 0 && !this.selectedDefaultCompanyId) {
+        const tokenCompany = this.auth.getCompanyId();
+        if (tokenCompany) {
+          this.companies = this.companies.filter(c => c.id === tokenCompany);
+          this.selectedDefaultCompanyId = tokenCompany;
+        } else if (this.companies.length > 0 && !this.selectedDefaultCompanyId) {
           this.selectedDefaultCompanyId = this.companies[0].id;
         }
         this.cdr.detectChanges();

@@ -1,12 +1,12 @@
 :host {
-  --ink: #1e293b;
+  --ink: var(--color-text);
   --ink-soft: #64748b;
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --border: #e2e8f0;
-  --teal: #14b8a6;
-  --teal-dark: #0f766e;
-  --teal-light: #f0fdfb;
+  --bg: var(--color-bg);
+  --surface: var(--color-surface);
+  --border: var(--color-border);
+  --teal: var(--color-primary);
+  --teal-dark: var(--color-primary-dark);
+  --teal-light: color-mix(in srgb, var(--color-primary) 10%, white);
   --ok: #16a34a;
   --ok-bg: #dcfce7;
   --warn: #d97706;
@@ -432,7 +432,7 @@ h1 {
   .modal form textarea:focus {
     outline: none;
     border-color: var(--teal);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 
 /* FIX: .form-hint ka koi style nahi tha — ab proper spacing/color mil gaya */

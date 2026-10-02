@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LoginRequest } from '../../shared/models/Login/LoginRequest';
-import { LoginResponse } from '../../shared/models/Login/loginresponse';
 import { RegisterRequest } from '../../shared/Register/Registerrequest';
 import { FrontendPermissionService } from '../services/frontend-permission.service';
 import { environment } from '../../../environments/environment';
@@ -12,26 +11,68 @@ import { environment } from '../../../environments/environment';
 })
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/Auth`;
+  private readonly creds = { withCredentials: true };
 
   constructor(
     private http: HttpClient,
     private frontendPerm: FrontendPermissionService
   ) { }
 
-  login(request: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, request);
+  login(request: LoginRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/login`, request, this.creds);
+  }
+
+  getTenant(slug: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/tenant/${encodeURIComponent(slug)}`, this.creds);
   }
 
   register(request: RegisterRequest): Observable<any> {
-    // POST api/Auth/register
-    // Response: { Message, Data: { UserId, CompanyId } }
-    // On failure: 400 with { Message }
-    return this.http.post<any>(`${this.apiUrl}/register`, request);
+    return this.http.post<any>(`${this.apiUrl}/register`, request, this.creds);
   }
 
-  saveToken(token: string, roleId?: number) {
+  refresh(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/refresh`, {}, this.creds);
+  }
+
+  logoutApi(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/logout`, {}, this.creds);
+  }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/forgot-password`, { email }, this.creds);
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reset-password`, { token, newPassword }, this.creds);
+  }
+
+  verifyEmail(token: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/verify-email`, { params: { token }, ...this.creds });
+  }
+
+  acceptInvite(body: { token: string; fullName: string; loginName: string; password: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/accept-invite`, body, this.creds);
+  }
+
+  persistLogin(data: any): void {
+    const token = data?.token || data?.Token;
+    if (token) {
+      this.saveToken(token, data?.roleId ?? data?.RoleId, data?.roleCode ?? data?.RoleCode);
+    }
+    this.saveCurrentUser({
+      userId: data?.userId ?? data?.UserId,
+      roleId: data?.roleId ?? data?.RoleId,
+      roleCode: data?.roleCode ?? data?.RoleCode,
+      userName: data?.userName ?? data?.UserName,
+      companyId: data?.companyId ?? data?.CompanyId,
+      companyName: data?.companyName ?? data?.CompanyName
+    });
+  }
+
+  saveToken(token: string, roleId?: number, roleCode?: string) {
     localStorage.setItem('token', token);
     if (roleId) { localStorage.setItem('roleId', String(roleId)); }
+    if (roleCode) { localStorage.setItem('roleCode', String(roleCode)); }
   }
 
   getToken() {
@@ -42,18 +83,21 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return false;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const isExpired = payload.exp * 1000 < Date.now();
-      return !isExpired;
+      const parts = token.split('.');
+      if (parts.length !== 3) return false;
+      const payload = JSON.parse(atob(parts[1]));
+      if (!payload?.exp) return false;
+      return payload.exp * 1000 > Date.now();
     } catch {
-      // Agar token JWT format mein nahi hai ya decode fail ho
-      return true; // fallback: sirf existence check
+      return false;
     }
   }
 
   logout() {
+    this.logoutApi().subscribe({ error: () => { /* cookie may already be gone */ } });
     localStorage.removeItem('token');
     localStorage.removeItem('roleId');
+    localStorage.removeItem('roleCode');
     localStorage.removeItem('userId');
     localStorage.removeItem('userName');
     localStorage.removeItem('departmentId');

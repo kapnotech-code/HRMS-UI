@@ -1,12 +1,12 @@
 :host {
-  --primary: #0f766e;
+  --primary: var(--color-primary-dark);
   --primary-dark: #0b5c56;
   --primary-darker: #084945;
   --primary-light: #ecfdf3;
   --primary-soft: rgba(15, 118, 110, 0.08);
-  --surface: #ffffff;
-  --bg: #f8fafc;
-  --border: #e2e8f0;
+  --surface: var(--color-surface);
+  --bg: var(--color-bg);
+  --border: var(--color-border);
   --border-strong: #cbd5e1;
   --text: #0f172a;
   --text-muted: #64748b;

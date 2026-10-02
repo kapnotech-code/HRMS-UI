@@ -50,8 +50,8 @@
 
   .filter-input:focus {
     outline: none;
-    border-color: #14b8a6;
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 
 /* ---------- Buttons ---------- */
@@ -70,9 +70,9 @@
   }
 
 .btn-primary {
-  background: #14b8a6;
+  background: var(--color-primary);
   color: #fff;
-  box-shadow: 0 1px 2px rgba(20, 184, 166, 0.25);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
   .btn-primary:hover {
@@ -103,7 +103,7 @@
 
   .btn-link:hover {
     text-decoration: underline;
-    background: rgba(20, 184, 166, 0.08);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
     border-radius: 6px;
   }
 
@@ -213,8 +213,8 @@
     .form-grid input:focus,
     .form-grid select:focus {
       outline: none;
-      border-color: #14b8a6;
-      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
     }
 
 .form-actions {
@@ -256,12 +256,12 @@
   }
 
   .shift-table th {
-    background: #f0fdfb;
+    background: color-mix(in srgb, var(--color-primary) 10%, white);
     font-weight: 700;
     font-size: 11.5px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #0f766e;
+    color: var(--color-primary-dark);
     border-bottom: 1px solid #e5e7eb;
   }
 
@@ -280,7 +280,7 @@
 
 .emp-cell {
   font-weight: 600;
-  color: #0f766e;
+  color: var(--color-primary-dark);
 }
 
 .muted {

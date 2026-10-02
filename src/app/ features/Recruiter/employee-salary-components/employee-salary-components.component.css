@@ -55,8 +55,8 @@
   min-height: 42px;
   padding: 10px 18px;
   color: #fff;
-  background: #14b8a6;
-  box-shadow: 0 4px 10px rgba(20, 184, 166, 0.2);
+  background: var(--color-primary);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
   .btn-primary:hover:not(:disabled) {
@@ -123,7 +123,7 @@ button:disabled {
 }
 
 .success-message {
-  color: #0f766e;
+  color: var(--color-primary-dark);
   background: #ecfdf5;
   border: 1px solid #a7f3d0;
 }
@@ -166,7 +166,7 @@ button:disabled {
 
 .count-badge {
   padding: 6px 12px;
-  color: #0f766e;
+  color: var(--color-primary-dark);
   background: #ecfdf5;
   border-radius: 999px;
   font-size: 12px;
@@ -185,12 +185,12 @@ table {
 }
 
 thead {
-  background: #f0fdfa;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
 }
 
 th {
   padding: 13px 18px;
-  color: #0f766e;
+  color: var(--color-primary-dark);
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -255,7 +255,7 @@ tbody tr {
 }
 
 .amount-cell {
-  color: #0f766e;
+  color: var(--color-primary-dark);
   font-weight: 750;
 }
 
@@ -390,8 +390,8 @@ tbody tr {
 }
 
   .form-input:focus {
-    border-color: #14b8a6;
-    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
   .form-input.invalid {

@@ -9,8 +9,8 @@
 
       <!-- Billing Toggle -->
       <div class="billing-toggle">
-        <button class="toggle-btn" [class.active]="billingCycle === 'monthly'" (click)="billingCycle = 'monthly'">Monthly</button>
-        <button class="toggle-btn" [class.active]="billingCycle === 'yearly'" (click)="billingCycle = 'yearly'">
+        <button class="toggle-btn" [class.active]="billingCycle === 'monthly'" (click)="billingCycle = 'monthly'; refreshQuote()">Monthly</button>
+        <button class="toggle-btn" [class.active]="billingCycle === 'yearly'" (click)="billingCycle = 'yearly'; refreshQuote()">
           Annual <span class="save-chip">Save 20%</span>
         </button>
       </div>
@@ -26,15 +26,12 @@
     </div>
 
     <!-- Error -->
-    <div class="sub-alert sub-alert-error" *ngIf="errorMsg && !showCheckout">
-      <span>⚠️ {{ errorMsg }}</span>
-      <button class="btn-retry" (click)="retry()">Retry</button>
-    </div>
+    <ui-alert *ngIf="errorMsg && !showCheckout" tone="danger">
+      {{ errorMsg }}
+      <ui-button variant="outline" type="button" (click)="retry()">Retry</ui-button>
+    </ui-alert>
 
-    <!-- Success -->
-    <div class="sub-alert sub-alert-success" *ngIf="successMsg">
-      ✅ {{ successMsg }}
-    </div>
+    <ui-alert *ngIf="successMsg" tone="ok">{{ successMsg }}</ui-alert>
 
     <!-- Plans Grid -->
     <div class="plans-grid" *ngIf="!loading && !errorMsg">
@@ -53,7 +50,7 @@
         </div>
 
         <div class="plan-price-box">
-          <span class="plan-price-amount">${{ billingCycle === 'yearly' ? getYearlyPrice(plan.price) : plan.price }}</span>
+          <span class="plan-price-amount">₹{{ getPlanDisplayPrice(plan) }}</span>
           <div class="plan-price-meta">
             <span class="plan-price-period">/ {{ plan.durationDays }} days</span>
             <span class="plan-price-save" *ngIf="billingCycle === 'yearly' && plan.price > 0">Save 20%</span>
@@ -62,7 +59,7 @@
 
         <p class="plan-description">{{ plan.description }}</p>
 
-        <div class="plan-features-list" *ngIf="plan.features?.length">
+        <div class="plan-features-list" *ngIf="plan.features.length">
           <div class="plan-features-title">What's included:</div>
           <ul>
             <li *ngFor="let f of plan.features">
@@ -129,11 +126,27 @@
       </div>
       <div class="summary-row">
         <span>Duration</span>
-        <strong>{{ selectedPlan.durationDays }} days</strong>
+        <strong>{{ billingCycle === 'yearly' ? 365 : selectedPlan.durationDays }} days</strong>
+      </div>
+      <div class="coupon-row">
+        <input type="text" [(ngModel)]="couponCode" placeholder="Coupon code" (keyup.enter)="refreshQuote()" />
+        <button type="button" class="btn-retry" (click)="refreshQuote()">Apply</button>
+      </div>
+      <div class="summary-row" *ngIf="quote?.success">
+        <span>Subtotal</span>
+        <strong>₹{{ quote!.subtotal | number:'1.2-2' }}</strong>
+      </div>
+      <div class="summary-row" *ngIf="quote?.success && quote!.discount">
+        <span>Coupon {{ quote!.couponCode }}</span>
+        <strong>−₹{{ quote!.discount | number:'1.2-2' }}</strong>
+      </div>
+      <div class="summary-row" *ngIf="quote?.success">
+        <span>GST</span>
+        <strong>₹{{ quote!.gstTotal | number:'1.2-2' }}</strong>
       </div>
       <div class="summary-row summary-total">
         <span>Total Amount</span>
-        <strong class="total-price">${{ selectedPlan.price }}</strong>
+        <strong class="total-price">₹{{ (quote?.success ? quote!.payable : getPlanDisplayPrice(selectedPlan)) | number:'1.2-2' }}</strong>
       </div>
     </div>
 

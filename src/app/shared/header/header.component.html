@@ -10,8 +10,9 @@
     </button>
 
     <div class="brand">
-      <div class="brand-icon"><i class="ti ti-building-skyscraper"></i></div>
-      <span>HRMS</span>
+      <img *ngIf="brandLogo" class="brand-logo" [src]="brandLogo" [alt]="brandName" />
+      <div *ngIf="!brandLogo" class="brand-icon"><i class="ti ti-building-skyscraper"></i></div>
+      <span>{{ brandName }}</span>
     </div>
   </div>
 

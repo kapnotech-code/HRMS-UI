@@ -1,27 +1,36 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/Auth.service';
 import { SidebarService } from '../../core/services/Sidebar.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
 export class HeaderComponent implements OnInit {
   userName = 'Admin';
   userRole = 'HR Manager';
+  brandName = 'HRMS';
+  brandLogo = '';
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    public sidebarService: SidebarService
+    public sidebarService: SidebarService,
+    public theme: ThemeService
   ) { }
 
   ngOnInit(): void {
     this.loadUserInfo();
+    this.theme.branding$.subscribe(b => {
+      this.brandName = b.displayName || 'HRMS';
+      this.brandLogo = this.theme.assetUrl(b.logoUrl);
+    });
   }
 
   private loadUserInfo(): void {
@@ -55,6 +64,7 @@ export class HeaderComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+    this.theme.reset();
     this.router.navigate(['/login']);
   }
 }

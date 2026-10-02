@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :host {
-  --teal: #0f766e;
-  --teal-light: #14b8a6;
-  --teal-bg: #f0fdfa;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --surface: #ffffff;
-  --bg: #f8fafc;
+  --teal: var(--color-primary-dark);
+  --teal-light: var(--color-primary);
+  --teal-bg: color-mix(in srgb, var(--color-primary) 10%, white);
+  --ink: var(--color-text);
+  --muted: var(--color-muted);
+  --border: var(--color-border);
+  --surface: var(--color-surface);
+  --bg: var(--color-bg);
   --danger: #dc2626;
   --danger-bg: #fef2f2;
   --success: #059669;
@@ -27,7 +27,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .sub-page-header {
-  background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
+  background: linear-gradient(135deg, #0f172a 0%, var(--color-primary-dark) 100%);
   padding: 64px 20px 80px;
   text-align: center;
   color: #fff;
@@ -259,7 +259,7 @@
 .btn-subscribe:hover:not(:disabled) { background: var(--teal); color: #fff; }
 
 .btn-subscribe-featured { background: var(--teal); color: #fff; }
-.btn-subscribe-featured:hover:not(:disabled) { background: #0d5c56; }
+.btn-subscribe-featured:hover:not(:disabled) { background: var(--color-accent); }
 
 .btn-subscribe:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--border); color: var(--muted); }
 
@@ -374,6 +374,8 @@
 }
 
 .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+.coupon-row { display: flex; gap: 8px; margin: 8px 0 12px; }
+.coupon-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; }
 .summary-row:last-child { border-bottom: none; }
 .summary-row span { color: var(--muted); }
 .summary-row strong { color: var(--ink); }
@@ -422,7 +424,7 @@
   gap: 8px;
 }
 
-.btn-modal-pay:hover:not(:disabled) { background: #0d5c56; }
+.btn-modal-pay:hover:not(:disabled) { background: var(--color-accent); }
 .btn-modal-pay:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .pay-spinner {

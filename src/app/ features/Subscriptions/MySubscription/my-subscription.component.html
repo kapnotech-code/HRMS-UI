@@ -23,10 +23,10 @@
     </div>
 
     <!-- Error -->
-    <div class="mysub-alert mysub-alert-error" *ngIf="errorMsg && !loading">
-      <span>⚠️ {{ errorMsg }}</span>
-      <button (click)="loadSubscription()">Retry</button>
-    </div>
+    <ui-alert *ngIf="errorMsg && !loading" tone="danger">
+      {{ errorMsg }}
+      <ui-button variant="outline" type="button" (click)="loadSubscription()">Retry</ui-button>
+    </ui-alert>
 
     <!-- No Subscription -->
     <div class="mysub-empty" *ngIf="!loading && !errorMsg && !subscription">
@@ -149,6 +149,23 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="sub-features-card" *ngIf="invoices.length">
+        <h3 class="card-section-title">Invoices</h3>
+        <table class="inv-table">
+          <thead><tr><th>Number</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let inv of invoices">
+              <td>{{ inv.number }}</td>
+              <td>₹{{ inv.amount | number:'1.2-2' }}</td>
+              <td>{{ inv.status }}</td>
+              <td>
+                <ui-button *ngIf="inv.hasPdf" variant="outline" type="button" (click)="downloadInvoice(inv.invoiceId)">PDF</ui-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
     </div>

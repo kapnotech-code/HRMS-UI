@@ -1,0 +1,37 @@
+<div class="brand-page">
+  <ui-page-header
+    title="Workspace branding"
+    subtitle="These colors and logo drive CSS variables used by the shell, login, and later screens." />
+
+  <ui-alert *ngIf="message" tone="ok">{{ message }}</ui-alert>
+  <ui-alert *ngIf="error" tone="danger">{{ error }}</ui-alert>
+  <p *ngIf="loading">Loading…</p>
+
+  <form *ngIf="!loading" (ngSubmit)="save()">
+    <label>Display name
+      <input name="displayName" [(ngModel)]="form.displayName" maxlength="200" />
+    </label>
+
+    <div class="brand-logo-row">
+      <img *ngIf="logoSrc()" [src]="logoSrc()" alt="Logo" />
+      <label class="file-label">Logo
+        <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" (change)="onLogo($event)" />
+      </label>
+    </div>
+
+    <div class="color-grid">
+      <label>Primary <input type="color" name="primaryColor" [(ngModel)]="form.primaryColor" (ngModelChange)="preview()" /></label>
+      <label>Primary dark <input type="color" name="primaryDark" [(ngModel)]="form.primaryDark" (ngModelChange)="preview()" /></label>
+      <label>Accent <input type="color" name="accentColor" [(ngModel)]="form.accentColor" (ngModelChange)="preview()" /></label>
+      <label>Sidebar <input type="color" name="sidebarColor" [(ngModel)]="form.sidebarColor" (ngModelChange)="preview()" /></label>
+      <label>Background <input type="color" name="backgroundColor" [(ngModel)]="form.backgroundColor" (ngModelChange)="preview()" /></label>
+      <label>Surface <input type="color" name="surfaceColor" [(ngModel)]="form.surfaceColor" (ngModelChange)="preview()" /></label>
+      <label>Text <input type="color" name="textColor" [(ngModel)]="form.textColor" (ngModelChange)="preview()" /></label>
+    </div>
+
+    <div class="actions">
+      <ui-button type="button" variant="outline" (click)="preview()">Preview</ui-button>
+      <ui-button type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save branding' }}</ui-button>
+    </div>
+  </form>
+</div>

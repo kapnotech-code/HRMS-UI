@@ -4,9 +4,9 @@
       "name": "Frontend (HRMS-UI)",
       "path": "."
     },
-    {
-      "name": "Backend (hrms-project)",
-      "path": "d:/hrms-project"
+    { 
+	  "name": "Backend (hrms-project)",
+      "path": "../HRMS-Backend"
     }
   ],
   "settings": {

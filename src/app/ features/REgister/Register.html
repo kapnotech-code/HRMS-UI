@@ -15,11 +15,12 @@
     <div class="success-card">
       <div class="success-icon">🎉</div>
       <h2>Welcome to HRMS!</h2>
-      <p>Your company <strong>{{ form.companyName }}</strong> has been registered successfully.</p>
+      <p>Your company <strong>{{ form.companyName }}</strong> has been registered. Verify the email we sent to <strong>{{ form.email }}</strong> before your first login.</p>
       <div class="success-plan-badge">
-        <span>{{ selectedPlanObj.name }} Plan Activated</span>
+        <span *ngIf="paymentRequired">{{ selectedPlanObj.name }} selected — pay after you sign in</span>
+        <span *ngIf="!paymentRequired">{{ selectedPlanObj.name }} plan is ready after email verification</span>
       </div>
-      <p class="success-sub">Check your email <strong>{{ form.email }}</strong> for login credentials.</p>
+      <p class="success-sub">Check your email <strong>{{ form.email }}</strong> for login instructions.</p>
       <div class="success-actions">
         <button class="btn btn-primary btn-lg" (click)="goToDashboard()">Go to Login →</button>
         <button class="btn btn-outline" (click)="goToPlans()">Explore Plans</button>
@@ -31,12 +32,14 @@
   <div class="reg-body" *ngIf="currentStep < 4">
 
     <!-- Step Indicator -->
-    <div class="step-indicator">
+    <div class="step-indicator" role="progressbar" [attr.aria-valuenow]="currentStep" aria-valuemin="1" aria-valuemax="3">
       <div class="step-track">
         <div class="step-progress-bar" [style.width.%]="progress"></div>
       </div>
       <div class="steps-row">
-        <div class="step-dot-item" *ngFor="let s of steps.slice(0, 3)" [class.active]="currentStep === s.number" [class.done]="currentStep > s.number">
+        <div class="step-dot-item" *ngFor="let s of steps.slice(0, 3)"
+             [class.active]="currentStep === s.number"
+             [class.done]="currentStep > s.number">
           <div class="step-dot">
             <span *ngIf="currentStep <= s.number">{{ s.number }}</span>
             <span *ngIf="currentStep > s.number">✓</span>
@@ -51,7 +54,8 @@
 
       <!-- Error -->
       <div class="alert-error" *ngIf="errorMessage" role="alert">
-        <span>⚠️</span> {{ errorMessage }}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ errorMessage }}
       </div>
 
       <!-- ===== STEP 1: Company Info ===== -->
@@ -65,49 +69,74 @@
         </div>
 
         <div class="form-group">
-          <label>Company Name *</label>
-          <input type="text" [(ngModel)]="form.companyName" placeholder="e.g. TechCorp Solutions Pvt. Ltd." />
+          <label for="companyName">Company Name <span class="req">*</span></label>
+          <input id="companyName" name="companyName" type="text"
+                 [(ngModel)]="form.companyName"
+                 placeholder="e.g. TechCorp Solutions Pvt. Ltd."
+                 autocomplete="organization"
+                 maxlength="200" />
         </div>
 
         <div class="form-group">
-          <label>Company Email *</label>
-          <input type="email" [(ngModel)]="form.companyEmail" placeholder="e.g. hr@techcorp.com" />
+          <label for="companyEmail">Company Email <span class="req">*</span></label>
+          <input id="companyEmail" name="companyEmail" type="email"
+                 [(ngModel)]="form.companyEmail"
+                 placeholder="e.g. hr@techcorp.com"
+                 autocomplete="email"
+                 maxlength="200" />
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
-            <label>Industry *</label>
-            <select [(ngModel)]="form.industry">
-              <option value="" disabled selected>Select industry</option>
-              <option *ngFor="let i of industries" [value]="i">{{ i }}</option>
-            </select>
+            <label for="industry">Industry <span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="industry" name="industry" [(ngModel)]="form.industry">
+                <option value="" disabled selected>Select industry</option>
+                <option *ngFor="let i of industries" [value]="i">{{ i }}</option>
+              </select>
+              <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
           </div>
           <div class="form-group">
-            <label>Company Size *</label>
-            <select [(ngModel)]="form.companySize">
-              <option value="" disabled selected>Select size</option>
-              <option *ngFor="let s of companySizes" [value]="s">{{ s }} employees</option>
-            </select>
+            <label for="companySize">Company Size <span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="companySize" name="companySize" [(ngModel)]="form.companySize">
+                <option value="" disabled selected>Select size</option>
+                <option *ngFor="let s of companySizes" [value]="s">{{ s }} employees</option>
+              </select>
+              <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
           </div>
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
-            <label>Country *</label>
-            <select [(ngModel)]="form.country">
-              <option value="" disabled selected>Select country</option>
-              <option *ngFor="let c of countries" [value]="c">{{ c }}</option>
-            </select>
+            <label for="country">Country <span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="country" name="country" [(ngModel)]="form.country">
+                <option value="" disabled selected>Select country</option>
+                <option *ngFor="let c of countries" [value]="c">{{ c }}</option>
+              </select>
+              <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
           </div>
           <div class="form-group">
-            <label>Phone</label>
-            <input type="tel" [(ngModel)]="form.phone" placeholder="+91 98765 43210" />
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel"
+                   [(ngModel)]="form.phone"
+                   placeholder="+91 98765 43210"
+                   autocomplete="tel"
+                   maxlength="20" />
           </div>
         </div>
 
         <div class="form-group">
-          <label>Website</label>
-          <input type="url" [(ngModel)]="form.website" placeholder="https://yourcompany.com" />
+          <label for="website">Website</label>
+          <input id="website" name="website" type="url"
+                 [(ngModel)]="form.website"
+                 placeholder="https://yourcompany.com"
+                 autocomplete="url"
+                 maxlength="300" />
         </div>
       </div>
 
@@ -122,42 +151,88 @@
         </div>
 
         <div class="form-group">
-          <label>Full Name *</label>
-          <input type="text" [(ngModel)]="form.fullName" placeholder="e.g. Priya Sharma" />
+          <label for="fullName">Full Name <span class="req">*</span></label>
+          <input id="fullName" name="fullName" type="text"
+                 [(ngModel)]="form.fullName"
+                 placeholder="e.g. Priya Sharma"
+                 autocomplete="name"
+                 maxlength="200" />
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
-            <label>Login ID *</label>
-            <input type="text" [(ngModel)]="form.loginName" placeholder="e.g. priya.sharma" />
-            <small>Used to sign in to HRMS</small>
+            <label for="loginName">Login ID <span class="req">*</span></label>
+            <input id="loginName" name="loginName" type="text"
+                   [(ngModel)]="form.loginName"
+                   placeholder="e.g. priya.sharma"
+                   autocomplete="username"
+                   maxlength="100" />
+            <small>Letters, numbers, dots, hyphens, underscores only</small>
           </div>
           <div class="form-group">
-            <label>Email Address *</label>
-            <input type="email" [(ngModel)]="form.email" placeholder="priya@techcorp.com" />
+            <label for="adminEmail">Email Address <span class="req">*</span></label>
+            <input id="adminEmail" name="adminEmail" type="email"
+                   [(ngModel)]="form.email"
+                   placeholder="priya@techcorp.com"
+                   autocomplete="email"
+                   maxlength="200" />
           </div>
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
-            <label>Password *</label>
+            <label for="password">Password <span class="req">*</span></label>
             <div class="pw-wrap">
-              <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="form.password" placeholder="Min. 6 characters" />
-              <button type="button" class="pw-toggle" (click)="showPassword = !showPassword">{{ showPassword ? '🙈' : '👁️' }}</button>
+              <input id="password" name="password"
+                     [type]="showPassword ? 'text' : 'password'"
+                     [(ngModel)]="form.password"
+                     placeholder="Min. 8 characters"
+                     autocomplete="new-password"
+                     maxlength="100" />
+              <button type="button" class="pw-toggle"
+                      (click)="showPassword = !showPassword"
+                      [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
             </div>
+            <!-- Password Strength Meter -->
+            <div class="pw-strength" *ngIf="form.password.length > 0">
+              <div class="pw-strength-bar">
+                <div class="pw-strength-fill"
+                     [style.width.%]="passwordStrengthWidth"
+                     [style.background]="passwordStrength.color"></div>
+              </div>
+              <span class="pw-strength-label" [style.color]="passwordStrength.color">
+                {{ passwordStrength.label }}
+              </span>
+            </div>
+            <small>Uppercase, lowercase, number & special character required</small>
           </div>
           <div class="form-group">
-            <label>Confirm Password *</label>
-            <div class="pw-wrap">
-              <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="form.confirmPassword" placeholder="Re-enter password" />
-              <button type="button" class="pw-toggle" (click)="showConfirmPassword = !showConfirmPassword">{{ showConfirmPassword ? '🙈' : '👁️' }}</button>
+            <label for="confirmPassword">Confirm Password <span class="req">*</span></label>
+            <div class="pw-wrap" [class.match]="passwordsMatch" [class.mismatch]="passwordsMismatch">
+              <input id="confirmPassword" name="confirmPassword"
+                     [type]="showConfirmPassword ? 'text' : 'password'"
+                     [(ngModel)]="form.confirmPassword"
+                     placeholder="Re-enter password"
+                     autocomplete="new-password"
+                     maxlength="100" />
+              <button type="button" class="pw-toggle"
+                      (click)="showConfirmPassword = !showConfirmPassword"
+                      [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+                <svg *ngIf="!showConfirmPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="showConfirmPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
             </div>
+            <small class="match-hint" *ngIf="passwordsMatch">✓ Passwords match</small>
+            <small class="mismatch-hint" *ngIf="passwordsMismatch">✗ Passwords do not match</small>
           </div>
         </div>
 
         <div class="admin-info-note">
-          <span>🔒</span>
-          <span>Your password is encrypted and stored securely. We never share your credentials.</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Your password is encrypted with BCrypt and stored securely. We never share your credentials.</span>
         </div>
       </div>
 
@@ -167,12 +242,19 @@
           <div class="step-icon-badge">💳</div>
           <div>
             <h2>Choose your subscription plan</h2>
-            <p>You can upgrade or change your plan anytime from the dashboard.</p>
+            <p>Prices come from your live catalog. Paid plans activate after you verify email, sign in, and complete Razorpay checkout.</p>
           </div>
         </div>
 
-        <div class="plan-selector-grid">
-          <div class="plan-option" *ngFor="let p of plans" [class.selected]="form.selectedPlan === p.id" (click)="form.selectedPlan = p.id">
+        <div class="plan-selector-grid" role="radiogroup" aria-label="Subscription plan" *ngIf="!plansLoading && plans.length">
+          <div class="plan-option" *ngFor="let p of plans"
+               [class.selected]="form.selectedPlan === p.id"
+               (click)="form.selectedPlan = p.id"
+               role="radio"
+               [attr.aria-checked]="form.selectedPlan === p.id"
+               tabindex="0"
+               (keydown.enter)="form.selectedPlan = p.id"
+               (keydown.space)="form.selectedPlan = p.id">
             <div class="plan-option-badge" *ngIf="p.badge">{{ p.badge }}</div>
             <div class="plan-option-header">
               <div class="plan-radio">
@@ -182,42 +264,47 @@
                 <div class="plan-option-name">{{ p.name }}</div>
                 <div class="plan-option-price">
                   <span class="price-big">{{ p.priceLabel }}</span>
-                  <span class="price-cycle" *ngIf="p.price > 0">/employee/mo</span>
-                  <span class="price-cycle" *ngIf="p.price === 0">forever</span>
-                  <span class="price-cycle" *ngIf="p.price === -1">pricing</span>
+                  <span class="price-cycle" *ngIf="p.price > 0">/month</span>
+                  <span class="price-cycle" *ngIf="p.price === 0">trial</span>
                 </div>
               </div>
             </div>
             <p class="plan-option-desc">{{ p.desc }}</p>
             <div class="plan-option-employees">👥 {{ p.employees }}</div>
             <ul class="plan-option-features">
-              <li *ngFor="let f of p.features"><span class="feat-check">✓</span> {{ f }}</li>
+              <li *ngFor="let f of p.features">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ f }}
+              </li>
             </ul>
           </div>
         </div>
 
         <div class="selected-plan-summary">
           <span>Selected: <strong>{{ selectedPlanObj.name }}</strong></span>
-          <span class="plan-note">{{ selectedPlanObj.price === 0 ? 'No credit card required' : selectedPlanObj.price === -1 ? 'Our team will contact you' : '14-day free trial included' }}</span>
+          <span class="plan-note">
+            {{ selectedPlanObj.price === 0 ? 'No payment required for trial' : 'Pay with Razorpay after you verify email and sign in' }}
+          </span>
         </div>
       </div>
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button class="btn btn-outline" (click)="prev()" *ngIf="currentStep > 1">← Back</button>
-        <button class="btn btn-ghost" routerLink="/" *ngIf="currentStep === 1">Cancel</button>
+        <button class="btn btn-outline" (click)="prev()" *ngIf="currentStep > 1" type="button">← Back</button>
+        <a class="btn btn-ghost" routerLink="/" *ngIf="currentStep === 1">Cancel</a>
 
-        <button class="btn btn-primary" (click)="next()" *ngIf="currentStep < 3">
+        <button class="btn btn-primary" (click)="next()" *ngIf="currentStep < 3" type="button">
           Continue →
         </button>
-        <button class="btn btn-primary btn-submit" (click)="submit()" *ngIf="currentStep === 3" [disabled]="loading">
+        <button class="btn btn-primary btn-submit" (click)="submit()" *ngIf="currentStep === 3"
+                [disabled]="loading || !plans.length" type="button">
           <span class="spinner" *ngIf="loading"></span>
           {{ loading ? 'Creating workspace...' : 'Create My Workspace →' }}
         </button>
       </div>
 
       <p class="reg-terms" *ngIf="currentStep === 3">
-        By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        By registering, you agree to our <a href="#" target="_blank" rel="noopener">Terms of Service</a> and <a href="#" target="_blank" rel="noopener">Privacy Policy</a>.
       </p>
     </div>
 
