@@ -35,7 +35,8 @@ const SUPER_ADMIN = [
   'company.read',
   'subscription.read',
   'subscription.manage',
-  'user.read'
+  'user.read',
+  'permission.manage'
 ];
 
 const COMPANY_ADMIN = [
@@ -221,10 +222,7 @@ const ROUTE_FEATURE: Record<string, string> = {
   '/transactions/document-types': 'documents',
   '/masters/attendance': 'attendance',
   '/transactions/master-attendance': 'attendance',
-  '/transactions/leave-transactions': 'leave',
-  '/masters/permission-matrix': 'custom_roles',
-  '/masters/pages': 'custom_roles',
-  '/masters/menus': 'custom_roles'
+  '/transactions/leave-transactions': 'leave'
 };
 
 export function permissionForRoute(url: string): string | null {

@@ -20,6 +20,7 @@ import { EmployerService as CompanyService } from '../../../../app/core/services
 import { CompanyResponse } from '../../../shared/models/companylist/CompanyResponse';
 import { DocumentCategoryService } from '../../../core/services/document-category.service';
 import { DocumentCategory } from '../../../shared/models/documentcategory/document';
+import { resolveFileUrl } from '../../../core/utils/file-url';
 @Component({
   selector: 'app-documents',
   standalone: true,
@@ -209,13 +210,8 @@ export class DocumentsComponent implements OnInit {
   // ---------------------------------------------------
   // FILE URL / PREVIEW HELPERS
   // ---------------------------------------------------
-  // Backend file-server base URL — where filePath is served from. Set your actual API/base URL here.
-  readonly fileBaseUrl = 'https://localhost:7135/';
-
-  // Builds the full file URL — used for the link/thumbnail in the table
   getFileUrl(filePath: string | null | undefined): string {
-    if (!filePath) return '';
-    return this.fileBaseUrl + filePath;
+    return resolveFileUrl(filePath);
   }
 
   // Determines whether the extension is an image — if so, a thumbnail is shown in the table

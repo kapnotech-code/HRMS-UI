@@ -33,7 +33,7 @@ describe('permission-matrix', () => {
     expect(permissionForRoute('/recruiter/employee-master')).toBe('employee.read');
     expect(permissionForRoute('recruiter/payroll?x=1')).toBe('payroll.read');
     expect(featureForRoute('/recruiter/payroll-adjustment')).toBe('payroll');
-    expect(featureForRoute('/masters/pages')).toBe('custom_roles');
+    expect(featureForRoute('/masters/pages')).toBeNull();
     expect(featureForRoute('/dashboard')).toBeNull();
   });
 

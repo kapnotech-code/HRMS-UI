@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { EmployeeService } from '../../../core/services/employee.service';
@@ -18,6 +17,7 @@ import {
   EmployeeColumn,
 } from '../../../shared/constants/employee-report-columns';
 import { Router } from '@angular/router';
+import { resolveFileUrl as toFileUrl } from '../../../core/utils/file-url';
 
 interface Option {
   id: number;
@@ -120,10 +120,6 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
   // a getCompanyLogo(companyID) helper.
   companyLogoUrl = '';
   qrCodeUrl = '';
-
-  // ---------- File resolution ----------
-  private readonly fileBaseUrl = environment.apiUrl.replace('/api', '');
-
 
   private profileImageState = new Map<number, ImageLoadState>();
 
@@ -333,12 +329,7 @@ export class EmployeeReportComponent implements OnInit, OnDestroy {
    * ⚠️ Update `fileBaseUrl` above to match your actual backend/file host.
    */
   resolveFileUrl(path: string | null | undefined): string {
-    if (!path) return '';
-    if (/^https?:\/\//i.test(path)) {
-      return path;
-    }
-    const cleanPath = path.startsWith('/') ? path : '/' + path;
-    return `${this.fileBaseUrl}${cleanPath}`;
+    return toFileUrl(path);
   }
 
   /**

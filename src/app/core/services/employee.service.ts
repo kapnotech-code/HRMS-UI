@@ -52,8 +52,10 @@ export class EmployeeService {
   uploadFile(file: File, type: 'profile' | 'resume' | 'document'): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('type', type);
-    // Content-Type set mat karo — browser khud multipart boundary set karta hai
-    return this.http.post<any>(`${this.apiUrl}/UploadFile`, formData);
+    const category = type === 'document' ? 'resume' : type;
+    return this.http.post<any>(
+      `${this.apiUrl}/UploadFile?category=${encodeURIComponent(category)}`,
+      formData
+    );
   }
 }

@@ -6,6 +6,7 @@ import { CompanyRequest } from '../../../../app/shared/models/companylist/Compan
 import { CompanyResponse } from '../../../../app/shared/models/companylist/CompanyResponse';
 import { EmployerService } from '../../../../app/core/services/company.service';
 import { UiAlertComponent, UiButtonComponent, UiPageHeaderComponent } from '../../../shared/ui';
+import { resolveFileUrl } from '../../../core/utils/file-url';
 
 @Component({
   selector: 'app-company-list',
@@ -15,9 +16,6 @@ import { UiAlertComponent, UiButtonComponent, UiPageHeaderComponent } from '../.
   styleUrl: './Companylist.css'
 })
 export class CompanyList implements OnInit {
-  // Base URL where uploaded files are served from (wwwroot root of the API)
-  private readonly fileBaseUrl = 'https://localhost:7135';
-
   companies: CompanyResponse[] = [];
   filteredCompanies: CompanyResponse[] = [];
 
@@ -77,8 +75,7 @@ export class CompanyList implements OnInit {
 
   // Builds a full URL for a stored file path returned by the API
   getFileUrl(path: string | null | undefined): string {
-    if (!path) return '';
-    return `${this.fileBaseUrl}/${path.replace(/^\/+/, '')}`;
+    return resolveFileUrl(path);
   }
 
   // Shows a success banner for a few seconds, then auto-clears it.

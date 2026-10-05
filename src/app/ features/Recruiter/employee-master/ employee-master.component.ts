@@ -19,6 +19,7 @@ import {
   canonicalStatus,
   validateEmployee,
 } from '../../../shared/validators/employee-validators';
+import { resolveFileUrl, uploadedFilePath } from '../../../core/utils/file-url';
 
 interface Option {
   id: number;
@@ -434,7 +435,7 @@ export class EmployeeMasterComponent implements OnInit {
     this.uploadingProfilePic = true;
     this.employeeService.uploadFile(file, 'profile').subscribe({
       next: (res: any) => {
-        this.formModel.profilePicturePath = res.data?.filePath ?? res.filePath;
+        this.formModel.profilePicturePath = uploadedFilePath(res);
         this.uploadingProfilePic = false;
         this.showToastMessage('success', 'Profile picture uploaded.');
         this.cdr.detectChanges();
@@ -462,7 +463,7 @@ export class EmployeeMasterComponent implements OnInit {
     this.uploadingResume = true;
     this.employeeService.uploadFile(file, 'resume').subscribe({
       next: (res: any) => {
-        this.formModel.resumePath = res.data?.filePath ?? res.filePath;
+        this.formModel.resumePath = uploadedFilePath(res);
         this.uploadingResume = false;
         this.showToastMessage('success', 'Resume uploaded.');
         this.cdr.detectChanges();
@@ -933,9 +934,7 @@ export class EmployeeMasterComponent implements OnInit {
   // ===================================================
 
   getProfilePicUrl(path: string | undefined): string {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    return `${window.location.origin}/${path}`;
+    return resolveFileUrl(path);
   }
 
   isImageUrl(path: string | undefined): boolean {
@@ -976,7 +975,7 @@ export class EmployeeMasterComponent implements OnInit {
 
       this.employeeService.uploadFile(file, 'document').subscribe({
         next: (res: any) => {
-          const filePath = res.data?.filePath ?? res.filePath ?? '';
+          const filePath = uploadedFilePath(res);
           this.documentFiles.push({ file, previewUrl: filePath });
           this.uploadingDocument = false;
           this.showToastMessage('success', `Document "${file.name}" uploaded.`);

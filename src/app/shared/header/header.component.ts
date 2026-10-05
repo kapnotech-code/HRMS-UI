@@ -55,9 +55,13 @@ export class HeaderComponent implements OnInit {
 
   private getRoleName(roleId: number): string {
     switch (roleId) {
-      case 1: return 'Admin';
+      case 1:
+      case 6:
+        return 'Company Admin';
       case 2: return 'HR';
       case 3: return 'Employee';
+      case 4: return 'Manager';
+      case 5: return 'Super Admin';
       default: return `Role-${roleId}`;
     }
   }
